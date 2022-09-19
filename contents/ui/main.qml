@@ -207,12 +207,7 @@ PlasmaCore.Dialog {
         if (zone != -1) {
             let targetZone = repeater_zones.model[zone]
             let zone_padding = config.layouts[currentLayout].padding || 0
-            client.geometry = {
-                "x": ((targetZone.x / 100) * (clientArea.width - zone_padding) + (clientArea.x + zone_padding / 2)) + zone_padding / 2,
-                "y": ((targetZone.y / 100) * (clientArea.height - zone_padding) + (clientArea.y + zone_padding / 2)) + zone_padding / 2,
-                "width": ((targetZone.width / 100) * (clientArea.width - zone_padding)) - zone_padding,
-                "height": ((targetZone.height / 100) * (clientArea.height - zone_padding)) - zone_padding
-            }
+            client.geometry = Qt.rect(((targetZone.x / 100) * (clientArea.width - zone_padding) + (clientArea.x + zone_padding / 2)) + zone_padding / 2, ((targetZone.y / 100) * (clientArea.height - zone_padding) + (clientArea.y + zone_padding / 2)) + zone_padding / 2, ((targetZone.width / 100) * (clientArea.width - zone_padding)) - zone_padding, ((targetZone.height / 100) * (clientArea.height - zone_padding)) - zone_padding)
         }
         
         // save zone
@@ -628,12 +623,7 @@ PlasmaCore.Dialog {
                             })
                             if (index > -1) {
                                 let geometry = oldWindowGeometries[index]
-                                client.geometry = {
-                                    "x": (r.x - geometry.zone_x) + (geometry.center_x - geometry.width / 2),
-                                    "y": r.y,
-                                    "width": geometry.width,
-                                    "height": geometry.height
-                                }
+                                client.geometry = Qt.rect((r.x - geometry.zone_x) + (geometry.center_x - geometry.width / 2), r.y, geometry.width, geometry.height)
                             }
                         }
                     }
