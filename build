@@ -1,0 +1,7 @@
+scriptName=KZones
+
+zip -r "$scriptName.kwinscript" contents metadata.desktop
+
+kpackagetool5 -i "$scriptName.kwinscript" || kpackagetool5 -u "$scriptName.kwinscript"
+
+kwin_x11 --replace & disown

@@ -1,0 +1,20 @@
+[Desktop Entry]
+Name=KZones
+Comment=Utility for snapping windows into zones
+
+Icon=preferences-desktop-virtual
+Type=Service
+
+X-Plasma-API=declarativescript
+X-Plasma-MainScript=ui/main.qml
+
+X-KDE-ServiceTypes=KWin/Script
+X-KDE-ConfigModule=kwin/effects/configs/kcm_kwin4_genericscripted
+
+X-KDE-PluginInfo-Author=gerritdevriese
+X-KDE-PluginInfo-Name=kzones
+X-KDE-PluginInfo-Version=0.1
+X-KDE-PluginInfo-Website=https://kde.org
+X-KDE-PluginInfo-Category=Utilities
+X-KDE-PluginInfo-License=GPL-3.0+
+X-KDE-PluginInfo-EnabledByDefault=true
