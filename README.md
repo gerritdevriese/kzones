@@ -15,8 +15,9 @@ Snap windows using shortcuts (full list below)
 
 ## Installation
 Install via KDE Store or clone this repo and run the `./build` script.
-### ~~KDE Store~~
-~~Under System Settings / KWin Scripts / Get New Scripts, search for KZones and install it.~~ (TODO)
+### KDE Store
+Under System Settings / KWin Scripts / Get New Scripts, search for KZones and install it.  
+https://store.kde.org/p/1909220
 ### Build it yourself
 ```
 git clone https://github.com/gerritdevriese/kzones
