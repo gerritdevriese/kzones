@@ -19,6 +19,7 @@ Install via KDE Store or clone this repo and run the `./build` script.
 Under System Settings / KWin Scripts / Get New Scripts, search for KZones and install it.  
 https://store.kde.org/p/1909220
 ### Build it yourself
+Make sure you have "zip" installed on your system before building.
 ```
 git clone https://github.com/gerritdevriese/kzones
 cd kzones && ./build
@@ -186,6 +187,15 @@ List of all available shortcuts:
 | Toggle OSD                           | `Ctrl+Alt+C`              |
 
 *To change the default bindings, go to System Settings / Shortcuts and search for KZones*
+
+## Troubleshooting
+
+### The script doesn't work
+- Check if your KDE version is up to date.
+- Make sure there is at least one layout defined in the script settings and that it contains at least one zone.
+
+### My settings are not saved
+- After changing settings, you need to reload the script by disabling, saving and enabling it again. (or by restarting KWin)
 
 ## Caveats
 When selecting **Cursor** as the "determine zone method" you'll need to have xdotool installed, sadly this doesn't work on Wayland. So if you're using Wayland you'll need to use the **Titlebar** or **Window** method instead.
