@@ -26,7 +26,6 @@ cd kzones && ./build
 
 ## Setup
 ### Layouts
-To start using the script you'll need to have at least one layout. There are none by default.  
 You can define layouts by putting them in the **Layouts** tab in the script settings, here are some examples to get you started:
 #### Examples
 <details open>
