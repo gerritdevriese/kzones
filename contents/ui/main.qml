@@ -329,6 +329,15 @@ PlasmaCore.Dialog {
             }
         }
 
+        // click to exit osd
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            onPressed: {
+                hide()
+            }
+        }
+
         // main polling timer
         Timer {
             id: timer
