@@ -496,8 +496,12 @@ PlasmaCore.Dialog {
                     width: 160 //180 // TODO: make configurable (indicatorWidth)
                     height: 90 //100 // TODO: make configurable (indicatorHeight)
                     color: 'transparent'
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        horizontalCenterOffset: (((modelData || {}).indicator || {}).offset || {}).x || 0
+                        verticalCenter: parent.verticalCenter
+                        verticalCenterOffset: (((modelData || {}).indicator || {}).offset || {}).y || 0
+                    }
 
                     MouseArea {
                         anchors.fill: parent
@@ -525,6 +529,7 @@ PlasmaCore.Dialog {
                             radius: 5
                             x: ((modelData.x / 100) * (indicator.width - padding)) + padding
                             y: ((modelData.y / 100) * (indicator.height - padding)) + padding
+                            z: (index == zone.zoneIndex) ? 2 : 1
                             implicitWidth: ((modelData.width / 100) * (indicator.width - padding)) - padding
                             implicitHeight: ((modelData.height / 100) * (indicator.height - padding)) - padding
                             color: (index == zone.zoneIndex) ? color_indicator_accent : color_indicator
@@ -534,6 +539,7 @@ PlasmaCore.Dialog {
 
                     // zone indicator label
                     Text {
+                        z: 3
                         anchors.fill: indicator
                         font.pixelSize: 20
                         opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 0.25 // TODO: add opacity to config
