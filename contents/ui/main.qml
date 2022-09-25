@@ -171,6 +171,10 @@ PlasmaCore.Dialog {
     }
 
     function moveClientToZone(client, zone) {
+
+        // block plasmashell from being moved
+        if (client.resourceClass.toString() === "plasmashell") return
+        
         console.log("KZones: Moving client " + client.resourceClass.toString() + " to zone " + zone)
 
         // save current geometry
