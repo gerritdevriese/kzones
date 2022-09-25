@@ -157,6 +157,28 @@ Each **zone** object needs the following keys:
 - `x`, `y`: position of the top left corner of the zone in screen percentage
 - `width`, `height`: size of the zone in screen percentage
 
+#### Indicator offset
+
+If for some reason you want to move the zone indicator, you can do so by adding the following keys to a zone object:
+
+```json
+{
+    "name": "2",
+    "x": 25,
+    "y": 0,
+    "height": 100,
+    "width": 50,
+    "indicator": {
+        "offset": {
+            "x": 100,
+            "y": -50
+        }
+    }
+}
+```
+
+This example will move the indicator 100 pixels to the right and 50 pixels up.
+
 ### Other settings
 
 #### Determine zone
