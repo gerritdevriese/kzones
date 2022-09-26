@@ -252,12 +252,11 @@ PlasmaCore.Dialog {
         // shortcut: cycle through layouts
         bindShortcut("Cycle layouts", "Ctrl+Alt+D", function() {
             // reset timer to prevent osd from being hidden when switching layouts
-            if (mainDialog.shown) {
+            if (!moving) {
                 hideOSD.running = false
                 hideOSD.start()
-            } else {
-                hideOSD.running = !moving
             }
+
             //cycle through layouts
             currentLayout = (currentLayout + 1) % config.layouts.length
             highlightedZone = -1
