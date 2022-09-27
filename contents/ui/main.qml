@@ -61,7 +61,8 @@ PlasmaCore.Dialog {
             filterList: KWin.readConfig("filterList", ""), // filter list
             fadeDuration: KWin.readConfig("fadeDuration", 150), // animation duration in milliseconds
             osdTimeout: KWin.readConfig("osdTimeout", 2000), // timeout in milliseconds for hiding the OSD after switching layouts
-            layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')) // layouts
+            layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')), // layouts
+            alternateIndicatorStyle: KWin.readConfig("alternateIndicatorStyle", false), // alternate indicator style
         }
 
         console.log("KZones: Config loaded: " + JSON.stringify(config))
@@ -509,7 +510,8 @@ PlasmaCore.Dialog {
                     id: indicator
                     width: 160 //180 // TODO: make configurable (indicatorWidth)
                     height: 90 //100 // TODO: make configurable (indicatorHeight)
-                    color: 'transparent'
+                    radius: 5
+                    color: config.alternateIndicatorStyle ? color_indicator : 'transparent'
                     anchors {
                         horizontalCenter: parent.horizontalCenter
                         horizontalCenterOffset: (((modelData || {}).indicator || {}).offset || {}).x || 0
@@ -539,8 +541,9 @@ PlasmaCore.Dialog {
                         model: config.layouts[currentLayout].zones
 
                         Rectangle {
-                            property int padding: 3
+                            property int padding: config.alternateIndicatorStyle ? 0 : 3
                             radius: 5
+                            visible: config.alternateIndicatorStyle ? ((index == zone.zoneIndex) ? true : false) : true
                             x: ((modelData.x / 100) * (indicator.width - padding)) + padding
                             y: ((modelData.y / 100) * (indicator.height - padding)) + padding
                             z: (index == zone.zoneIndex) ? 2 : 1
