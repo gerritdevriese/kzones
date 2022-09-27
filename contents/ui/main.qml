@@ -30,6 +30,7 @@ PlasmaCore.Dialog {
     property int highlightedZone: -1
     property var oldWindowGeometries: []
     property var zonedClients: []
+    property int activeScreen: 0
 
     // colors
     property string color_zone_border: "transparent"
@@ -90,6 +91,7 @@ PlasmaCore.Dialog {
     }
 
     function refreshClientArea() {
+        activeScreen = workspace.activeScreen
         clientArea = workspace.clientArea(KWin.FullScreenArea, workspace.activeScreen, workspace.currentDesktop)
     }
 
@@ -447,7 +449,7 @@ PlasmaCore.Dialog {
                         t += `Resizing: ${resizing}\n`
                         t += `Old Window Geometries: ${oldWindowGeometries.length}\n`
                         t += `Zoned Clients: ${zonedClients.length}`
-                        //t += `Current Screen: ${workspace.activeScreen}`
+                        t += `Active Screen: ${activeScreen}`
                         return t
                     } else {
                         return ""
