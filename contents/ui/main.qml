@@ -17,9 +17,6 @@ PlasmaCore.Dialog {
     opacity: 0 // hide dialog on startup
     outputOnly: true // makes dialog click-through
 
-    // temp
-    property bool inverted: false
-
     // properties
     property var config: {}
     property bool shown: false
@@ -29,7 +26,6 @@ PlasmaCore.Dialog {
     property int currentLayout: 0
     property int highlightedZone: -1
     property var oldWindowGeometries: []
-    property var zonedClients: []
     property int activeScreen: 0
 
     // colors
@@ -135,27 +131,49 @@ PlasmaCore.Dialog {
 
     }
 
-    function getZone(client) {
-        const index = zonedClients.findIndex((object) => {
-            return object.client.windowId === client.windowId
-        })
-        if (index > -1) {
-            return zonedClients[index].zone
-        } else {
-            return -1
+    function matchZone(client) {
+        client.zone = -1
+        // get all zones in the current layout
+        let zones = config.layouts[currentLayout].zones
+        // loop through zones and compare with the geometries of the client
+        for (let i = 0; i < zones.length; i++) {
+            let zone = zones[i]
+            let zone_padding = config.layouts[currentLayout].padding || 0
+            let zoneX = clientArea.x + ((zone.x / 100) * (clientArea.width - zone_padding)) + zone_padding
+            let zoneY = clientArea.y + ((zone.y / 100) * (clientArea.height - zone_padding)) + zone_padding
+            let zoneWidth = ((zone.width / 100) * (clientArea.width - zone_padding)) - zone_padding
+            let zoneHeight = ((zone.height / 100) * (clientArea.height - zone_padding)) - zone_padding
+            if (client.geometry.x >= zoneX && client.geometry.y >= zoneY && client.geometry.width <= zoneWidth && client.geometry.height <= zoneHeight) {
+                // zone found, set it and exit the loop
+                client.zone = i
+                break
+            }
         }
     }
 
-    function setZone(client, zone) {
-        const index = zonedClients.findIndex((object) => {
-            return object.client.windowId === client.windowId
-        })
-        if (index > -1) {
-            console.log("KZones: Updating zone for client " + client.windowId + " to " + zone)
-            zonedClients[index].zone = zone
-        } else {
-            console.log("KZones: Adding client " + client.windowId + " to zone " + zone)
-            zonedClients.push({client: {windowId: client.windowId}, zone: zone})
+    function getWindowsInZone(zone) {
+        let windows = []
+        for (let i = 0; i < workspace.clientList().length; i++) {
+            let client = workspace.clientList()[i]
+            if (client.zone === zone && client.normalWindow) windows.push(client)
+        }
+        return windows
+    }
+
+    function switchWindowInZone(zone, reverse) {
+
+        let clientsInZone = getWindowsInZone(zone)
+
+        if (reverse) { clientsInZone.reverse() }
+
+        // cycle through clients in zone
+        if (clientsInZone.length > 0) {
+            let index = clientsInZone.indexOf(workspace.activeClient)
+            if (index === -1) {
+                workspace.activeClient = clientsInZone[0]
+            } else {
+                workspace.activeClient = clientsInZone[(index + 1) % clientsInZone.length]
+            }
         }
     }
 
@@ -175,8 +193,8 @@ PlasmaCore.Dialog {
 
     function moveClientToZone(client, zone) {
 
-        // block plasmashell from being moved
-        if (client.resourceClass.toString() === "plasmashell") return
+        // block abnormal windows from being moved (like plasmashell, docks, etc...)
+        if (!client.normalWindow) return
         
         console.log("KZones: Moving client " + client.resourceClass.toString() + " to zone " + zone)
 
@@ -218,7 +236,7 @@ PlasmaCore.Dialog {
         }
         
         // save zone
-        setZone(client, zone)
+        client.zone = zone
     }
 
     // fade in animation
@@ -276,32 +294,44 @@ PlasmaCore.Dialog {
 
         // shortcut: move to next zone
         bindShortcut("Move active window to next zone", "Ctrl+Alt+Right", function() {
-            moveClientToZone(workspace.activeClient, (getZone(workspace.activeClient) + 1) % config.layouts[currentLayout].zones.length)
+            moveClientToZone(workspace.activeClient, (workspace.activeClient.zone + 1) % config.layouts[currentLayout].zones.length)
         })
 
         // shortcut: move to previous zone
         bindShortcut("Move active window to previous zone", "Ctrl+Alt+Left", function() {
-            moveClientToZone(workspace.activeClient, (getZone(workspace.activeClient) - 1 + config.layouts[currentLayout].zones.length) % config.layouts[currentLayout].zones.length)
+            moveClientToZone(workspace.activeClient, (workspace.activeClient.zone - 1 + config.layouts[currentLayout].zones.length) % config.layouts[currentLayout].zones.length)
         })
 
         // shortcut: toggle osd
         bindShortcut("Toggle OSD", "Ctrl+Alt+C", function() {
-            if (!inverted) {
-                if (!shown) {
-                    highlightedZone = -1
-                    mainDialog.outputOnly = false
-                    show()
-                } else {
-                    moving = false
-                    hide()
-                }
+            if (!shown) {
+                highlightedZone = -1
+                mainDialog.outputOnly = false
+                show()
             } else {
-                // inverted mode
+                moving = false
+                hide()
             }
-            
+        })
+
+        // shortcut: switch to next window in current zone
+        bindShortcut("Switch to next window in current zone", "Ctrl+Alt+Up", function() {
+            let zone = workspace.activeClient.zone
+            switchWindowInZone(zone)
+        })
+
+        // shortcut: switch to previous window in current zone
+        bindShortcut("Switch to previous window in current zone", "Ctrl+Alt+Down", function() {
+            let zone = workspace.activeClient.zone
+            switchWindowInZone(zone, true)
         })
 
         mainDialog.loadConfig()
+
+        // match all clients to zones
+        for (var i = 0; i < workspace.clientList().length; i++) {
+            matchZone(workspace.clientList()[i])
+        }
     }
 
     function bindShortcut(title, sequence, callback) {
@@ -438,7 +468,7 @@ PlasmaCore.Dialog {
                         t += `Active: ${workspace.activeClient.caption}\n`
                         t += `Window class: ${workspace.activeClient.resourceClass.toString()}\n`
                         t += `X: ${workspace.activeClient.geometry.x}, Y: ${workspace.activeClient.geometry.y}, Width: ${workspace.activeClient.geometry.width}, Height: ${workspace.activeClient.geometry.height}\n`
-                        t += `Previous Zone: ${getZone(workspace.activeClient)}\n`
+                        t += `Previous Zone: ${workspace.activeClient.zone}\n`
                         t += `Highlighted Zone: ${highlightedZone}\n`
                         t += `Layout: ${currentLayout}\n`
                         t += `Zones: ${config.layouts[currentLayout].zones.map(z => z.name).join(', ')}\n`
@@ -449,7 +479,6 @@ PlasmaCore.Dialog {
                         t += `Moving: ${moving}\n`
                         t += `Resizing: ${resizing}\n`
                         t += `Old Window Geometries: ${oldWindowGeometries.length}\n`
-                        t += `Zoned Clients: ${zonedClients.length}`
                         t += `Active Screen: ${activeScreen}`
                         return t
                     } else {
@@ -595,9 +624,22 @@ PlasmaCore.Dialog {
         Connections {
             target: workspace
 
-            function onClientActivated(client) {
-                if (client) console.log("KZones: Client activated: " + client.resourceClass.toString())
+            function onClientAdded(client) {
+                // check if new window spawns in a zone
+                if (client.zone == undefined || client.zone == -1) {
+                    matchZone(client)
+                }
             }
+
+            function onClientActivated(client) {
+                if (client) {
+                    console.log("KZones: Client activated: " + client.resourceClass.toString() + " (zone " + client.zone + ")");
+                }
+            }
+
+            // unused, but may be useful in the future
+            // function onClientFullScreenSet(client, fullscreen, user) { }
+            // function onVirtualScreenSizeChanged(){ }
         }
 
         // options connection
