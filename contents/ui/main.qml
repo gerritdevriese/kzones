@@ -143,7 +143,7 @@ PlasmaCore.Dialog {
             let zoneY = clientArea.y + ((zone.y / 100) * (clientArea.height - zone_padding)) + zone_padding
             let zoneWidth = ((zone.width / 100) * (clientArea.width - zone_padding)) - zone_padding
             let zoneHeight = ((zone.height / 100) * (clientArea.height - zone_padding)) - zone_padding
-            if (client.geometry.x >= zoneX && client.geometry.y >= zoneY && client.geometry.width <= zoneWidth && client.geometry.height <= zoneHeight) {
+            if (client.geometry.x == zoneX && client.geometry.y == zoneY && client.geometry.width == zoneWidth && client.geometry.height == zoneHeight) {
                 // zone found, set it and exit the loop
                 client.zone = i
                 break
