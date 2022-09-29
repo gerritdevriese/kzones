@@ -198,6 +198,21 @@ PlasmaCore.Dialog {
         
         console.log("KZones: Moving client " + client.resourceClass.toString() + " to zone " + zone)
 
+        saveWindowGeometries(client, zone)
+
+        // move client to zone
+        if (zone != -1) {
+            let targetZone = repeater_zones.model[zone]
+            let zone_padding = config.layouts[currentLayout].padding || 0
+            client.geometry = Qt.rect(((targetZone.x / 100) * (clientArea.width - zone_padding) + (clientArea.x + zone_padding / 2)) + zone_padding / 2, ((targetZone.y / 100) * (clientArea.height - zone_padding) + (clientArea.y + zone_padding / 2)) + zone_padding / 2, ((targetZone.width / 100) * (clientArea.width - zone_padding)) - zone_padding, ((targetZone.height / 100) * (clientArea.height - zone_padding)) - zone_padding)
+        }
+        
+        // save zone
+        client.zone = zone
+    }
+
+    function saveWindowGeometries(client, zone) {
+        console.log("KZones: Saving geometry for client " + client.resourceClass.toString())
         // save current geometry
         if (config.rememberWindowGeometries) {
             let geometry = {
@@ -210,33 +225,20 @@ PlasmaCore.Dialog {
             const index = oldWindowGeometries.findIndex((object) => {
                 return object.windowId === client.windowId
             })
-            if (highlightedZone != -1) {
-                let higlightedZone = repeater_zones.model[highlightedZone]
-                geometry.center_x = ((higlightedZone.x / 100) * clientArea.width + clientArea.x) + (higlightedZone.width / 100) * clientArea.width / 2
-                geometry.center_y = ((higlightedZone.y / 100) * clientArea.height + clientArea.y) + (higlightedZone.height / 100) * clientArea.height / 2
-                geometry.zone_x = ((higlightedZone.x / 100) * clientArea.width + clientArea.x)
-                geometry.zone_y = ((higlightedZone.y / 100) * clientArea.height + clientArea.y)
-                if (index > -1) {
-                    console.log("KZones: Overwriting geometry for " + client.resourceClass.toString() + " " + JSON.stringify(oldWindowGeometries[index]))
-                    oldWindowGeometries[index] = geometry
-                } else {
-                    oldWindowGeometries.push(geometry)
-                    console.log("KZones: Saving geometry for " + client.resourceClass.toString() + ", array size: " + oldWindowGeometries.length)
-                }
+            if (zone != -1) {
+                if (client.zone == -1) {
+                    if (index > -1) {
+                        console.log("KZones: Overwriting geometry for " + client.resourceClass.toString() + " " + JSON.stringify(oldWindowGeometries[index]))
+                        oldWindowGeometries[index] = geometry
+                    } else {
+                        oldWindowGeometries.push(geometry)
+                        console.log("KZones: Saving geometry for " + client.resourceClass.toString() + ", array size: " + oldWindowGeometries.length)
+                    }
+                }                
             } else {
                 oldWindowGeometries.splice(index, 1)
             }
         }
-
-        // move client to zone
-        if (zone != -1) {
-            let targetZone = repeater_zones.model[zone]
-            let zone_padding = config.layouts[currentLayout].padding || 0
-            client.geometry = Qt.rect(((targetZone.x / 100) * (clientArea.width - zone_padding) + (clientArea.x + zone_padding / 2)) + zone_padding / 2, ((targetZone.y / 100) * (clientArea.height - zone_padding) + (clientArea.y + zone_padding / 2)) + zone_padding / 2, ((targetZone.width / 100) * (clientArea.width - zone_padding)) - zone_padding, ((targetZone.height / 100) * (clientArea.height - zone_padding)) - zone_padding)
-        }
-        
-        // save zone
-        client.zone = zone
     }
 
     // fade in animation
@@ -688,7 +690,13 @@ PlasmaCore.Dialog {
                             })
                             if (index > -1) {
                                 let geometry = oldWindowGeometries[index]
-                                client.geometry = Qt.rect((r.x - geometry.zone_x) + (geometry.center_x - geometry.width / 2), r.y, geometry.width, geometry.height)
+                                //get center of zone
+                                let zone = config.layouts[currentLayout].zones[client.zone]
+                                console.log("KZones: From Zone: " + client.zone)
+                                let zoneCenterX = (zone.x + (zone.width / 2)) / 100 * clientArea.width
+                                let zoneX = ((zone.x / 100) * clientArea.width + clientArea.x)
+                                console.log("KZones: Zone Center X: " + zoneCenterX)
+                                client.geometry = Qt.rect((r.x - zoneX) + (zoneCenterX - geometry.width / 2), r.y, geometry.width, geometry.height)
                             }
                         }
                     }
