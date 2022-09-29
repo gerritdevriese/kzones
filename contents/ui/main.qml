@@ -23,6 +23,7 @@ PlasmaCore.Dialog {
     property bool moving: false
     property bool resizing: false
     property var clientArea: {}
+    property var cachedClientArea: {}
     property int currentLayout: 0
     property int highlightedZone: -1
     property var oldWindowGeometries: []
@@ -663,6 +664,8 @@ PlasmaCore.Dialog {
             function onClientStartUserMovedResized(client) {
                 if (client.resizeable) {
                     if (client.move && checkFilter(client)) {
+                        refreshClientArea()
+                        cachedClientArea = clientArea
                         moving = true
                         resizing = false
                         hideOSD.running = false
@@ -680,22 +683,20 @@ PlasmaCore.Dialog {
 
             // is moving
             function onClientStepUserMovedResized(client, r) {
+                
                 if (client.resizeable) {
                     if (moving && checkFilter(client)) {
                         // refresh client area
                         refreshClientArea()
-                        if (config.rememberWindowGeometries) {
+                        if (config.rememberWindowGeometries && client.zone != -1) {
                             const index = oldWindowGeometries.findIndex((object) => {
                                 return object.windowId === client.windowId
                             })
                             if (index > -1) {
                                 let geometry = oldWindowGeometries[index]
-                                //get center of zone
                                 let zone = config.layouts[client.layout].zones[client.zone]
-                                console.log("KZones: From Zone: " + client.zone)
-                                let zoneCenterX = (zone.x + (zone.width / 2)) / 100 * clientArea.width
-                                let zoneX = ((zone.x / 100) * clientArea.width + clientArea.x)
-                                console.log("KZones: Zone Center X: " + zoneCenterX)
+                                let zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x
+                                let zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x)
                                 client.geometry = Qt.rect((r.x - zoneX) + (zoneCenterX - geometry.width / 2), r.y, geometry.width, geometry.height)
                             }
                         }
