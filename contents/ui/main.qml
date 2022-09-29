@@ -146,6 +146,7 @@ PlasmaCore.Dialog {
             if (client.geometry.x == zoneX && client.geometry.y == zoneY && client.geometry.width == zoneWidth && client.geometry.height == zoneHeight) {
                 // zone found, set it and exit the loop
                 client.zone = i
+                client.zone = currentLayout
                 break
             }
         }
@@ -209,6 +210,7 @@ PlasmaCore.Dialog {
         
         // save zone
         client.zone = zone
+        client.layout = currentLayout
     }
 
     function saveWindowGeometries(client, zone) {
@@ -235,8 +237,6 @@ PlasmaCore.Dialog {
                         console.log("KZones: Saving geometry for " + client.resourceClass.toString() + ", array size: " + oldWindowGeometries.length)
                     }
                 }                
-            } else {
-                oldWindowGeometries.splice(index, 1)
             }
         }
     }
@@ -691,7 +691,7 @@ PlasmaCore.Dialog {
                             if (index > -1) {
                                 let geometry = oldWindowGeometries[index]
                                 //get center of zone
-                                let zone = config.layouts[currentLayout].zones[client.zone]
+                                let zone = config.layouts[client.layout].zones[client.zone]
                                 console.log("KZones: From Zone: " + client.zone)
                                 let zoneCenterX = (zone.x + (zone.width / 2)) / 100 * clientArea.width
                                 let zoneX = ((zone.x / 100) * clientArea.width + clientArea.x)
