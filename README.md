@@ -198,6 +198,9 @@ You can block certain windows from snapping by adding their class name to the ex
 #### Polling rate
 The polling rate is the amount of time between each zone check when dragging a window. The default is 100ms, a faster polling rate is more accurate but will use more CPU. You can change this to your liking.
 
+#### Inverted mode
+When enabled, moving windows will not trigger the osd. Instead you'll have to use the "Toggle OSD" shortcut to show the osd.
+
 ## Shortcuts
 List of all available shortcuts:
 | Shortcut                                      | Default Binding           |
