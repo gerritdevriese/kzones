@@ -28,6 +28,7 @@ PlasmaCore.Dialog {
     property int highlightedZone: -1
     property var oldWindowGeometries: []
     property int activeScreen: 0
+    property bool invertedMode: false
 
     // colors
     property string color_zone_border: "transparent"
@@ -208,10 +209,6 @@ PlasmaCore.Dialog {
             let zone_padding = config.layouts[currentLayout].padding || 0
             client.geometry = Qt.rect(((targetZone.x / 100) * (clientArea.width - zone_padding) + (clientArea.x + zone_padding / 2)) + zone_padding / 2, ((targetZone.y / 100) * (clientArea.height - zone_padding) + (clientArea.y + zone_padding / 2)) + zone_padding / 2, ((targetZone.width / 100) * (clientArea.width - zone_padding)) - zone_padding, ((targetZone.height / 100) * (clientArea.height - zone_padding)) - zone_padding)
         }
-        
-        // save zone
-        client.zone = zone
-        client.layout = currentLayout
     }
 
     function saveWindowGeometries(client, zone) {
@@ -240,6 +237,9 @@ PlasmaCore.Dialog {
                 }                
             }
         }
+        // save zone
+        client.zone = zone
+        client.layout = currentLayout
     }
 
     // fade in animation
@@ -670,7 +670,7 @@ PlasmaCore.Dialog {
                         resizing = false
                         hideOSD.running = false
                         console.log("KZones: Move start " + client.resourceClass.toString())
-                        mainDialog.show()
+                        if (!invertedMode) mainDialog.show()
                         timer.running = true
                     }
                     if (client.resize) {
@@ -711,9 +711,12 @@ PlasmaCore.Dialog {
             function onClientFinishUserMovedResized(client) {
                 if (moving) {
                     console.log("Kzones: Move end " + client.resourceClass.toString())
-                    mainDialog.hide()
                     timer.running = false
-                    moveClientToZone(client, highlightedZone)
+                    if (shown) {
+                        moveClientToZone(client, highlightedZone)
+                    } else {
+                        saveWindowGeometries(client, -1)
+                    }                    
                     hide()
                 }
                 if (resizing) {
