@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>700</width>
-    <height>574</height>
+    <height>616</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -87,6 +87,13 @@
         <widget class="QCheckBox" name="kcfg_alwaysShowLayoutName">
          <property name="text">
           <string>Always show layout name</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="kcfg_invertedMode">
+         <property name="text">
+          <string>Inverted mode</string>
          </property>
         </widget>
        </item>
