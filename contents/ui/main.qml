@@ -17,19 +17,17 @@ PlasmaCore.Dialog {
     opacity: 0 // hide dialog on startup
     outputOnly: true // makes dialog click-through
 
-    // temp
-    property bool inverted: false
-
     // properties
     property var config: {}
     property bool shown: false
     property bool moving: false
     property bool resizing: false
     property var clientArea: {}
+    property var cachedClientArea: {}
     property int currentLayout: 0
     property int highlightedZone: -1
     property var oldWindowGeometries: []
-    property var zonedClients: []
+    property int activeScreen: 0
 
     // colors
     property string color_zone_border: "transparent"
@@ -60,7 +58,9 @@ PlasmaCore.Dialog {
             filterList: KWin.readConfig("filterList", ""), // filter list
             fadeDuration: KWin.readConfig("fadeDuration", 150), // animation duration in milliseconds
             osdTimeout: KWin.readConfig("osdTimeout", 2000), // timeout in milliseconds for hiding the OSD after switching layouts
-            layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')) // layouts
+            layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')), // layouts
+            alternateIndicatorStyle: KWin.readConfig("alternateIndicatorStyle", false), // alternate indicator style
+            invertedMode: KWin.readConfig("invertedMode", false), // inverted mode
         }
 
         console.log("KZones: Config loaded: " + JSON.stringify(config))
@@ -90,6 +90,7 @@ PlasmaCore.Dialog {
     }
 
     function refreshClientArea() {
+        activeScreen = workspace.activeScreen
         clientArea = workspace.clientArea(KWin.FullScreenArea, workspace.activeScreen, workspace.currentDesktop)
     }
 
@@ -132,27 +133,50 @@ PlasmaCore.Dialog {
 
     }
 
-    function getZone(client) {
-        const index = zonedClients.findIndex((object) => {
-            return object.client.windowId === client.windowId
-        })
-        if (index > -1) {
-            return zonedClients[index].zone
-        } else {
-            return -1
+    function matchZone(client) {
+        client.zone = -1
+        // get all zones in the current layout
+        let zones = config.layouts[currentLayout].zones
+        // loop through zones and compare with the geometries of the client
+        for (let i = 0; i < zones.length; i++) {
+            let zone = zones[i]
+            let zone_padding = config.layouts[currentLayout].padding || 0
+            let zoneX = clientArea.x + ((zone.x / 100) * (clientArea.width - zone_padding)) + zone_padding
+            let zoneY = clientArea.y + ((zone.y / 100) * (clientArea.height - zone_padding)) + zone_padding
+            let zoneWidth = ((zone.width / 100) * (clientArea.width - zone_padding)) - zone_padding
+            let zoneHeight = ((zone.height / 100) * (clientArea.height - zone_padding)) - zone_padding
+            if (client.geometry.x == zoneX && client.geometry.y == zoneY && client.geometry.width == zoneWidth && client.geometry.height == zoneHeight) {
+                // zone found, set it and exit the loop
+                client.zone = i
+                client.zone = currentLayout
+                break
+            }
         }
     }
 
-    function setZone(client, zone) {
-        const index = zonedClients.findIndex((object) => {
-            return object.client.windowId === client.windowId
-        })
-        if (index > -1) {
-            console.log("KZones: Updating zone for client " + client.windowId + " to " + zone)
-            zonedClients[index].zone = zone
-        } else {
-            console.log("KZones: Adding client " + client.windowId + " to zone " + zone)
-            zonedClients.push({client: {windowId: client.windowId}, zone: zone})
+    function getWindowsInZone(zone) {
+        let windows = []
+        for (let i = 0; i < workspace.clientList().length; i++) {
+            let client = workspace.clientList()[i]
+            if (client.zone === zone && client.normalWindow) windows.push(client)
+        }
+        return windows
+    }
+
+    function switchWindowInZone(zone, reverse) {
+
+        let clientsInZone = getWindowsInZone(zone)
+
+        if (reverse) { clientsInZone.reverse() }
+
+        // cycle through clients in zone
+        if (clientsInZone.length > 0) {
+            let index = clientsInZone.indexOf(workspace.activeClient)
+            if (index === -1) {
+                workspace.activeClient = clientsInZone[0]
+            } else {
+                workspace.activeClient = clientsInZone[(index + 1) % clientsInZone.length]
+            }
         }
     }
 
@@ -172,11 +196,23 @@ PlasmaCore.Dialog {
 
     function moveClientToZone(client, zone) {
 
-        // block plasmashell from being moved
-        if (client.resourceClass.toString() === "plasmashell") return
+        // block abnormal windows from being moved (like plasmashell, docks, etc...)
+        if (!client.normalWindow) return
         
         console.log("KZones: Moving client " + client.resourceClass.toString() + " to zone " + zone)
 
+        saveWindowGeometries(client, zone)
+
+        // move client to zone
+        if (zone != -1) {
+            let targetZone = repeater_zones.model[zone]
+            let zone_padding = config.layouts[currentLayout].padding || 0
+            client.geometry = Qt.rect(((targetZone.x / 100) * (clientArea.width - zone_padding) + (clientArea.x + zone_padding / 2)) + zone_padding / 2, ((targetZone.y / 100) * (clientArea.height - zone_padding) + (clientArea.y + zone_padding / 2)) + zone_padding / 2, ((targetZone.width / 100) * (clientArea.width - zone_padding)) - zone_padding, ((targetZone.height / 100) * (clientArea.height - zone_padding)) - zone_padding)
+        }
+    }
+
+    function saveWindowGeometries(client, zone) {
+        console.log("KZones: Saving geometry for client " + client.resourceClass.toString())
         // save current geometry
         if (config.rememberWindowGeometries) {
             let geometry = {
@@ -189,33 +225,21 @@ PlasmaCore.Dialog {
             const index = oldWindowGeometries.findIndex((object) => {
                 return object.windowId === client.windowId
             })
-            if (highlightedZone != -1) {
-                let higlightedZone = repeater_zones.model[highlightedZone]
-                geometry.center_x = ((higlightedZone.x / 100) * clientArea.width + clientArea.x) + (higlightedZone.width / 100) * clientArea.width / 2
-                geometry.center_y = ((higlightedZone.y / 100) * clientArea.height + clientArea.y) + (higlightedZone.height / 100) * clientArea.height / 2
-                geometry.zone_x = ((higlightedZone.x / 100) * clientArea.width + clientArea.x)
-                geometry.zone_y = ((higlightedZone.y / 100) * clientArea.height + clientArea.y)
-                if (index > -1) {
-                    console.log("KZones: Overwriting geometry for " + client.resourceClass.toString() + " " + JSON.stringify(oldWindowGeometries[index]))
-                    oldWindowGeometries[index] = geometry
-                } else {
-                    oldWindowGeometries.push(geometry)
-                    console.log("KZones: Saving geometry for " + client.resourceClass.toString() + ", array size: " + oldWindowGeometries.length)
-                }
-            } else {
-                oldWindowGeometries.splice(index, 1)
+            if (zone != -1) {
+                if (client.zone == -1) {
+                    if (index > -1) {
+                        console.log("KZones: Overwriting geometry for " + client.resourceClass.toString() + " " + JSON.stringify(oldWindowGeometries[index]))
+                        oldWindowGeometries[index] = geometry
+                    } else {
+                        oldWindowGeometries.push(geometry)
+                        console.log("KZones: Saving geometry for " + client.resourceClass.toString() + ", array size: " + oldWindowGeometries.length)
+                    }
+                }                
             }
         }
-
-        // move client to zone
-        if (zone != -1) {
-            let targetZone = repeater_zones.model[zone]
-            let zone_padding = config.layouts[currentLayout].padding || 0
-            client.geometry = Qt.rect(((targetZone.x / 100) * (clientArea.width - zone_padding) + (clientArea.x + zone_padding / 2)) + zone_padding / 2, ((targetZone.y / 100) * (clientArea.height - zone_padding) + (clientArea.y + zone_padding / 2)) + zone_padding / 2, ((targetZone.width / 100) * (clientArea.width - zone_padding)) - zone_padding, ((targetZone.height / 100) * (clientArea.height - zone_padding)) - zone_padding)
-        }
-        
         // save zone
-        setZone(client, zone)
+        client.zone = zone
+        client.layout = currentLayout
     }
 
     // fade in animation
@@ -273,32 +297,44 @@ PlasmaCore.Dialog {
 
         // shortcut: move to next zone
         bindShortcut("Move active window to next zone", "Ctrl+Alt+Right", function() {
-            moveClientToZone(workspace.activeClient, (getZone(workspace.activeClient) + 1) % config.layouts[currentLayout].zones.length)
+            moveClientToZone(workspace.activeClient, (workspace.activeClient.zone + 1) % config.layouts[currentLayout].zones.length)
         })
 
         // shortcut: move to previous zone
         bindShortcut("Move active window to previous zone", "Ctrl+Alt+Left", function() {
-            moveClientToZone(workspace.activeClient, (getZone(workspace.activeClient) - 1 + config.layouts[currentLayout].zones.length) % config.layouts[currentLayout].zones.length)
+            moveClientToZone(workspace.activeClient, (workspace.activeClient.zone - 1 + config.layouts[currentLayout].zones.length) % config.layouts[currentLayout].zones.length)
         })
 
         // shortcut: toggle osd
         bindShortcut("Toggle OSD", "Ctrl+Alt+C", function() {
-            if (!inverted) {
-                if (!shown) {
-                    highlightedZone = -1
-                    mainDialog.outputOnly = false
-                    show()
-                } else {
-                    moving = false
-                    hide()
-                }
+            if (!shown) {
+                highlightedZone = -1
+                mainDialog.outputOnly = false
+                show()
             } else {
-                // inverted mode
+                moving = false
+                hide()
             }
-            
+        })
+
+        // shortcut: switch to next window in current zone
+        bindShortcut("Switch to next window in current zone", "Ctrl+Alt+Up", function() {
+            let zone = workspace.activeClient.zone
+            switchWindowInZone(zone)
+        })
+
+        // shortcut: switch to previous window in current zone
+        bindShortcut("Switch to previous window in current zone", "Ctrl+Alt+Down", function() {
+            let zone = workspace.activeClient.zone
+            switchWindowInZone(zone, true)
         })
 
         mainDialog.loadConfig()
+
+        // match all clients to zones
+        for (var i = 0; i < workspace.clientList().length; i++) {
+            matchZone(workspace.clientList()[i])
+        }
     }
 
     function bindShortcut(title, sequence, callback) {
@@ -435,7 +471,7 @@ PlasmaCore.Dialog {
                         t += `Active: ${workspace.activeClient.caption}\n`
                         t += `Window class: ${workspace.activeClient.resourceClass.toString()}\n`
                         t += `X: ${workspace.activeClient.geometry.x}, Y: ${workspace.activeClient.geometry.y}, Width: ${workspace.activeClient.geometry.width}, Height: ${workspace.activeClient.geometry.height}\n`
-                        t += `Previous Zone: ${getZone(workspace.activeClient)}\n`
+                        t += `Previous Zone: ${workspace.activeClient.zone}\n`
                         t += `Highlighted Zone: ${highlightedZone}\n`
                         t += `Layout: ${currentLayout}\n`
                         t += `Zones: ${config.layouts[currentLayout].zones.map(z => z.name).join(', ')}\n`
@@ -446,8 +482,7 @@ PlasmaCore.Dialog {
                         t += `Moving: ${moving}\n`
                         t += `Resizing: ${resizing}\n`
                         t += `Old Window Geometries: ${oldWindowGeometries.length}\n`
-                        t += `Zoned Clients: ${zonedClients.length}`
-                        //t += `Current Screen: ${workspace.activeScreen}`
+                        t += `Active Screen: ${activeScreen}`
                         return t
                     } else {
                         return ""
@@ -507,7 +542,8 @@ PlasmaCore.Dialog {
                     id: indicator
                     width: 160 //180 // TODO: make configurable (indicatorWidth)
                     height: 90 //100 // TODO: make configurable (indicatorHeight)
-                    color: 'transparent'
+                    radius: 5
+                    color: config.alternateIndicatorStyle ? color_indicator : 'transparent'
                     anchors {
                         horizontalCenter: parent.horizontalCenter
                         horizontalCenterOffset: (((modelData || {}).indicator || {}).offset || {}).x || 0
@@ -537,8 +573,9 @@ PlasmaCore.Dialog {
                         model: config.layouts[currentLayout].zones
 
                         Rectangle {
-                            property int padding: 3
+                            property int padding: config.alternateIndicatorStyle ? 0 : 3
                             radius: 5
+                            visible: config.alternateIndicatorStyle ? ((index == zone.zoneIndex) ? true : false) : true
                             x: ((modelData.x / 100) * (indicator.width - padding)) + padding
                             y: ((modelData.y / 100) * (indicator.height - padding)) + padding
                             z: (index == zone.zoneIndex) ? 2 : 1
@@ -590,9 +627,22 @@ PlasmaCore.Dialog {
         Connections {
             target: workspace
 
-            function onClientActivated(client) {
-                if (client) console.log("KZones: Client activated: " + client.resourceClass.toString())
+            function onClientAdded(client) {
+                // check if new window spawns in a zone
+                if (client.zone == undefined || client.zone == -1) {
+                    matchZone(client)
+                }
             }
+
+            function onClientActivated(client) {
+                if (client) {
+                    console.log("KZones: Client activated: " + client.resourceClass.toString() + " (zone " + client.zone + ")");
+                }
+            }
+
+            // unused, but may be useful in the future
+            // function onClientFullScreenSet(client, fullscreen, user) { }
+            // function onVirtualScreenSizeChanged(){ }
         }
 
         // options connection
@@ -614,11 +664,13 @@ PlasmaCore.Dialog {
             function onClientStartUserMovedResized(client) {
                 if (client.resizeable) {
                     if (client.move && checkFilter(client)) {
+                        refreshClientArea()
+                        cachedClientArea = clientArea
                         moving = true
                         resizing = false
                         hideOSD.running = false
                         console.log("KZones: Move start " + client.resourceClass.toString())
-                        mainDialog.show()
+                        if (!config.invertedMode) mainDialog.show()
                         timer.running = true
                     }
                     if (client.resize) {
@@ -631,17 +683,21 @@ PlasmaCore.Dialog {
 
             // is moving
             function onClientStepUserMovedResized(client, r) {
+                
                 if (client.resizeable) {
                     if (moving && checkFilter(client)) {
                         // refresh client area
                         refreshClientArea()
-                        if (config.rememberWindowGeometries) {
+                        if (config.rememberWindowGeometries && client.zone != -1) {
                             const index = oldWindowGeometries.findIndex((object) => {
                                 return object.windowId === client.windowId
                             })
                             if (index > -1) {
                                 let geometry = oldWindowGeometries[index]
-                                client.geometry = Qt.rect((r.x - geometry.zone_x) + (geometry.center_x - geometry.width / 2), r.y, geometry.width, geometry.height)
+                                let zone = config.layouts[client.layout].zones[client.zone]
+                                let zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x
+                                let zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x)
+                                client.geometry = Qt.rect((r.x - zoneX) + (zoneCenterX - geometry.width / 2), r.y, geometry.width, geometry.height)
                             }
                         }
                     }
@@ -655,9 +711,12 @@ PlasmaCore.Dialog {
             function onClientFinishUserMovedResized(client) {
                 if (moving) {
                     console.log("Kzones: Move end " + client.resourceClass.toString())
-                    mainDialog.hide()
                     timer.running = false
-                    moveClientToZone(client, highlightedZone)
+                    if (shown) {
+                        moveClientToZone(client, highlightedZone)
+                    } else {
+                        saveWindowGeometries(client, -1)
+                    }                    
                     hide()
                 }
                 if (resizing) {

@@ -198,15 +198,20 @@ You can block certain windows from snapping by adding their class name to the ex
 #### Polling rate
 The polling rate is the amount of time between each zone check when dragging a window. The default is 100ms, a faster polling rate is more accurate but will use more CPU. You can change this to your liking.
 
+#### Inverted mode
+When enabled, moving windows will not trigger the osd. Instead you'll have to use the "Toggle OSD" shortcut to show the osd.
+
 ## Shortcuts
 List of all available shortcuts:
-| Shortcut                             | Default Binding           |
-|--------------------------------------|---------------------------|
-| Move active window to zone           | `Ctrl+Alt+[0-9]`          |
-| Move active window to previous zone  | `Ctrl+Alt+Left`           |
-| Move active window to next zone      | `Ctrl+Alt+Right`          |
-| Cycle between layouts                | `Ctrl+Alt+D`              |
-| Toggle OSD                           | `Ctrl+Alt+C`              |
+| Shortcut                                      | Default Binding           |
+|-----------------------------------------------|---------------------------|
+| Move active window to zone                    | `Ctrl+Alt+[0-9]`          |
+| Move active window to previous zone           | `Ctrl+Alt+Left`           |
+| Move active window to next zone               | `Ctrl+Alt+Right`          |
+| Switch to previous window in current zone     | `Ctrl+Alt+Down`           |
+| Switch to next window in current zone         | `Ctrl+Alt+Up`             |
+| Cycle between layouts                         | `Ctrl+Alt+D`              |
+| Toggle OSD                                    | `Ctrl+Alt+C`              |
 
 *To change the default bindings, go to System Settings / Shortcuts and search for KZones*
 
