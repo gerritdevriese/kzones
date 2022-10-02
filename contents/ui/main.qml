@@ -26,7 +26,6 @@ PlasmaCore.Dialog {
     property var cachedClientArea: {}
     property int currentLayout: 0
     property int highlightedZone: -1
-    property var oldWindowGeometries: []
     property int activeScreen: 0
 
     // colors
@@ -216,24 +215,14 @@ PlasmaCore.Dialog {
         // save current geometry
         if (config.rememberWindowGeometries) {
             let geometry = {
-                "windowId": client.windowId,
                 "x": client.geometry.x,
                 "y": client.geometry.y,
                 "width": client.geometry.width,
                 "height": client.geometry.height
             }
-            const index = oldWindowGeometries.findIndex((object) => {
-                return object.windowId === client.windowId
-            })
             if (zone != -1) {
                 if (client.zone == -1) {
-                    if (index > -1) {
-                        console.log("KZones: Overwriting geometry for " + client.resourceClass.toString() + " " + JSON.stringify(oldWindowGeometries[index]))
-                        oldWindowGeometries[index] = geometry
-                    } else {
-                        oldWindowGeometries.push(geometry)
-                        console.log("KZones: Saving geometry for " + client.resourceClass.toString() + ", array size: " + oldWindowGeometries.length)
-                    }
+                    client.oldGeometry = geometry
                 }                
             }
         }
@@ -481,7 +470,7 @@ PlasmaCore.Dialog {
                         t += `Handle X: ${handle.x}, Y: ${handle.y}, Width: ${handle.width}, Height: ${handle.height}\n`
                         t += `Moving: ${moving}\n`
                         t += `Resizing: ${resizing}\n`
-                        t += `Old Window Geometries: ${oldWindowGeometries.length}\n`
+                        t += `Old Geometry: ${JSON.stringify(workspace.activeClient.oldGeometry)}\n`
                         t += `Active Screen: ${activeScreen}`
                         return t
                     } else {
@@ -689,11 +678,8 @@ PlasmaCore.Dialog {
                         // refresh client area
                         refreshClientArea()
                         if (config.rememberWindowGeometries && client.zone != -1) {
-                            const index = oldWindowGeometries.findIndex((object) => {
-                                return object.windowId === client.windowId
-                            })
-                            if (index > -1) {
-                                let geometry = oldWindowGeometries[index]
+                            if (client.oldGeometry) {
+                                let geometry = client.oldGeometry
                                 let zone = config.layouts[client.layout].zones[client.zone]
                                 let zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x
                                 let zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x)
