@@ -7,6 +7,8 @@ import org.kde.kwin 2.0
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.core 2.0 as PlasmaCore
 
+import "components" as Components
+
 PlasmaCore.Dialog {
 
     id: mainDialog
@@ -27,17 +29,18 @@ PlasmaCore.Dialog {
     property int currentLayout: 0
     property int highlightedZone: -1
     property int activeScreen: 0
+    property bool doAnimations: true
 
     // colors
     property string color_zone_border: "transparent"
     property string color_zone_border_active: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.9)
     property string color_zone_background: "transparent"
     property string color_zone_background_active: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.1)
-    property string color_indicator: '#66555555'
-    property string color_indicator_accent: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.9)
-    property string color_indicator_shadow: "#55000000"
+    property string color_indicator: Qt.rgba(Kirigami.Theme.alternateBackgroundColor.r, Kirigami.Theme.alternateBackgroundColor.g, Kirigami.Theme.alternateBackgroundColor.b, 1) //'#66555555'
+    property string color_indicator_accent: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 1)
+    property string color_indicator_shadow: '#69000000'
     property string color_indicator_font: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 1)
-    property string color_debug_handle: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.9)    
+    property string color_debug_handle: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.9)  
 
     function loadConfig() {
         // load values from configuration
@@ -539,13 +542,14 @@ PlasmaCore.Dialog {
                 property int zoneIndex: index
                 property int zone_padding: config.layouts[currentLayout].padding || 0
 
-                // zone indicator
+                //! keep this the first child
                 Rectangle {
                     id: indicator
                     width: 160 //180 // TODO: make configurable (indicatorWidth)
                     height: 90 //100 // TODO: make configurable (indicatorHeight)
                     radius: 5
                     color: config.alternateIndicatorStyle ? color_indicator : 'transparent'
+                    opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 0.5
                     anchors {
                         horizontalCenter: parent.horizontalCenter
                         horizontalCenterOffset: (((modelData || {}).indicator || {}).offset || {}).x || 0
@@ -584,7 +588,11 @@ PlasmaCore.Dialog {
                             implicitWidth: ((modelData.width / 100) * (indicator.width - padding)) - padding
                             implicitHeight: ((modelData.height / 100) * (indicator.height - padding)) - padding
                             color: (index == zone.zoneIndex) ? color_indicator_accent : color_indicator
-                            opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 0.25 // TODO: add opacity to config
+                            // opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 1.0 // TODO: add opacity to config
+                            scale: (doAnimations) ? ((highlightedZone == zone.zoneIndex) ? ((index == zone.zoneIndex) ? 1.1 : 1) : 1.0) : 1
+                            Behavior on scale {
+                                NumberAnimation { duration: 150 }
+                            }
                         }
                     }
 
@@ -593,7 +601,7 @@ PlasmaCore.Dialog {
                         z: 3
                         anchors.fill: indicator
                         font.pixelSize: 20
-                        opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 0.25 // TODO: add opacity to config
+                        opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 0.5 // TODO: add opacity to config
                         color: color_indicator_font
                         leftPadding: 30
                         rightPadding: 30
@@ -608,17 +616,8 @@ PlasmaCore.Dialog {
                 }
 
                 // zone indicator shadow
-                DropShadow {
-                    id: rectShadow
-                    anchors.fill: indicator
-                    cached: true
-                    horizontalOffset: 0
-                    verticalOffset: 0
-                    radius: 16
-                    samples: 33
-                    color: color_indicator_shadow
-                    smooth: true
-                    source: indicator
+                Components.Shadow{
+                    target: indicator
                 }
 
             }
