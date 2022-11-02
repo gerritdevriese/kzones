@@ -1,6 +1,6 @@
 import QtGraphicalEffects 1.0
-import QtQuick 2.6
-import QtQuick.Controls 1.5
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.2
 import org.kde.kirigami 2.5 as Kirigami
 import org.kde.kwin 2.0
@@ -59,7 +59,7 @@ PlasmaCore.Dialog {
             filterMode: KWin.readConfig("filterMode", 0), // filter mode
             filterList: KWin.readConfig("filterList", ""), // filter list
             fadeDuration: KWin.readConfig("fadeDuration", 150), // animation duration in milliseconds
-            osdTimeout: KWin.readConfig("osdTimeout", 2000), // timeout in milliseconds for hiding the OSD after switching layouts
+            osdTimeout: KWin.readConfig("osdTimeout", 1000), // timeout in milliseconds for hiding the OSD after switching layouts
             layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')), // layouts
             alternateIndicatorStyle: KWin.readConfig("alternateIndicatorStyle", false), // alternate indicator style
             invertedMode: KWin.readConfig("invertedMode", false), // inverted mode
@@ -77,18 +77,17 @@ PlasmaCore.Dialog {
         mainItem.height = workspace.displayHeight
         // show OSD
         if (!mainDialog.shown) {
-            showAnimation.start()
+            mainDialog.opacity = 1
             mainDialog.shown = true
+            highlightedZone = -1
         }        
     }
 
     function hide() {
         // hide OSD
-        if (mainDialog.shown) {
-            hideAnimation.start() 
-            mainDialog.shown = false
-            mainDialog.outputOnly = true
-        }
+        mainDialog.opacity = 0
+        mainDialog.shown = false
+        mainDialog.outputOnly = true
     }
 
     function refreshClientArea() {
@@ -240,20 +239,13 @@ PlasmaCore.Dialog {
         client.layout = currentLayout
     }
 
-    // fade in animation
-    NumberAnimation on opacity {
-        id: showAnimation
-        from: 0
-        to: 1
-        duration: config.fadeDuration
-    }
-
-    // fade out animation
-    NumberAnimation on opacity {
-        id: hideAnimation
-        from: 1
-        to: 0
-        duration: config.fadeDuration
+    Behavior on opacity {
+        NumberAnimation { 
+            duration: config.fadeDuration
+            onRunningChanged: {
+                mainDialog.visible = running || shown
+            }
+        }
     }
 
     Component.onCompleted: {
@@ -262,15 +254,7 @@ PlasmaCore.Dialog {
         KWin.registerWindow(mainDialog)
 
         // refresh client area
-        refreshClientArea()
-
-        // delay the initialization of the overlay until the workspace is ready
-        delay.setTimeout(function() {
-            mainDialog.visible = true
-            mainDialog.opacity = 0
-            console.log("KZones: Ready!")
-        }, 1000)
-        
+        refreshClientArea()        
         // shortcut: cycle through layouts
         bindShortcut("Cycle layouts", "Ctrl+Alt+D", function() {
             // reset timer to prevent osd from being hidden when switching layouts
@@ -306,11 +290,9 @@ PlasmaCore.Dialog {
         // shortcut: toggle osd
         bindShortcut("Toggle OSD", "Ctrl+Alt+C", function() {
             if (!shown) {
-                highlightedZone = -1
                 mainDialog.outputOnly = false
                 show()
             } else {
-                moving = false
                 hide()
             }
         })
@@ -333,6 +315,8 @@ PlasmaCore.Dialog {
         for (var i = 0; i < workspace.clientList().length; i++) {
             matchZone(workspace.clientList()[i])
         }
+
+        console.log("KZones: Ready!")
     }
 
     function bindShortcut(title, sequence, callback) {
@@ -344,29 +328,44 @@ PlasmaCore.Dialog {
         width: 420
         height: 69
 
-        PlasmaCore.DataSource {
-            id: mouseSource
-            engine: "mouse"
-            interval: shown ? config.pollingRate : 0
-            connectedSources: ["Position"]
-
-            property int pos_x: 0
-            property int pos_y: 0
-
-            onNewData: {
+        // main polling timer
+        Timer {
+            id: timer
+            triggeredOnStart: true
+            interval: config.pollingRate
+            running: shown && moving
+            repeat: true
+            
+            onTriggered: {
                 switch (config.targetMethod) {
                     case 0: // titlebar
                     case 1: // window
                         checkZone(handle.x, handle.y, handle.width, handle.height)
                         break
                     case 2: // cursor
-                        pos_x = mouseSource.data.Position.Position.x
-                        pos_y = mouseSource.data.Position.Position.y
-                        checkZone(pos_x, pos_y)
+                        let position = mouseSource.getPosition()
+                        checkZone(position.x, position.y)
                         break
                     default:
                         break
-                }                
+                }
+            }
+        }
+
+        PlasmaCore.DataSource {
+            id: mouseSource
+            engine: "mouse"
+
+            property var position: null
+
+            function getPosition() {
+                mouseSource.connectSource("Position")
+                return position
+            }
+
+            onNewData: {
+                position = mouseSource.data.Position.Position
+                disconnectSource(sourceName);   
             }
         }
 
@@ -555,7 +554,7 @@ PlasmaCore.Dialog {
                             highlightedZone = zone.zoneIndex
                         }
                         onExited: {
-                            highlightedZone = -1
+                            if (shown) highlightedZone = -1
                         }
                     }
 
