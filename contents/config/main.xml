@@ -46,8 +46,8 @@
             <default>100</default>
         </entry>
 
-        <entry name="targetMethod" type="String">
-            <default>0</default>
+        <entry name="targetMethod" type="Int">
+            <default>2</default>
         </entry>
 
         <entry name="handleUnitPercent" type="Bool">

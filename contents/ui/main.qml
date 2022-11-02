@@ -51,7 +51,7 @@ PlasmaCore.Dialog {
             alwaysShowLayoutName: KWin.readConfig("alwaysShowLayoutName", false), // always show layout name, or only when switching between them
             pollingRate: KWin.readConfig("pollingRate", 100), // polling rate in milliseconds
             zoneTarget: KWin.readConfig("zoneTarget", 0), // the part of the zone you need to hover over to highlight it
-            targetMethod: KWin.readConfig("targetMethod", 0), // method to determine in which zone the window is located
+            targetMethod: KWin.readConfig("targetMethod", 2), // method to determine in which zone the window is located
             handleUnitPercent: KWin.readConfig("handleUnitPercent", true), // method to determine in which zone the window is located
             handleUnitPixels: KWin.readConfig("handleUnitPixels", false), // method to determine in which zone the window is located (unused)
             handleSize: KWin.readConfig("handleSize", 100), // set the size of the handle, only applicable when target method is Titlebar or Window
@@ -96,7 +96,7 @@ PlasmaCore.Dialog {
         clientArea = workspace.clientArea(KWin.FullScreenArea, workspace.activeScreen, workspace.currentDesktop)
     }
 
-    function checkZone(x, y, width, height) {
+    function checkZone(x, y, width = 1, height = 1) {
         let arr = []
         for (let i = 0; i < repeater_zones.model.length; i++) {
             let zone
@@ -344,25 +344,29 @@ PlasmaCore.Dialog {
         width: 420
         height: 69
 
-        // xdotool
         PlasmaCore.DataSource {
-            id: xdotool
-            engine: "executable"
-            connectedSources: []
+            id: mouseSource
+            engine: "mouse"
+            interval: shown ? config.pollingRate : 0
+            connectedSources: ["Position"]
 
             property int pos_x: 0
             property int pos_y: 0
 
             onNewData: {
-                let data = xdotool.data["xdotool getmouselocation"].stdout.replace(/ /g, '\u003A').split('\u003A')
-                if (data.length > 1) {
-                    pos_x = Number(data[1])
-                    pos_y = Number(data[3])
-                } else {
-                    console.log("KZones: xdotool is not installed")
-                }
-                disconnectSource(sourceName)
-                checkZone(handle.x, handle.y, handle.width, handle.height)
+                switch (config.targetMethod) {
+                    case 0: // titlebar
+                    case 1: // window
+                        checkZone(handle.x, handle.y, handle.width, handle.height)
+                        break
+                    case 2: // cursor
+                        pos_x = mouseSource.data.Position.Position.x
+                        pos_y = mouseSource.data.Position.Position.y
+                        checkZone(pos_x, pos_y)
+                        break
+                    default:
+                        break
+                }                
             }
         }
 
@@ -387,29 +391,6 @@ PlasmaCore.Dialog {
             }
         }
 
-        // main polling timer
-        Timer {
-            id: timer
-            triggeredOnStart: true
-            interval: config.pollingRate
-            running: false
-            repeat: true
-
-            onTriggered: {
-                switch (config.targetMethod) {
-                case 0: // titlebar
-                case 1: // window
-                    checkZone(handle.x, handle.y, handle.width, handle.height)
-                    break
-                case 2: // cursor
-                    xdotool.connectSource('xdotool getmouselocation')
-                    break
-                default:
-                    break
-                }
-            }
-        }
-
         // debug handle
         Rectangle {
             id: handle
@@ -420,7 +401,7 @@ PlasmaCore.Dialog {
                     return (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
                 }
                 else {
-                    return 8
+                    return 32
                 }
             }
             height: {
@@ -431,7 +412,7 @@ PlasmaCore.Dialog {
                 else if (config.targetMethod == 1) {
                     return (config.handleUnitPercent) ? workspace.activeClient.height * (config.handleSize / 100) : config.handleSize
                 } else {
-                    return 8
+                    return 32
                 }
             }
             x: {
@@ -442,7 +423,7 @@ PlasmaCore.Dialog {
                     let centerpadding_width = (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
                     return ((workspace.activeClient.x + workspace.activeClient.width / 2)) - centerpadding_width / 2
                 } else {
-                    return xdotool.pos_x - 4
+                    return mouseSource.pos_x - 16
                 }
             }
             y: {
@@ -453,7 +434,7 @@ PlasmaCore.Dialog {
                     let centerpadding_height = (config.handleUnitPercent) ? workspace.activeClient.height * (config.handleSize / 100) : config.handleSize
                     return ((workspace.activeClient.y + workspace.activeClient.height / 2)) - centerpadding_height / 2
                 } else {
-                    return xdotool.pos_y - 4
+                    return mouseSource.pos_y - 16
                 }
             }
         }
@@ -677,7 +658,6 @@ PlasmaCore.Dialog {
                         hideOSD.running = false
                         console.log("KZones: Move start " + client.resourceClass.toString())
                         if (!config.invertedMode) mainDialog.show()
-                        timer.running = true
                     }
                     if (client.resize) {
                         moving = false
@@ -715,7 +695,6 @@ PlasmaCore.Dialog {
             function onClientFinishUserMovedResized(client) {
                 if (moving) {
                     console.log("Kzones: Move end " + client.resourceClass.toString())
-                    timer.running = false
                     if (shown) {
                         moveClientToZone(client, highlightedZone)
                     } else {

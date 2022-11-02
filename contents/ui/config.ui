@@ -132,6 +132,9 @@
            <property name="toolTip">
             <string>Method to determine in which zone the window is located</string>
            </property>
+           <property name="currentIndex">
+            <number>2</number>
+           </property>
            <property name="frame">
             <bool>true</bool>
            </property>
