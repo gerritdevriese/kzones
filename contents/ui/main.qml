@@ -207,10 +207,12 @@ PlasmaCore.Dialog {
 
         // move client to zone
         if (zone != -1) {
-            let targetZone = repeater_zones.model[zone]
-            let zone_padding = config.layouts[currentLayout].padding || 0
-            client.geometry = Qt.rect(((targetZone.x / 100) * (clientArea.width - zone_padding) + (clientArea.x + zone_padding / 2)) + zone_padding / 2, ((targetZone.y / 100) * (clientArea.height - zone_padding) + (clientArea.y + zone_padding / 2)) + zone_padding / 2, ((targetZone.width / 100) * (clientArea.width - zone_padding)) - zone_padding, ((targetZone.height / 100) * (clientArea.height - zone_padding)) - zone_padding)
-            if (config.enableDebugMode) osdCmd.exec("Moved to zone " + (zone + 1))
+            let repeater_zone = repeater_zones.itemAt(zone)
+            let global_x = repeater_zone.mapToGlobal(Qt.point(0, 0)).x
+            let global_y = repeater_zone.mapToGlobal(Qt.point(0, 0)).y
+            let newGeometry = Qt.rect(Math.round(global_x), Math.round(global_y), Math.round(repeater_zone.width), Math.round(repeater_zone.height))
+            console.log("KZones: Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry))
+            client.geometry = newGeometry
         }
     }
 
@@ -695,7 +697,8 @@ PlasmaCore.Dialog {
                                 let zone = config.layouts[client.layout].zones[client.zone]
                                 let zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x
                                 let zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x)
-                                client.geometry = Qt.rect((r.x - zoneX) + (zoneCenterX - geometry.width / 2), r.y, geometry.width, geometry.height)
+                                let newGeometry = Qt.rect(Math.round((r.x - zoneX) + (zoneCenterX - geometry.width / 2)), Math.round(r.y), Math.round(geometry.width), Math.round(geometry.height))
+                                client.geometry = newGeometry
                             }
                         }
                     }
