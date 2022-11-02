@@ -121,18 +121,21 @@ PlasmaCore.Dialog {
                 "width": width,
                 "height": height
             }
-            arr.push({i, overlap: rectOverlapArea(component, component2)})
+            if (rectOverlapArea(component, component2) > 0) {
+                let xDist = Math.abs((component.x + component.width / 2) - (component2.x + component2.width / 2))
+                let yDist = Math.abs((component.y + component.height / 2) - (component2.y + component2.height / 2))
+                let distance = xDist + yDist
+                arr.push({i, distance})
+            }
         }
-
-        // calculate highest overlap
-        let overlaps = arr.map(x => x.overlap)
-        let maxOverlap = Math.max(...overlaps)
-        if (maxOverlap > 0) {
-            highlightedZone = arr[overlaps.indexOf(maxOverlap)].i
+        //get lowest distance
+        let distances = arr.map(x => x.distance)
+        if (distances.length > 0) {
+            let minDistance = Math.min(...distances)
+            highlightedZone = arr[distances.indexOf(minDistance)].i
         } else {
             highlightedZone = -1
         }
-
     }
 
     function matchZone(client) {
