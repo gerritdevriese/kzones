@@ -11,54 +11,40 @@
         </entry>
 
         <entry name="layoutsJson" type="String">
-            <default>[
-    {
-        &quot;name&quot;: &quot;Layout 1&quot;,
-        &quot;padding&quot;: 0,
-        &quot;zones&quot;: [
-            {
-                &quot;name&quot;: &quot;1&quot;,
-                &quot;x&quot;: 0,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 100,
-                &quot;width&quot;: 25
-            },
-            {
-                &quot;name&quot;: &quot;2&quot;,
-                &quot;x&quot;: 25,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 100,
-                &quot;width&quot;: 50
-            },
-            {
-                &quot;name&quot;: &quot;3&quot;,
-                &quot;x&quot;: 75,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 100,
-                &quot;width&quot;: 25
-            }
-        ]
-    }
-]</default>
+            <default>
+                [
+                    {
+                        &quot;name&quot;: &quot;Layout 1&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;name&quot;: &quot;1&quot;,
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;height&quot;: 100,
+                                &quot;width&quot;: 25
+                            },
+                            {
+                                &quot;name&quot;: &quot;2&quot;,
+                                &quot;x&quot;: 25,
+                                &quot;y&quot;: 0,
+                                &quot;height&quot;: 100,
+                                &quot;width&quot;: 50
+                            },
+                            {
+                                &quot;name&quot;: &quot;3&quot;,
+                                &quot;x&quot;: 75,
+                                &quot;y&quot;: 0,
+                                &quot;height&quot;: 100,
+                                &quot;width&quot;: 25
+                            }
+                        ]
+                    }
+                ]
+            </default>
         </entry>
 
         <entry name="pollingRate" type="Int">
-            <default>100</default>
-        </entry>
-
-        <entry name="targetMethod" type="Int">
-            <default>2</default>
-        </entry>
-
-        <entry name="handleUnitPercent" type="Bool">
-            <default>true</default>
-        </entry>
-
-        <entry name="handleUnitPixels" type="Bool">
-            <default>false</default>
-        </entry>
-
-        <entry name="handleSize" type="Int">
             <default>100</default>
         </entry>
 
@@ -95,6 +81,18 @@
         </entry>
 
         <entry name="invertedMode" type="Bool">
+            <default>false</default>
+        </entry>
+
+        <entry name="modifierKey" type="Int">
+            <default>5</default>
+        </entry>
+
+        <entry name="npmbToggle" type="Bool">
+            <default>true</default>
+        </entry>
+
+        <entry name="npmbCycle" type="Bool">
             <default>false</default>
         </entry>
 
