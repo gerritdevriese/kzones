@@ -52,6 +52,10 @@ PlasmaCore.Dialog {
             alwaysShowLayoutName: KWin.readConfig("alwaysShowLayoutName", false), // always show layout name, or only when switching between them
             pollingRate: KWin.readConfig("pollingRate", 100), // polling rate in milliseconds
             zoneTarget: KWin.readConfig("zoneTarget", 0), // the part of the zone you need to hover over to highlight it
+            targetMethod: KWin.readConfig("targetMethod", 0), // method to determine in which zone the window is located
+            handleUnitPercent: KWin.readConfig("handleUnitPercent", true), // method to determine in which zone the window is located
+            handleUnitPixels: KWin.readConfig("handleUnitPixels", false), // method to determine in which zone the window is located (unused)
+            handleSize: KWin.readConfig("handleSize", 100), // set the size of the handle, only applicable when target method is Titlebar or Window
             enableDebugMode: KWin.readConfig("enableDebugMode", false), // enable debug mode
             filterMode: KWin.readConfig("filterMode", 0), // filter mode
             filterList: KWin.readConfig("filterList", ""), // filter list
@@ -60,7 +64,9 @@ PlasmaCore.Dialog {
             layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')), // layouts
             alternateIndicatorStyle: KWin.readConfig("alternateIndicatorStyle", false), // alternate indicator style
             invertedMode: KWin.readConfig("invertedMode", false), // inverted mode
+            modifierEnabled: KWin.readConfig("modifierEnabled", false), // modifier enabled
             modifierKey: KWin.readConfig("modifierKey", 5), // modifier key
+            npmbEnabled: KWin.readConfig("npmbEnabled", false), // npmb enabled
             npmbToggle: KWin.readConfig("npmbToggle", true), // toggle with non-primary mouse button
             npmbCycle: KWin.readConfig("npmbCycle", false), // cycle layouts with non-primary mouse button
         }
@@ -96,27 +102,46 @@ PlasmaCore.Dialog {
         clientArea = workspace.clientArea(KWin.FullScreenArea, workspace.activeScreen, workspace.currentDesktop)
     }
 
-    function checkZone(x, y) {
+    function checkZone(x, y, width = 1, height = 1) {
+        let arr = []
         for (let i = 0; i < repeater_zones.model.length; i++) {
             let zone
             switch (config.zoneTarget) {
-                case 0:
-                    zone = repeater_zones.itemAt(i).children[0]
-                    break
-                case 1:
-                    zone = repeater_zones.itemAt(i)
-                    break
+            case 0:
+                zone = repeater_zones.itemAt(i).children[0]
+                break
+            case 1:
+                zone = repeater_zones.itemAt(i)
+                break
             }
             let zoneItem = zone.mapToItem(null, 0, 0)
             let component = {
-                x: zoneItem.x,
-                y: zoneItem.y,
-                width: zone.width,
-                height: zone.height
+                "x": zoneItem.x,
+                "y": zoneItem.y,
+                "width": zone.width,
+                "height": zone.height
             }
-            if (x >= component.x && x <= component.x + component.width && y >= component.y && y <= component.y + component.height) return i
+            let component2 = {
+                "x": x,
+                "y": y,
+                "width": width,
+                "height": height
+            }
+            if (rectOverlapArea(component, component2) > 0) {
+                let xDist = Math.abs((component.x + component.width / 2) - (component2.x + component2.width / 2))
+                let yDist = Math.abs((component.y + component.height / 2) - (component2.y + component2.height / 2))
+                let distance = xDist + yDist
+                arr.push({i, distance})
+            }
         }
-        return -1
+        //get lowest distance
+        let distances = arr.map(x => x.distance)
+        if (distances.length > 0) {
+            let minDistance = Math.min(...distances)
+            highlightedZone = arr[distances.indexOf(minDistance)].i
+        } else {
+            highlightedZone = -1
+        }
     }
 
     function matchZone(client) {
@@ -297,7 +322,12 @@ PlasmaCore.Dialog {
             matchZone(workspace.clientList()[i])
         }
 
-        console.log("KZones: Ready!")
+        // delay the initialization of the overlay until the workspace is ready
+        delay.setTimeout(function() {
+            mainDialog.visible = true
+            mainDialog.opacity = 0
+            console.log("KZones: Ready!")
+        }, 1000)
     }
 
     function bindShortcut(title, sequence, callback) {
@@ -306,8 +336,8 @@ PlasmaCore.Dialog {
 
     Item {
         id: mainItem
-        width: 420
-        height: 69
+        width: workspace.displayWidth
+        height: workspace.displayHeight
 
         // main polling timer
         Timer {
@@ -316,34 +346,57 @@ PlasmaCore.Dialog {
             interval: config.pollingRate
             running: shown && moving
             repeat: true
-            
+
             onTriggered: {
-                let position = mouseSource.getPosition()
-                highlightedZone = checkZone(position.x, position.y)
+                switch (config.targetMethod) {
+                case 0: // titlebar
+                case 1: // window
+                    checkZone(handle.x, handle.y, handle.width, handle.height)
+                    break
+                case 2: // cursor
+                    xdotool.connectSource('xdotool getmouselocation')
+                    break
+                default:
+                    break
+                }
             }
         }
 
+        // xdotool
         PlasmaCore.DataSource {
-            id: mouseSource
-            engine: "mouse"
+            id: xdotool
+            engine: "executable"
+            connectedSources: []
 
-            property var position: null
-
-            function getPosition() {
-                mouseSource.connectSource("Position")
-                return position
-            }
+            property int pos_x: 0
+            property int pos_y: 0
 
             onNewData: {
-                position = mouseSource.data.Position.Position
-                disconnectSource(sourceName);   
+                let data = xdotool.data["xdotool getmouselocation"].stdout.replace(/ /g, '\u003A').split('\u003A')
+                if (data.length > 1) {
+                    pos_x = Number(data[1])
+                    pos_y = Number(data[3])
+                } else {
+                    console.log("KZones: xdotool is not installed")
+                }
+                disconnectSource(sourceName)
+                checkZone(handle.x, handle.y, handle.width, handle.height)
             }
         }
 
         PlasmaCore.DataSource {
             id: keystateSource
             engine: "keystate"
-            connectedSources: [modifierKeys[config.modifierKey],"Left Button", "Right Button", "Middle Button"]
+            connectedSources: {
+                let sources = []
+                if (config.modifierEnabled) {
+                    sources.push(modifierKeys[config.modifierKey])
+                }
+                if (config.npmbEnabled) {
+                    sources.concat(["Left Button", "Right Button", "Middle Button"])
+                }
+                return sources
+            }
             // ["Shift","Right Button","First X Button","Caps Lock","Middle Button","Alt","Num Lock","Left Button","Meta","AltGr","Second X Button","Hyper","Ctrl","Super"]
             onNewData: {
                 //console.log(JSON.stringify(keystateSource))
@@ -367,14 +420,14 @@ PlasmaCore.Dialog {
                         case "Middle Button":
                             if(keystateSource.data[sourceName].Pressed) {
                                 console.log("KZones: Npmb pressed")
-                                if (config.npmbToggle) {
+                                if (config.npmbEnabled && config.npmbToggle) {
                                     if (shown) {
                                         hide()
                                     } else {
                                         show()
                                     }
                                 }
-                                if (config.npmbCycle) {
+                                if (config.npmbEnabled && config.npmbCycle) {
                                     highlightedZone = -1
                                     currentLayout = (currentLayout + 1) % config.layouts.length
                                 }                    
@@ -411,10 +464,47 @@ PlasmaCore.Dialog {
             id: handle
             color: color_debug_handle
             visible: config.enableDebugMode
-            width: 32
-            height: 32
-            x: mouseSource.pos_x - 16
-            y: mouseSource.pos_y - 16
+            width: {
+                if (config.targetMethod == 0 || config.targetMethod == 1) {
+                    return (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
+                }
+                else {
+                    return 8
+                }
+            }
+            height: {
+                if (config.targetMethod == 0) {
+                    let titlebarHeight = workspace.activeClient.rect.height - workspace.activeClient.clientSize.height
+                    return titlebarHeight > 0 ? titlebarHeight : 32
+                }
+                else if (config.targetMethod == 1) {
+                    return (config.handleUnitPercent) ? workspace.activeClient.height * (config.handleSize / 100) : config.handleSize
+                } else {
+                    return 8
+                }
+            }
+            x: {
+                if (config.targetMethod == 0) {
+                    return workspace.activeClient.geometry.x + (workspace.activeClient.geometry.width / 2) - (handle.width / 2)
+                }
+                else if (config.targetMethod == 1) {
+                    let centerpadding_width = (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
+                    return ((workspace.activeClient.x + workspace.activeClient.width / 2)) - centerpadding_width / 2
+                } else {
+                    return xdotool.pos_x - 4
+                }
+            }
+            y: {
+                if (config.targetMethod == 0) {
+                    return workspace.activeClient.geometry.y
+                }
+                else if (config.targetMethod == 1) {
+                    let centerpadding_height = (config.handleUnitPercent) ? workspace.activeClient.height * (config.handleSize / 100) : config.handleSize
+                    return ((workspace.activeClient.y + workspace.activeClient.height / 2)) - centerpadding_height / 2
+                } else {
+                    return xdotool.pos_y - 4
+                }
+            }
         }
 
         // debug osd
@@ -633,10 +723,13 @@ PlasmaCore.Dialog {
                         resizing = false
                         hideOSD.running = false
                         console.log("KZones: Move start " + client.resourceClass.toString())
-                        if (!((!config.invertedMode && keystateSource.data[modifierKeys[config.modifierKey]].Pressed) || (config.invertedMode && !keystateSource.data[config.modifierKey].Pressed))){
+                        if (config.modifierEnabled) {
+                            if (!((!config.invertedMode && keystateSource.data[modifierKeys[config.modifierKey]].Pressed) || (config.invertedMode && !keystateSource.data[config.modifierKey].Pressed))){
+                                mainDialog.show()
+                            }
+                        } else {
                             mainDialog.show()
                         }
-                        
                     }
                     if (client.resize) {
                         moving = false

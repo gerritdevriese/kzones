@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>700</width>
-    <height>600</height>
+    <height>630</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>700</width>
-    <height>600</height>
+    <height>630</height>
    </size>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -58,21 +58,9 @@
        <item>
         <widget class="QGroupBox" name="groupBox_general">
          <property name="title">
-          <string/>
+          <string>General</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_11">
-          <item>
-           <widget class="QLabel" name="label">
-            <property name="font">
-             <font>
-              <pointsize>11</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>General</string>
-            </property>
-           </widget>
-          </item>
           <item>
            <widget class="QCheckBox" name="kcfg_rememberWindowGeometries">
             <property name="sizePolicy">
@@ -100,23 +88,156 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_modifier">
+        <widget class="QGroupBox" name="groupBox_target">
          <property name="title">
-          <string/>
+          <string>Zone determination</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <item>
+           <layout class="QFormLayout" name="formLayout_6">
+            <item row="0" column="1">
+             <widget class="QComboBox" name="kcfg_zoneTarget">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>The part of the zone you need to hover over to highlight it</string>
+              </property>
+              <item>
+               <property name="text">
+                <string>Indicator</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Zone</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Method</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="kcfg_targetMethod">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Method to determine in which zone the window is located</string>
+              </property>
+              <property name="frame">
+               <bool>true</bool>
+              </property>
+              <item>
+               <property name="text">
+                <string extracomment="dd">Titlebar</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Window</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string extracomment="The most precice method, but depends on xdotool to determine the cursor position">Cursor</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Size</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="kcfg_handleSize">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Set the size of the handle, only applicable when target method is Titlebar or Window</string>
+              </property>
+              <property name="suffix">
+               <string/>
+              </property>
+              <property name="maximum">
+               <number>2147483647</number>
+              </property>
+              <property name="stepType">
+               <enum>QAbstractSpinBox::DefaultStepType</enum>
+              </property>
+              <property name="value">
+               <number>100</number>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QRadioButton" name="kcfg_handleUnitPercent">
+              <property name="text">
+               <string>Percent</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QRadioButton" name="kcfg_handleUnitPixels">
+              <property name="text">
+               <string>Pixels</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_20">
+              <property name="text">
+               <string>Target</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="kcfg_modifierEnabled">
+         <property name="title">
+          <string>Modifier key (X11)</string>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_12">
-          <item>
-           <widget class="QLabel" name="label_5">
-            <property name="font">
-             <font>
-              <pointsize>11</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Modifier key</string>
-            </property>
-           </widget>
-          </item>
           <item>
            <widget class="QCheckBox" name="kcfg_invertedMode">
             <property name="text">
@@ -193,23 +314,17 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_npmb">
+        <widget class="QGroupBox" name="kcfg_npmbEnabled">
          <property name="title">
-          <string/>
+          <string>Non-primary mouse button (X11)</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_13">
-          <item>
-           <widget class="QLabel" name="label_6">
-            <property name="font">
-             <font>
-              <pointsize>11</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Non-primary mouse button</string>
-            </property>
-           </widget>
-          </item>
           <item>
            <widget class="QRadioButton" name="kcfg_npmbToggle">
             <property name="text">
@@ -231,61 +346,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_target">
-         <property name="title">
-          <string/>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_14">
-          <item>
-           <widget class="QLabel" name="label_14">
-            <property name="font">
-             <font>
-              <pointsize>11</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Zone target</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QFormLayout" name="formLayout_10">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_20">
-              <property name="text">
-               <string>Target</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="kcfg_zoneTarget">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>The part of the zone you need to hover over to highlight it</string>
-              </property>
-              <item>
-               <property name="text">
-                <string>Indicator</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Zone</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <spacer name="verticalSpacer_3">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -299,11 +359,11 @@
         </spacer>
        </item>
       </layout>
-      <zorder>groupBox_modifier</zorder>
-      <zorder>groupBox_npmb</zorder>
-      <zorder>groupBox_target</zorder>
+      <zorder>kcfg_modifierEnabled</zorder>
+      <zorder>kcfg_npmbEnabled</zorder>
       <zorder>groupBox_general</zorder>
       <zorder>verticalSpacer_3</zorder>
+      <zorder>groupBox_target</zorder>
      </widget>
      <widget class="QWidget" name="tab_layouts">
       <attribute name="icon">
