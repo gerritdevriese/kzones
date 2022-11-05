@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>700</width>
-    <height>630</height>
+    <height>660</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>700</width>
-    <height>630</height>
+    <height>660</height>
    </size>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -144,7 +144,7 @@
               </property>
               <item>
                <property name="text">
-                <string extracomment="dd">Titlebar</string>
+                <string>Titlebar</string>
                </property>
               </item>
               <item>
@@ -154,7 +154,7 @@
               </item>
               <item>
                <property name="text">
-                <string extracomment="The most precice method, but depends on xdotool to determine the cursor position">Cursor</string>
+                <string>Cursor *</string>
                </property>
               </item>
              </widget>
@@ -226,7 +226,7 @@
        <item>
         <widget class="QGroupBox" name="kcfg_modifierEnabled">
          <property name="title">
-          <string>Modifier key (X11)</string>
+          <string>Modifier key *</string>
          </property>
          <property name="flat">
           <bool>false</bool>
@@ -316,7 +316,7 @@
        <item>
         <widget class="QGroupBox" name="kcfg_npmbEnabled">
          <property name="title">
-          <string>Non-primary mouse button (X11)</string>
+          <string>Non-primary mouse button *</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -358,12 +358,20 @@
          </property>
         </spacer>
        </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>* Not compatible with Wayland</string>
+         </property>
+        </widget>
+       </item>
       </layout>
       <zorder>kcfg_modifierEnabled</zorder>
       <zorder>kcfg_npmbEnabled</zorder>
       <zorder>groupBox_general</zorder>
       <zorder>verticalSpacer_3</zorder>
       <zorder>groupBox_target</zorder>
+      <zorder>label</zorder>
      </widget>
      <widget class="QWidget" name="tab_layouts">
       <attribute name="icon">

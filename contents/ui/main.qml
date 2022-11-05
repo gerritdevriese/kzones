@@ -322,6 +322,9 @@ PlasmaCore.Dialog {
             matchZone(workspace.clientList()[i])
         }
 
+        //get session type
+        cmdSessionType.exec()
+
         // delay the initialization of the overlay until the workspace is ready
         delay.setTimeout(function() {
             mainDialog.visible = true
@@ -354,7 +357,8 @@ PlasmaCore.Dialog {
                     checkZone(handle.x, handle.y, handle.width, handle.height)
                     break
                 case 2: // cursor
-                    xdotool.connectSource('xdotool getmouselocation')
+                    let pos = mouseSource.getPosition()
+                    checkZone(pos.x, pos.y, 1, 1)
                     break
                 default:
                     break
@@ -362,25 +366,19 @@ PlasmaCore.Dialog {
             }
         }
 
-        // xdotool
         PlasmaCore.DataSource {
-            id: xdotool
-            engine: "executable"
-            connectedSources: []
+            id: mouseSource
 
-            property int pos_x: 0
-            property int pos_y: 0
+            property var position: null
+
+            function getPosition() {
+                mouseSource.connectSource("Position")
+                return position
+            }
 
             onNewData: {
-                let data = xdotool.data["xdotool getmouselocation"].stdout.replace(/ /g, '\u003A').split('\u003A')
-                if (data.length > 1) {
-                    pos_x = Number(data[1])
-                    pos_y = Number(data[3])
-                } else {
-                    console.log("KZones: xdotool is not installed")
-                }
-                disconnectSource(sourceName)
-                checkZone(handle.x, handle.y, handle.width, handle.height)
+                position = mouseSource.data.Position.Position
+                disconnectSource(sourceName);   
             }
         }
 
@@ -393,7 +391,7 @@ PlasmaCore.Dialog {
                     sources.push(modifierKeys[config.modifierKey])
                 }
                 if (config.npmbEnabled) {
-                    sources.concat(["Left Button", "Right Button", "Middle Button"])
+                    sources = sources.concat(["Left Button", "Right Button", "Middle Button"])
                 }
                 return sources
             }
@@ -420,14 +418,14 @@ PlasmaCore.Dialog {
                         case "Middle Button":
                             if(keystateSource.data[sourceName].Pressed) {
                                 console.log("KZones: Npmb pressed")
-                                if (config.npmbEnabled && config.npmbToggle) {
+                                if (config.npmbToggle) {
                                     if (shown) {
                                         hide()
                                     } else {
                                         show()
                                     }
                                 }
-                                if (config.npmbEnabled && config.npmbCycle) {
+                                if (config.npmbCycle) {
                                     highlightedZone = -1
                                     currentLayout = (currentLayout + 1) % config.layouts.length
                                 }                    
@@ -450,6 +448,26 @@ PlasmaCore.Dialog {
             }
         }
 
+        PlasmaCore.DataSource {
+            id: cmdSessionType
+            engine: "executable"
+            connectedSources: []
+            onNewData: {
+                let session = cmdSessionType.data[cmdSessionType.connectedSources[0]].stdout.trim()
+                if (session == "x11") {
+                    console.log("KZones: X11 session detected")
+                    //when this is set in Wayland, KWin crashes 🤦
+                    mouseSource.engine = "mouse"
+                } else {
+                    console.log("KZones: Wayland session detected")
+                }
+                disconnectSource(sourceName);
+            }
+            function exec() {
+                connectSource(`echo $XDG_SESSION_TYPE`);
+            }
+        }
+
         // click to exit osd
         MouseArea {
             anchors.fill: parent
@@ -469,7 +487,7 @@ PlasmaCore.Dialog {
                     return (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
                 }
                 else {
-                    return 8
+                    return 32
                 }
             }
             height: {
@@ -480,7 +498,7 @@ PlasmaCore.Dialog {
                 else if (config.targetMethod == 1) {
                     return (config.handleUnitPercent) ? workspace.activeClient.height * (config.handleSize / 100) : config.handleSize
                 } else {
-                    return 8
+                    return 32
                 }
             }
             x: {
@@ -491,7 +509,7 @@ PlasmaCore.Dialog {
                     let centerpadding_width = (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
                     return ((workspace.activeClient.x + workspace.activeClient.width / 2)) - centerpadding_width / 2
                 } else {
-                    return xdotool.pos_x - 4
+                    return mouseSource.position.x - handle.width / 2  || 0
                 }
             }
             y: {
@@ -502,7 +520,7 @@ PlasmaCore.Dialog {
                     let centerpadding_height = (config.handleUnitPercent) ? workspace.activeClient.height * (config.handleSize / 100) : config.handleSize
                     return ((workspace.activeClient.y + workspace.activeClient.height / 2)) - centerpadding_height / 2
                 } else {
-                    return xdotool.pos_y - 4
+                    return mouseSource.position.y - handle.height / 2  || 0
                 }
             }
         }
