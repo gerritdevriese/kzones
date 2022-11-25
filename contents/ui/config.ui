@@ -147,7 +147,7 @@
            </item>
            <item>
             <property name="text">
-             <string extracomment="The most precice method, but depends on xdotool to determine the cursor position">Cursor</string>
+             <string extracomment="The most precice method, but requires kwin ≥ 5.27">Cursor</string>
             </property>
            </item>
           </widget>

@@ -346,28 +346,6 @@ PlasmaCore.Dialog {
         width: 420
         height: 69
 
-        // xdotool
-        PlasmaCore.DataSource {
-            id: xdotool
-            engine: "executable"
-            connectedSources: []
-
-            property int pos_x: 0
-            property int pos_y: 0
-
-            onNewData: {
-                let data = xdotool.data["xdotool getmouselocation"].stdout.replace(/ /g, '\u003A').split('\u003A')
-                if (data.length > 1) {
-                    pos_x = Number(data[1])
-                    pos_y = Number(data[3])
-                } else {
-                    console.log("KZones: xdotool is not installed")
-                }
-                disconnectSource(sourceName)
-                checkZone(handle.x, handle.y, handle.width, handle.height)
-            }
-        }
-
         // click to exit osd
         MouseArea {
             anchors.fill: parent
@@ -386,17 +364,7 @@ PlasmaCore.Dialog {
             repeat: true
 
             onTriggered: {
-                switch (config.targetMethod) {
-                case 0: // titlebar
-                case 1: // window
-                    checkZone(handle.x, handle.y, handle.width, handle.height)
-                    break
-                case 2: // cursor
-                    xdotool.connectSource('xdotool getmouselocation')
-                    break
-                default:
-                    break
-                }
+                checkZone(handle.x, handle.y, handle.width, handle.height)
             }
         }
 
@@ -432,7 +400,7 @@ PlasmaCore.Dialog {
                     let centerpadding_width = (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
                     return ((workspace.activeClient.x + workspace.activeClient.width / 2)) - centerpadding_width / 2
                 } else {
-                    return xdotool.pos_x - 4
+                    return workspace.cursorPos.x - 4
                 }
             }
             y: {
@@ -443,7 +411,7 @@ PlasmaCore.Dialog {
                     let centerpadding_height = (config.handleUnitPercent) ? workspace.activeClient.height * (config.handleSize / 100) : config.handleSize
                     return ((workspace.activeClient.y + workspace.activeClient.height / 2)) - centerpadding_height / 2
                 } else {
-                    return xdotool.pos_y - 4
+                    return workspace.cursorPos.y - 4
                 }
             }
         }
