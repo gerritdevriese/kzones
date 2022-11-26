@@ -483,6 +483,7 @@ PlasmaCore.Dialog {
             color: color_debug_handle
             visible: config.enableDebugMode
             width: {
+                if (!config.enableDebugMode) return 0
                 if (config.targetMethod == 0 || config.targetMethod == 1) {
                     return (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
                 }
@@ -491,6 +492,7 @@ PlasmaCore.Dialog {
                 }
             }
             height: {
+                if (!config.enableDebugMode) return 0
                 if (config.targetMethod == 0) {
                     let titlebarHeight = workspace.activeClient.rect.height - workspace.activeClient.clientSize.height
                     return titlebarHeight > 0 ? titlebarHeight : 32
@@ -502,6 +504,7 @@ PlasmaCore.Dialog {
                 }
             }
             x: {
+                if (!config.enableDebugMode) return 0
                 if (config.targetMethod == 0) {
                     return workspace.activeClient.geometry.x + (workspace.activeClient.geometry.width / 2) - (handle.width / 2)
                 }
@@ -513,6 +516,7 @@ PlasmaCore.Dialog {
                 }
             }
             y: {
+                if (!config.enableDebugMode) return 0
                 if (config.targetMethod == 0) {
                     return workspace.activeClient.geometry.y
                 }
