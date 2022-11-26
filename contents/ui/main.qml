@@ -78,7 +78,7 @@ PlasmaCore.Dialog {
         if (!config.alwaysShowLayoutName) layoutOsd.visible = false
         // refresh client area
         refreshClientArea()
-        // update main item size, otherwise at boot it's not correct
+        // update main item size (needed for boot time, and to reset after hiding)
         mainItem.width = workspace.displayWidth
         mainItem.height = workspace.displayHeight
         // show OSD
@@ -95,6 +95,8 @@ PlasmaCore.Dialog {
         mainDialog.opacity = 0
         mainDialog.shown = false
         mainDialog.outputOnly = true
+        mainItem.width = 0
+        mainItem.height = 0
     }
 
     function refreshClientArea() {
@@ -705,14 +707,18 @@ PlasmaCore.Dialog {
                 }
             }
 
-            function onClientActivated(client) {
-                if (client) {
-                    console.log("KZones: Client activated: " + client.resourceClass.toString() + " (zone " + client.zone + ")");
-                }
+            function onClientFullScreenSet(client, fullscreen, user) {
+                if (!client) return;
+                console.log("KZones: Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + fullscreen + ")");
+                mainDialog.hide();
             }
 
             // unused, but may be useful in the future
-            // function onClientFullScreenSet(client, fullscreen, user) { }
+            // function onClientActivated(client) {
+            //     if (client) {
+            //         console.log("KZones: Client activated: " + client.resourceClass.toString() + " (zone " + client.zone + ")");
+            //     }    
+            // }
             // function onVirtualScreenSizeChanged(){ }
         }
 
