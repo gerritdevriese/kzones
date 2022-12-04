@@ -140,10 +140,13 @@ PlasmaCore.Dialog {
         let distances = arr.map(x => x.distance)
         if (distances.length > 0) {
             let minDistance = Math.min(...distances)
-            highlightedZone = arr[distances.indexOf(minDistance)].i
-        } else {
-            highlightedZone = -1
+            return arr[distances.indexOf(minDistance)].i
         }
+        return -1
+    }
+
+    function checkZoneByGeometry(geometry) {
+        return checkZone(geometry.x, geometry.y, geometry.width, geometry.height)
     }
 
     function matchZone(client) {
@@ -288,12 +291,24 @@ PlasmaCore.Dialog {
 
         // shortcut: move to next zone
         bindShortcut("Move active window to next zone", "Ctrl+Alt+Right", function() {
-            moveClientToZone(workspace.activeClient, (workspace.activeClient.zone + 1) % config.layouts[currentLayout].zones.length)
+            const client = workspace.activeClient
+            if (client.zone == -1) {
+                moveClientToZone(client, checkZoneByGeometry(client.geometry))
+                return
+            }
+            const zonesLength = config.layouts[currentLayout].zones.length
+            moveClientToZone(client, (client.zone + 1) % zonesLength)
         })
 
         // shortcut: move to previous zone
         bindShortcut("Move active window to previous zone", "Ctrl+Alt+Left", function() {
-            moveClientToZone(workspace.activeClient, (workspace.activeClient.zone - 1 + config.layouts[currentLayout].zones.length) % config.layouts[currentLayout].zones.length)
+            const client = workspace.activeClient
+            if (client.zone == -1) {
+                moveClientToZone(client, checkZoneByGeometry(client.geometry))
+                return
+            }
+            const zonesLength = config.layouts[currentLayout].zones.length
+            moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength)
         })
 
         // shortcut: toggle osd
@@ -356,11 +371,11 @@ PlasmaCore.Dialog {
                 switch (config.targetMethod) {
                 case 0: // titlebar
                 case 1: // window
-                    checkZone(handle.x, handle.y, handle.width, handle.height)
+                    highlightedZone = checkZoneByGeometry(handle)
                     break
                 case 2: // cursor
                     let pos = mouseSource.getPosition()
-                    checkZone(pos.x, pos.y, 1, 1)
+                    highlightedZone = checkZone(pos.x, pos.y)
                     break
                 default:
                     break
