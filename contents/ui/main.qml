@@ -214,41 +214,39 @@ PlasmaCore.Dialog {
 
         // block abnormal windows from being moved (like plasmashell, docks, etc...)
         if (!client.normalWindow) return
-        
+        if (zone === -1) {
+            console.log("[!!] Attempted to move client to zone '-1' .. Its likely a bug :(")
+            return
+        }
+
         console.log("KZones: Moving client " + client.resourceClass.toString() + " to zone " + zone)
 
-        saveWindowGeometries(client, zone)
-
-        // move client to zone
-        if (zone != -1) {
-            let repeater_zone = repeater_zones.itemAt(zone)
-            let global_x = repeater_zone.mapToGlobal(Qt.point(0, 0)).x
-            let global_y = repeater_zone.mapToGlobal(Qt.point(0, 0)).y
-            let newGeometry = Qt.rect(Math.round(global_x), Math.round(global_y), Math.round(repeater_zone.width), Math.round(repeater_zone.height))
-            console.log("KZones: Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry))
-            client.geometry = newGeometry
+        if (client.zone === -1) {
+            // Save client geometry before moving to a zone
+            saveWindowGeometries(client)
         }
-    }
 
-    function saveWindowGeometries(client, zone) {
+        // Set new geometry and zone
+        let repeater_zone = repeater_zones.itemAt(zone)
+        let global_x = repeater_zone.mapToGlobal(Qt.point(0, 0)).x
+        let global_y = repeater_zone.mapToGlobal(Qt.point(0, 0)).y
+        let newGeometry = Qt.rect(Math.round(global_x), Math.round(global_y), Math.round(repeater_zone.width), Math.round(repeater_zone.height))
+        console.log("KZones: Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry))
+        client.geometry = newGeometry
+        client.zone = zone
+    } 
+
+    function saveWindowGeometries(client) {
         console.log("KZones: Saving geometry for client " + client.resourceClass.toString())
         // save current geometry
         if (config.rememberWindowGeometries) {
-            let geometry = {
+            client.oldGeometry = {
                 "x": client.geometry.x,
                 "y": client.geometry.y,
                 "width": client.geometry.width,
                 "height": client.geometry.height
             }
-            if (zone != -1) {
-                if (client.zone == -1) {
-                    client.oldGeometry = geometry
-                }                
-            }
         }
-        // save zone
-        client.zone = zone
-        client.layout = currentLayout
     }
 
     Behavior on opacity {
@@ -755,19 +753,21 @@ PlasmaCore.Dialog {
             // start moving
             function onClientStartUserMovedResized(client) {
                 if (client.resizeable && client.normalWindow) {
+                    client.zone = -1
                     if (client.move && checkFilter(client)) {
                         refreshClientArea()
-                        cachedClientArea = clientArea
                         moving = true
                         resizing = false
                         hideOSD.running = false
-                        console.log("KZones: Move start " + client.resourceClass.toString())
-                        if (config.modifierEnabled) {
-                            if (!((!config.invertedMode && keystateSource.data[modifierKeys[config.modifierKey]].Pressed) || (config.invertedMode && !keystateSource.data[config.modifierKey].Pressed))){
-                                mainDialog.show()
-                            }
-                        } else {
-                            mainDialog.show()
+                        console.log("KZones: Active client move start " + client.resourceClass.toString())
+
+                        if (config.rememberWindowGeometries && client.oldGeometry) {
+                            console.log("KZones: Restoring old geometry")
+                            client.geometry.x = client.oldGeometry.x
+                            client.geometry.y = client.oldGeometry.y
+                            client.geometry.width = client.oldGeometry.width
+                            client.geometry.height = client.oldGeometry.height
+                            delete client.oldGeometry
                         }
                     }
                     if (client.resize) {
@@ -779,28 +779,7 @@ PlasmaCore.Dialog {
             }
 
             // is moving
-            function onClientStepUserMovedResized(client, r) {
-                
-                if (client.resizeable) {
-                    if (moving && checkFilter(client)) {
-                        // refresh client area
-                        refreshClientArea()
-                        if (config.rememberWindowGeometries && client.zone != -1) {
-                            if (client.oldGeometry) {
-                                let geometry = client.oldGeometry
-                                let zone = config.layouts[client.layout].zones[client.zone]
-                                let zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x
-                                let zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x)
-                                let newGeometry = Qt.rect(Math.round((r.x - zoneX) + (zoneCenterX - geometry.width / 2)), Math.round(r.y), Math.round(geometry.width), Math.round(geometry.height))
-                                client.geometry = newGeometry
-                            }
-                        }
-                    }
-                    if (resizing) {
-                        // client resizing
-                    }
-                }
-            }
+            // function onClientStepUserMovedResized(client, r) { }
 
             // stop moving
             function onClientFinishUserMovedResized(client) {
@@ -808,9 +787,7 @@ PlasmaCore.Dialog {
                     console.log("Kzones: Move end " + client.resourceClass.toString())
                     if (shown) {
                         moveClientToZone(client, highlightedZone)
-                    } else {
-                        saveWindowGeometries(client, -1)
-                    }                    
+                    }
                     hide()
                 }
                 if (resizing) {
