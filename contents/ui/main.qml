@@ -404,11 +404,11 @@ PlasmaCore.Dialog {
             engine: "keystate"
             connectedSources: {
                 let sources = []
-                if (config.modifierEnabled) {
-                    sources.push(modifierKeys[config.modifierKey])
-                }
                 if (config.npmbEnabled) {
                     sources = sources.concat(["Left Button", "Right Button", "Middle Button"])
+                }
+                if (config.modifierEnabled) {
+                    sources.push(modifierKeys[config.modifierKey])
                 }
                 return sources
             }
