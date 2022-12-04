@@ -225,4 +225,4 @@ List of all available shortcuts:
 - After changing settings, you need to reload the script by disabling, saving and enabling it again. (or by restarting KWin)
 
 ## Caveats
-When selecting **Cursor** as the "determine zone method" you'll need to have xdotool installed, sadly this doesn't work on Wayland. So if you're using Wayland you'll need to use the **Titlebar** or **Window** method instead.
+When selecting **Cursor** as the "determine zone method" you have to be on X11. If you're using Wayland you'll need to use the **Titlebar** or **Window** method instead.
