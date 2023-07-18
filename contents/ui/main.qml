@@ -43,6 +43,17 @@ PlasmaCore.Dialog {
     property string color_indicator_font: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 1)
     property string color_debug_handle: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.9)  
 
+    // enums
+    property var zoneTargets: {
+        "indicator": 0,
+        "zone": 1
+    }
+    property var targetMethods: {
+        "titlebar": 0,
+        "window": 1,
+        "cursor": 2
+    }
+
     function loadConfig() {
         // load values from configuration
         console.log("KZones: Reading config...")
@@ -106,10 +117,10 @@ PlasmaCore.Dialog {
         for (let i = 0; i < repeater_zones.model.length; i++) {
             let zone
             switch (config.zoneTarget) {
-            case 0:
+            case zoneTargets.indicator:
                 zone = repeater_zones.itemAt(i).children[0]
                 break
-            case 1:
+            case zoneTargets.zone:
                 zone = repeater_zones.itemAt(i)
                 break
             }
@@ -366,11 +377,11 @@ PlasmaCore.Dialog {
 
             onTriggered: {
                 switch (config.targetMethod) {
-                case 0: // titlebar
-                case 1: // window
+                case targetMethods.titlebar:
+                case targetMethods.window:
                     highlightedZone = checkZoneByGeometry(handle)
                     break
-                case 2: // cursor
+                case targetMethods.cursor:
                     let pos = workspace.cursorPos
                     highlightedZone = checkZone(pos.x, pos.y)
                     break
@@ -461,7 +472,7 @@ PlasmaCore.Dialog {
             color: color_debug_handle
             visible: config.enableDebugMode
             width: {
-                if (config.targetMethod == 0 || config.targetMethod == 1) {
+                if (config.targetMethod == targetMethods.titlebar || config.targetMethod == targetMethods.window) {
                     return workspace.activeClient.width
                 }
                 else {
@@ -469,21 +480,21 @@ PlasmaCore.Dialog {
                 }
             }
             height: {
-                if (config.targetMethod == 1) {
+                if (config.targetMethod == targetMethods.window) {
                     return workspace.activeClient.height
                 } else {
                     return 32
                 }
             }
             x: {
-                if (config.targetMethod == 0 || config.targetMethod == 1) {
+                if (config.targetMethod == targetMethods.titlebar || config.targetMethod == targetMethods.window) {
                     return workspace.activeClient.geometry.x
                 } else {
                     return workspace.cursorPos.x - handle.width / 2  || 0
                 }
             }
             y: {
-                if (config.targetMethod == 0 || config.targetMethod == 1) {
+                if (config.targetMethod == targetMethods.titlebar || config.targetMethod == targetMethods.window) {
                     return workspace.activeClient.geometry.y
                 } else {
                     return workspace.cursorPos.y - handle.height / 2  || 0
