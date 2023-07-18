@@ -36,7 +36,7 @@ PlasmaCore.Dialog {
     property string color_zone_border_active: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.9)
     property string color_zone_background: "transparent"
     property string color_zone_background_active: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.1)
-    property string color_indicator: Qt.rgba(Kirigami.Theme.alternateBackgroundColor.r, Kirigami.Theme.alternateBackgroundColor.g, Kirigami.Theme.alternateBackgroundColor.b, 1) //'#66555555'
+    property string color_indicator: Qt.rgba(Kirigami.Theme.alternateBackgroundColor.r, Kirigami.Theme.alternateBackgroundColor.g, Kirigami.Theme.alternateBackgroundColor.b, 1)
     property string color_indicator_accent: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 1)
     property string color_indicator_shadow: '#69000000'
     property string color_indicator_font: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 1)
@@ -70,6 +70,7 @@ PlasmaCore.Dialog {
             osdTimeout: KWin.readConfig("osdTimeout", 1000), // timeout in milliseconds for hiding the OSD after switching layouts
             layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')), // layouts
             alternateIndicatorStyle: KWin.readConfig("alternateIndicatorStyle", false), // alternate indicator style
+            invertedMode: KWin.readConfig("invertedMode", false), // inverted mode
         }
 
         console.log("KZones: Config loaded: " + JSON.stringify(config))
@@ -339,9 +340,6 @@ PlasmaCore.Dialog {
         for (var i = 0; i < workspace.clientList().length; i++) {
             matchZone(workspace.clientList()[i])
         }
-
-        //get session type
-        cmdSessionType.exec()
 
         // delay the initialization of the overlay until the workspace is ready
         delay.setTimeout(function() {
@@ -661,7 +659,7 @@ PlasmaCore.Dialog {
                         resizing = false
                         hideOSD.running = false
                         console.log("KZones: Move start " + client.resourceClass.toString())
-                        mainDialog.show()
+                        if (!config.invertedMode) mainDialog.show()
                     }
                     if (client.resize) {
                         moving = false

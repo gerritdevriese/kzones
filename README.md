@@ -187,10 +187,7 @@ This example will move the indicator 100 pixels to the right and 50 pixels up.
 The Target can be set to **Indicator** or **Zone**. **Indicator** is the default and will snap the window to the zone if the chosen method is inside the zone indicator. Choose **Zone** if you want to always snap the window to the zone it's dropped in. (you can cancel the snap with the "Toggle OSD" shortcut)
 
 ###### Method
-By default the script will use the **Titlebar** method to determine which zone a window should snap to. This means that the window will snap when the target contains the titlebar of the window. You can change this behaviour by setting the method to **Cursor** or **Window**. (mind the caveats below)
-
-###### Size
-Change the size of the chosen method, for example when using the **Titlebar** method you can decrease the size of the "handle" to make it easier to snap windows to the correct zone. You can temporarily enable debug mode to see the exact size of the "handle".
+By default the script will use the **Cursor** method to determine which zone a window should snap to. This means that the window will snap when the cursor is above the target. You can change this behaviour by setting the method to **Titlebar** or **Window**.
 
 #### Filtering
 You can block certain windows from snapping by adding their class name to the exclude list. Or you can only allow certain windows to snap by adding their class name to the include list. You can find the class name of a window by running `xprop` in a terminal and clicking on the window. The class name will be in the `WM_CLASS` property.
@@ -218,11 +215,8 @@ List of all available shortcuts:
 ## Troubleshooting
 
 ### The script doesn't work
-- Check if your KDE version is up to date.
+- Check if your KDE version is at 5.27 or higher.
 - Make sure there is at least one layout defined in the script settings and that it contains at least one zone.
 
 ### My settings are not saved
 - After changing settings, you need to reload the script by disabling, saving and enabling it again. (or by restarting KWin)
-
-## Caveats
-When selecting **Cursor** as the "determine zone method" you have to be on X11. If you're using Wayland you'll need to use the **Titlebar** or **Window** method instead.
