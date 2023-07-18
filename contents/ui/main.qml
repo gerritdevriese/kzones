@@ -374,28 +374,12 @@ PlasmaCore.Dialog {
                     highlightedZone = checkZoneByGeometry(handle)
                     break
                 case 2: // cursor
-                    let pos = mouseSource.getPosition()
+                    let pos = workspace.cursorPos
                     highlightedZone = checkZone(pos.x, pos.y)
                     break
                 default:
                     break
                 }
-            }
-        }
-
-        PlasmaCore.DataSource {
-            id: mouseSource
-
-            property var position: null
-
-            function getPosition() {
-                mouseSource.connectSource("Position")
-                return position
-            }
-
-            onNewData: {
-                position = mouseSource.data.Position.Position
-                disconnectSource(sourceName);   
             }
         }
 
@@ -465,26 +449,6 @@ PlasmaCore.Dialog {
             }
         }
 
-        PlasmaCore.DataSource {
-            id: cmdSessionType
-            engine: "executable"
-            connectedSources: []
-            onNewData: {
-                let session = cmdSessionType.data[cmdSessionType.connectedSources[0]].stdout.trim()
-                if (session == "x11") {
-                    console.log("KZones: X11 session detected")
-                    //when this is set in Wayland, KWin crashes 🤦
-                    mouseSource.engine = "mouse"
-                } else {
-                    console.log("KZones: Wayland session detected")
-                }
-                disconnectSource(sourceName);
-            }
-            function exec() {
-                connectSource(`echo $XDG_SESSION_TYPE`);
-            }
-        }
-
         // click to exit osd
         MouseArea {
             anchors.fill: parent
@@ -526,7 +490,7 @@ PlasmaCore.Dialog {
                     let centerpadding_width = (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
                     return ((workspace.activeClient.x + workspace.activeClient.width / 2)) - centerpadding_width / 2
                 } else {
-                    return mouseSource.position.x - handle.width / 2  || 0
+                    return workspace.cursorPos.x - handle.width / 2  || 0
                 }
             }
             y: {
@@ -537,7 +501,7 @@ PlasmaCore.Dialog {
                     let centerpadding_height = (config.handleUnitPercent) ? workspace.activeClient.height * (config.handleSize / 100) : config.handleSize
                     return ((workspace.activeClient.y + workspace.activeClient.height / 2)) - centerpadding_height / 2
                 } else {
-                    return mouseSource.position.y - handle.height / 2  || 0
+                    return workspace.cursorPos.y - handle.height / 2  || 0
                 }
             }
         }
