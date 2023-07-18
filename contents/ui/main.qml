@@ -53,9 +53,6 @@ PlasmaCore.Dialog {
             pollingRate: KWin.readConfig("pollingRate", 100), // polling rate in milliseconds
             zoneTarget: KWin.readConfig("zoneTarget", 0), // the part of the zone you need to hover over to highlight it
             targetMethod: KWin.readConfig("targetMethod", 0), // method to determine in which zone the window is located
-            handleUnitPercent: KWin.readConfig("handleUnitPercent", true), // method to determine in which zone the window is located
-            handleUnitPixels: KWin.readConfig("handleUnitPixels", false), // method to determine in which zone the window is located (unused)
-            handleSize: KWin.readConfig("handleSize", 100), // set the size of the handle, only applicable when target method is Titlebar or Window
             enableDebugMode: KWin.readConfig("enableDebugMode", false), // enable debug mode
             filterMode: KWin.readConfig("filterMode", 0), // filter mode
             filterList: KWin.readConfig("filterList", ""), // filter list
@@ -465,41 +462,29 @@ PlasmaCore.Dialog {
             visible: config.enableDebugMode
             width: {
                 if (config.targetMethod == 0 || config.targetMethod == 1) {
-                    return (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
+                    return workspace.activeClient.width
                 }
                 else {
                     return 32
                 }
             }
             height: {
-                if (config.targetMethod == 0) {
-                    let titlebarHeight = workspace.activeClient.rect.height - workspace.activeClient.clientSize.height
-                    return titlebarHeight > 0 ? titlebarHeight : 32
-                }
-                else if (config.targetMethod == 1) {
-                    return (config.handleUnitPercent) ? workspace.activeClient.height * (config.handleSize / 100) : config.handleSize
+                if (config.targetMethod == 1) {
+                    return workspace.activeClient.height
                 } else {
                     return 32
                 }
             }
             x: {
-                if (config.targetMethod == 0) {
-                    return workspace.activeClient.geometry.x + (workspace.activeClient.geometry.width / 2) - (handle.width / 2)
-                }
-                else if (config.targetMethod == 1) {
-                    let centerpadding_width = (config.handleUnitPercent) ? workspace.activeClient.width * (config.handleSize / 100) : config.handleSize
-                    return ((workspace.activeClient.x + workspace.activeClient.width / 2)) - centerpadding_width / 2
+                if (config.targetMethod == 0 || config.targetMethod == 1) {
+                    return workspace.activeClient.geometry.x
                 } else {
                     return workspace.cursorPos.x - handle.width / 2  || 0
                 }
             }
             y: {
-                if (config.targetMethod == 0) {
+                if (config.targetMethod == 0 || config.targetMethod == 1) {
                     return workspace.activeClient.geometry.y
-                }
-                else if (config.targetMethod == 1) {
-                    let centerpadding_height = (config.handleUnitPercent) ? workspace.activeClient.height * (config.handleSize / 100) : config.handleSize
-                    return ((workspace.activeClient.y + workspace.activeClient.height / 2)) - centerpadding_height / 2
                 } else {
                     return workspace.cursorPos.y - handle.height / 2  || 0
                 }

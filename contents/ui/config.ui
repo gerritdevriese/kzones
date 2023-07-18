@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>700</width>
-    <height>660</height>
+    <width>600</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>700</width>
-    <height>660</height>
+    <width>600</width>
+    <height>600</height>
    </size>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -95,6 +95,13 @@
          <layout class="QVBoxLayout" name="verticalLayout_14">
           <item>
            <layout class="QFormLayout" name="formLayout_6">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_20">
+              <property name="text">
+               <string>Target</string>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="1">
              <widget class="QComboBox" name="kcfg_zoneTarget">
               <property name="sizePolicy">
@@ -154,68 +161,9 @@
               </item>
               <item>
                <property name="text">
-                <string>Cursor *</string>
+                <string>Cursor</string>
                </property>
               </item>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_14">
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="text">
-               <string>Size</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QSpinBox" name="kcfg_handleSize">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>Set the size of the handle, only applicable when target method is Titlebar or Window</string>
-              </property>
-              <property name="suffix">
-               <string/>
-              </property>
-              <property name="maximum">
-               <number>2147483647</number>
-              </property>
-              <property name="stepType">
-               <enum>QAbstractSpinBox::DefaultStepType</enum>
-              </property>
-              <property name="value">
-               <number>100</number>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QRadioButton" name="kcfg_handleUnitPercent">
-              <property name="text">
-               <string>Percent</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QRadioButton" name="kcfg_handleUnitPixels">
-              <property name="text">
-               <string>Pixels</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_20">
-              <property name="text">
-               <string>Target</string>
-              </property>
              </widget>
             </item>
            </layout>
@@ -358,20 +306,12 @@
          </property>
         </spacer>
        </item>
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>* Not compatible with Wayland</string>
-         </property>
-        </widget>
-       </item>
       </layout>
       <zorder>kcfg_modifierEnabled</zorder>
       <zorder>kcfg_npmbEnabled</zorder>
       <zorder>groupBox_general</zorder>
       <zorder>verticalSpacer_3</zorder>
       <zorder>groupBox_target</zorder>
-      <zorder>label</zorder>
      </widget>
      <widget class="QWidget" name="tab_layouts">
       <attribute name="icon">
