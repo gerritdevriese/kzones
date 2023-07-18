@@ -30,7 +30,6 @@ PlasmaCore.Dialog {
     property int highlightedZone: -1
     property int activeScreen: 0
     property bool doAnimations: true
-    property var modifierKeys: ["Alt", "AltGr", "Ctrl", "Hyper", "Meta", "Shift", "Super"]
 
     // colors
     property string color_zone_border: "transparent"
@@ -63,7 +62,7 @@ PlasmaCore.Dialog {
             alwaysShowLayoutName: KWin.readConfig("alwaysShowLayoutName", false), // always show layout name, or only when switching between them
             pollingRate: KWin.readConfig("pollingRate", 100), // polling rate in milliseconds
             zoneTarget: KWin.readConfig("zoneTarget", 0), // the part of the zone you need to hover over to highlight it
-            targetMethod: KWin.readConfig("targetMethod", 0), // method to determine in which zone the window is located
+            targetMethod: KWin.readConfig("targetMethod", 2), // method to determine in which zone the window is located
             enableDebugMode: KWin.readConfig("enableDebugMode", false), // enable debug mode
             filterMode: KWin.readConfig("filterMode", 0), // filter mode
             filterList: KWin.readConfig("filterList", ""), // filter list
@@ -71,12 +70,6 @@ PlasmaCore.Dialog {
             osdTimeout: KWin.readConfig("osdTimeout", 1000), // timeout in milliseconds for hiding the OSD after switching layouts
             layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')), // layouts
             alternateIndicatorStyle: KWin.readConfig("alternateIndicatorStyle", false), // alternate indicator style
-            invertedMode: KWin.readConfig("invertedMode", false), // inverted mode
-            modifierEnabled: KWin.readConfig("modifierEnabled", false), // modifier enabled
-            modifierKey: KWin.readConfig("modifierKey", 5), // modifier key
-            npmbEnabled: KWin.readConfig("npmbEnabled", false), // npmb enabled
-            npmbToggle: KWin.readConfig("npmbToggle", true), // toggle with non-primary mouse button
-            npmbCycle: KWin.readConfig("npmbCycle", false), // cycle layouts with non-primary mouse button
         }
 
         console.log("KZones: Config loaded: " + JSON.stringify(config))
@@ -392,60 +385,6 @@ PlasmaCore.Dialog {
         }
 
         PlasmaCore.DataSource {
-            id: keystateSource
-            engine: "keystate"
-            connectedSources: {
-                let sources = []
-                if (config.npmbEnabled) {
-                    sources = sources.concat(["Left Button", "Right Button", "Middle Button"])
-                }
-                if (config.modifierEnabled) {
-                    sources.push(modifierKeys[config.modifierKey])
-                }
-                return sources
-            }
-            // ["Shift","Right Button","First X Button","Caps Lock","Middle Button","Alt","Num Lock","Left Button","Meta","AltGr","Second X Button","Hyper","Ctrl","Super"]
-            onNewData: {
-                //console.log(JSON.stringify(keystateSource))
-                //console.log(sourceName)
-                if (moving) {
-                    switch (sourceName) {
-                        case modifierKeys[config.modifierKey]:
-                            if (keystateSource.data[sourceName].Pressed && moving) {
-                                console.log("KZones: Modifier key pressed")
-                                if (config.invertedMode) show()
-                                else hide()
-                            }
-                            if (!keystateSource.data[sourceName].Pressed && moving) {
-                                console.log("KZones: Modifier key released")
-                                if (config.invertedMode) hide()
-                                else show()
-                            }
-                            break
-                        case "Left Button":
-                        case "Right Button":
-                        case "Middle Button":
-                            if(keystateSource.data[sourceName].Pressed) {
-                                console.log("KZones: Npmb pressed")
-                                if (config.npmbToggle) {
-                                    if (shown) {
-                                        hide()
-                                    } else {
-                                        show()
-                                    }
-                                }
-                                if (config.npmbCycle) {
-                                    highlightedZone = -1
-                                    currentLayout = (currentLayout + 1) % config.layouts.length
-                                }                    
-                            }
-                            break
-                    }               
-                }
-            }
-        }
-
-        PlasmaCore.DataSource {
             id: osdCmd
             engine: "executable"
             connectedSources: []
@@ -722,13 +661,7 @@ PlasmaCore.Dialog {
                         resizing = false
                         hideOSD.running = false
                         console.log("KZones: Move start " + client.resourceClass.toString())
-                        if (config.modifierEnabled) {
-                            if (!((!config.invertedMode && keystateSource.data[modifierKeys[config.modifierKey]].Pressed) || (config.invertedMode && !keystateSource.data[config.modifierKey].Pressed))){
-                                mainDialog.show()
-                            }
-                        } else {
-                            mainDialog.show()
-                        }
+                        mainDialog.show()
                     }
                     if (client.resize) {
                         moving = false

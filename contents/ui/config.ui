@@ -172,128 +172,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="kcfg_modifierEnabled">
-         <property name="title">
-          <string>Modifier key *</string>
-         </property>
-         <property name="flat">
-          <bool>false</bool>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_12">
-          <item>
-           <widget class="QCheckBox" name="kcfg_invertedMode">
-            <property name="text">
-             <string>Hold modifier key to activate zones while dragging</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QFormLayout" name="formLayout_4">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_27">
-              <property name="text">
-               <string>Modifier key</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="kcfg_modifierKey">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>100</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="currentIndex">
-               <number>5</number>
-              </property>
-              <item>
-               <property name="text">
-                <string>Alt</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>AltGr</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Ctrl</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Hyper</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Meta</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Shift</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Super</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="kcfg_npmbEnabled">
-         <property name="title">
-          <string>Non-primary mouse button *</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_13">
-          <item>
-           <widget class="QRadioButton" name="kcfg_npmbToggle">
-            <property name="text">
-             <string>Toggles zone activation</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="kcfg_npmbCycle">
-            <property name="text">
-             <string>Cycles between layouts</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <spacer name="verticalSpacer_3">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -307,8 +185,6 @@
         </spacer>
        </item>
       </layout>
-      <zorder>kcfg_modifierEnabled</zorder>
-      <zorder>kcfg_npmbEnabled</zorder>
       <zorder>groupBox_general</zorder>
       <zorder>verticalSpacer_3</zorder>
       <zorder>groupBox_target</zorder>
