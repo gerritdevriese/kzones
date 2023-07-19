@@ -16,6 +16,10 @@ PlasmaCore.Dialog {
     type: PlasmaCore.Dialog.OnScreenDisplay // https://api.kde.org/frameworks/plasma-framework/html/classPlasmaQuick_1_1Dialog.html
     backgroundHints: PlasmaCore.Types.NoBackground
     flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    x: clientArea.x
+    y: clientArea.y
+    width: clientArea.width
+    height: clientArea.height
     visible: false
     outputOnly: true
     opacity: 1    
@@ -43,15 +47,12 @@ PlasmaCore.Dialog {
     property string color_indicator_text: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 1)
     property string color_debug_handle: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.9)  
 
+    property var correctedCursorPos: Qt.point(workspace.cursorPos.x - clientArea.x, workspace.cursorPos.y - clientArea.y)
+
     // enums
     property var zoneTargets: {
         "indicator": 0,
         "zone": 1
-    }
-    property var targetMethods: {
-        "titlebar": 0,
-        "window": 1,
-        "cursor": 2
     }
 
     function loadConfig() {
@@ -63,7 +64,6 @@ PlasmaCore.Dialog {
             alwaysShowLayoutName: KWin.readConfig("alwaysShowLayoutName", false), // always show layout name, or only when switching between them
             pollingRate: KWin.readConfig("pollingRate", 100), // polling rate in milliseconds
             zoneTarget: KWin.readConfig("zoneTarget", 0), // the part of the zone you need to hover over to highlight it
-            targetMethod: KWin.readConfig("targetMethod", 2), // method to determine in which zone the window is located
             enableDebugMode: KWin.readConfig("enableDebugMode", false), // enable debug mode
             filterMode: KWin.readConfig("filterMode", 0), // filter mode
             filterList: KWin.readConfig("filterList", ""), // filter list
@@ -93,11 +93,10 @@ PlasmaCore.Dialog {
 
     function refreshClientArea() {
         activeScreen = workspace.activeScreen
-        clientArea = workspace.clientArea(KWin.FullScreenArea, workspace.activeScreen, workspace.currentDesktop)
+        clientArea = workspace.clientArea(KWin.FullScreenArea, activeScreen, workspace.currentDesktop)
     }
 
-    function checkZone(x, y, width = 1, height = 1) {
-        let arr = []
+    function checkZone(x, y) {
         for (let i = 0; i < repeater_zones.model.length; i++) {
             let zone
             switch (config.zoneTarget) {
@@ -109,36 +108,29 @@ PlasmaCore.Dialog {
                 break
             }
             let zoneItem = zone.mapToItem(null, 0, 0)
-            let component = {
-                "x": zoneItem.x,
-                "y": zoneItem.y,
-                "width": zone.width,
-                "height": zone.height
+            if (isPointInside(x, y, {x: zoneItem.x, y: zoneItem.y, width: zone.width, height: zone.height})) {
+                return i
             }
-            let component2 = {
-                "x": x,
-                "y": y,
-                "width": width,
-                "height": height
-            }
-            if (rectOverlapArea(component, component2) > 0) {
-                let xDist = Math.abs((component.x + component.width / 2) - (component2.x + component2.width / 2))
-                let yDist = Math.abs((component.y + component.height / 2) - (component2.y + component2.height / 2))
-                let distance = xDist + yDist
-                arr.push({i, distance})
-            }
-        }
-        //get lowest distance
-        let distances = arr.map(x => x.distance)
-        if (distances.length > 0) {
-            let minDistance = Math.min(...distances)
-            return arr[distances.indexOf(minDistance)].i
         }
         return -1
     }
 
-    function checkZoneByGeometry(geometry) {
-        return checkZone(geometry.x, geometry.y, geometry.width, geometry.height)
+    function isPointInside(x, y, geometry) {
+        return x >= geometry.x && x <= geometry.x + geometry.width && y >= geometry.y && y <= geometry.y + geometry.height
+    }
+
+    function rectOverlapArea(component1, component2) {
+        let x1 = component1.x
+        let y1 = component1.y
+        let x2 = component1.x + component1.width
+        let y2 = component1.y + component1.height
+        let x3 = component2.x
+        let y3 = component2.y
+        let x4 = component2.x + component2.width
+        let y4 = component2.y + component2.height
+        let xOverlap = Math.max(0, Math.min(x2, x4) - Math.max(x1, x3))
+        let yOverlap = Math.max(0, Math.min(y2, y4) - Math.max(y1, y3))
+        return xOverlap * yOverlap
     }
 
     function matchZone(client) {
@@ -149,8 +141,8 @@ PlasmaCore.Dialog {
         for (let i = 0; i < zones.length; i++) {
             let zone = zones[i]
             let zone_padding = config.layouts[currentLayout].padding || 0
-            let zoneX = clientArea.x + ((zone.x / 100) * (clientArea.width - zone_padding)) + zone_padding
-            let zoneY = clientArea.y + ((zone.y / 100) * (clientArea.height - zone_padding)) + zone_padding
+            let zoneX = ((zone.x / 100) * (clientArea.width - zone_padding)) + zone_padding
+            let zoneY = ((zone.y / 100) * (clientArea.height - zone_padding)) + zone_padding
             let zoneWidth = ((zone.width / 100) * (clientArea.width - zone_padding)) - zone_padding
             let zoneHeight = ((zone.height / 100) * (clientArea.height - zone_padding)) - zone_padding
             if (client.geometry.x == zoneX && client.geometry.y == zoneY && client.geometry.width == zoneWidth && client.geometry.height == zoneHeight) {
@@ -186,20 +178,6 @@ PlasmaCore.Dialog {
                 workspace.activeClient = clientsInZone[(index + 1) % clientsInZone.length]
             }
         }
-    }
-
-    function rectOverlapArea(component1, component2) {
-        let x1 = component1.x + clientArea.x
-        let y1 = component1.y + clientArea.y
-        let x2 = component1.x + component1.width + clientArea.x
-        let y2 = component1.y + component1.height + clientArea.y
-        let x3 = component2.x + clientArea.x
-        let y3 = component2.y + clientArea.y
-        let x4 = component2.x + component2.width + clientArea.x
-        let y4 = component2.y + component2.height + clientArea.y
-        let xOverlap = Math.max(0, Math.min(x2, x4) - Math.max(x1, x3))
-        let yOverlap = Math.max(0, Math.min(y2, y4) - Math.max(y1, y3))
-        return xOverlap * yOverlap
     }
 
     function moveClientToZone(client, zone) {
@@ -276,10 +254,7 @@ PlasmaCore.Dialog {
         // shortcut: move to next zone
         bindShortcut("Move active window to next zone", "Ctrl+Alt+Right", function() {
             const client = workspace.activeClient
-            if (client.zone == -1) {
-                moveClientToZone(client, checkZoneByGeometry(client.geometry))
-                return
-            }
+            // TODO: if client.zone = -1 check if client is in a zone by geometry
             const zonesLength = config.layouts[currentLayout].zones.length
             moveClientToZone(client, (client.zone + 1) % zonesLength)
         })
@@ -287,10 +262,7 @@ PlasmaCore.Dialog {
         // shortcut: move to previous zone
         bindShortcut("Move active window to previous zone", "Ctrl+Alt+Left", function() {
             const client = workspace.activeClient
-            if (client.zone == -1) {
-                moveClientToZone(client, checkZoneByGeometry(client.geometry))
-                return
-            }
+            // TODO: if client.zone = -1 check if client is in a zone by geometry
             const zonesLength = config.layouts[currentLayout].zones.length
             moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength)
         })
@@ -332,30 +304,37 @@ PlasmaCore.Dialog {
 
     Item {
         id: mainItem
-        width: workspace.displayWidth
-        height: workspace.displayHeight
+        anchors.fill: parent
 
         // main polling timer
         Timer {
             id: timer
             triggeredOnStart: true
             interval: config.pollingRate
-            running: shown && moving
+            running: shown// && moving
             repeat: true
 
             onTriggered: {
-                switch (config.targetMethod) {
-                case targetMethods.titlebar:
-                case targetMethods.window:
-                    highlightedZone = checkZoneByGeometry(handle)
-                    break
-                case targetMethods.cursor:
-                    let pos = workspace.cursorPos
-                    highlightedZone = checkZone(pos.x, pos.y)
-                    break
-                default:
-                    break
-                }
+
+                refreshClientArea()
+                
+                let pos = correctedCursorPos
+                highlightedZone = checkZone(pos.x, pos.y)
+
+                // mini selector
+                config.layouts.forEach((layout, layoutIndex) => {
+                    let layoutItem = repeater_layouts.itemAt(layoutIndex)
+                    layout.zones.forEach((zone, zoneIndex) => {
+                        let zoneItem = layoutItem.children[zoneIndex]
+                        // check if cursor is above zoneItem
+                        let zoneItemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0))
+                        if(isPointInside(workspace.cursorPos.x, workspace.cursorPos.y, {x: zoneItemGlobal.x, y: zoneItemGlobal.y, width: zoneItem.width, height: zoneItem.height})) {
+                            highlightedZone = zoneIndex
+                            currentLayout = layoutIndex
+                        }
+                    })
+                })
+
             }
         }
 
@@ -377,43 +356,24 @@ PlasmaCore.Dialog {
             id: handle
             color: color_debug_handle
             visible: config.enableDebugMode
-            width: {
-                if (config.targetMethod == targetMethods.titlebar || config.targetMethod == targetMethods.window) {
-                    return workspace.activeClient.width
-                }
-                else {
-                    return 32
-                }
-            }
-            height: {
-                if (config.targetMethod == targetMethods.window) {
-                    return workspace.activeClient.height
-                } else {
-                    return 32
-                }
-            }
-            x: {
-                if (config.targetMethod == targetMethods.titlebar || config.targetMethod == targetMethods.window) {
-                    return workspace.activeClient.geometry.x
-                } else {
-                    return workspace.cursorPos.x - handle.width / 2  || 0
-                }
-            }
-            y: {
-                if (config.targetMethod == targetMethods.titlebar || config.targetMethod == targetMethods.window) {
-                    return workspace.activeClient.geometry.y
-                } else {
-                    return workspace.cursorPos.y - handle.height / 2  || 0
-                }
-            }
+            width: 32
+            height: 32
+            radius: 32
+            x: correctedCursorPos.x - handle.width / 2
+            y: correctedCursorPos.y - handle.height / 2
+            z: 100
         }
 
         // debug osd
         Rectangle {
             id: debugOsd
             visible: config.enableDebugMode
-            x: clientArea.x
-            y: clientArea.y
+
+            anchors.left: parent.left
+            anchors.leftMargin: 20
+            anchors.top: parent.top
+            anchors.topMargin: 20
+
             z: 100
             width: debugOsdText.paintedWidth + debugOsdText.padding * 2
             height: debugOsdText.paintedHeight + debugOsdText.padding * 2
@@ -426,6 +386,7 @@ PlasmaCore.Dialog {
                 padding: 15
                 color: color_indicator_text
                 text: {
+                    // let correctedCursorPos = Qt.point(correctedCursorPos.x - clientArea.x, correctedCursorPos.y - clientArea.y)
                     if (config.enableDebugMode) {
                         let t = ""
                         t += `Active: ${workspace.activeClient.caption}\n`
@@ -440,7 +401,8 @@ PlasmaCore.Dialog {
                         t += `Moving: ${moving}\n`
                         t += `Resizing: ${resizing}\n`
                         t += `Old Geometry: ${JSON.stringify(workspace.activeClient.oldGeometry)}\n`
-                        t += `Active Screen: ${activeScreen}`
+                        t += `Active Screen: ${activeScreen}\n`
+                        t += `Cursor pos: ${correctedCursorPos.x}, ${correctedCursorPos.y}`
                         return t
                     } else {
                         return ""
@@ -459,8 +421,8 @@ PlasmaCore.Dialog {
             // zone
             Rectangle {
                 id: zone
-                x: clientArea.x + ((modelData.x / 100) * (clientArea.width - zone_padding)) + zone_padding
-                y: clientArea.y + ((modelData.y / 100) * (clientArea.height - zone_padding)) + zone_padding
+                x: ((modelData.x / 100) * (clientArea.width - zone_padding)) + zone_padding
+                y: ((modelData.y / 100) * (clientArea.height - zone_padding)) + zone_padding
                 implicitWidth: ((modelData.width / 100) * (clientArea.width - zone_padding)) - zone_padding
                 implicitHeight: ((modelData.height / 100) * (clientArea.height - zone_padding)) - zone_padding
                 color: (highlightedZone == zoneIndex) ? color_zone_background_active : color_zone_background
@@ -478,7 +440,7 @@ PlasmaCore.Dialog {
                     height: 90 //100 // TODO: make configurable (indicatorHeight)
                     radius: 5
                     color: config.alternateIndicatorStyle ? color_indicator : 'transparent'
-                    opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 0.5
+                    opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 1
                     anchors {
                         horizontalCenter: parent.horizontalCenter
                         horizontalCenterOffset: (((modelData || {}).indicator || {}).offset || {}).x || 0
@@ -501,7 +463,7 @@ PlasmaCore.Dialog {
                             implicitWidth: ((modelData.width / 100) * (indicator.width - padding)) - padding
                             implicitHeight: ((modelData.height / 100) * (indicator.height - padding)) - padding
                             color: (index == zone.zoneIndex) ? color_indicator_accent : color_indicator
-                            // opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 1.0 // TODO: add opacity to config
+                            // opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 0.5 // TODO: add opacity to config
                             scale: (doAnimations) ? ((highlightedZone == zone.zoneIndex) ? ((index == zone.zoneIndex) ? 1.1 : 1) : 1.0) : 1
                             Behavior on scale {
                                 NumberAnimation { duration: 150 }
@@ -531,11 +493,53 @@ PlasmaCore.Dialog {
                 // zone indicator shadow
                 Components.Shadow{
                     target: indicator
+                    visible: !config.alternateIndicatorStyle
                 }
 
             }
 
         }
+
+        // mini selector
+        RowLayout {
+            id: toolBarRowLayout
+            spacing: 20
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 20
+
+            Repeater {
+                id: repeater_layouts
+                model: config.layouts
+
+                Rectangle {
+                    id: layout
+                    width: 200
+                    height: 100
+                    color: "transparent"
+                    property int layoutIndex: index
+
+                    Repeater {
+                        id: zone
+                        model: modelData.zones
+                        property int zoneIndex: index
+
+                        // zone
+                        Rectangle {
+                            id: zone_2
+                            x: modelData.x / 100 * layout.width
+                            y: modelData.y / 100 * layout.height
+                            implicitWidth: modelData.width / 100 * layout.width
+                            implicitHeight: modelData.height / 100 * layout.height
+                            color: highlightedZone == index && currentLayout == layoutIndex ? color_indicator_accent : color_indicator
+                            border.color: "black"
+                            border.width: 2
+                        }
+                    }
+                }
+            }
+        }
+        
 
         // workspace connection
         Connections {
@@ -582,7 +586,7 @@ PlasmaCore.Dialog {
             function onClientStartUserMovedResized(client) {
                 if (client.resizeable && client.normalWindow) {
                     if (client.move && checkFilter(client)) {
-                        refreshClientArea()
+                        
                         cachedClientArea = clientArea
                         moving = true
                         resizing = false
@@ -682,6 +686,14 @@ PlasmaCore.Dialog {
                 })
                 delay.start()
             }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            visible: config.enableDebugMode
+            border.color: color_debug_handle
+            border.width: 1
         }
 
     }

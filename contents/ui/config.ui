@@ -135,47 +135,6 @@
               </item>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_5">
-              <property name="toolTip">
-               <string/>
-              </property>
-              <property name="text">
-               <string>Method</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QComboBox" name="kcfg_targetMethod">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>Method to determine in which zone the window is located</string>
-              </property>
-              <property name="frame">
-               <bool>true</bool>
-              </property>
-              <item>
-               <property name="text">
-                <string>Titlebar</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Window</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Cursor</string>
-               </property>
-              </item>
-             </widget>
-            </item>
            </layout>
           </item>
          </layout>
