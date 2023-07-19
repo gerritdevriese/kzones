@@ -68,10 +68,6 @@
             <default>0</default>
         </entry>
 
-        <entry name="fadeDuration" type="Int">
-            <default>100</default>
-        </entry>
-
         <entry name="osdTimeout" type="Int">
             <default>1000</default>
         </entry>

@@ -12,12 +12,13 @@ import "components" as Components
 PlasmaCore.Dialog {
 
     id: mainDialog
-    location: PlasmaCore.Types.Desktop // on the planar desktop layer, extending across the full screen from edge to edge. 
-    backgroundHints: PlasmaCore.Types.NoBackground // not drawing a background under the applet, the applet has its own implementation. 
+    location: PlasmaCore.Types.Floating // https://api.kde.org/frameworks/plasma-framework/html/classPlasma_1_1Types.html
+    type: PlasmaCore.Dialog.OnScreenDisplay // https://api.kde.org/frameworks/plasma-framework/html/classPlasmaQuick_1_1Dialog.html
+    backgroundHints: PlasmaCore.Types.NoBackground
     flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
-    visible: false // hide dialog on startup
-    opacity: 0 // hide dialog on startup
-    outputOnly: true // makes dialog click-through
+    visible: false
+    outputOnly: true
+    opacity: 1    
 
     // properties
     property var config: {}
@@ -39,7 +40,7 @@ PlasmaCore.Dialog {
     property string color_indicator: Qt.rgba(Kirigami.Theme.alternateBackgroundColor.r, Kirigami.Theme.alternateBackgroundColor.g, Kirigami.Theme.alternateBackgroundColor.b, 1)
     property string color_indicator_accent: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 1)
     property string color_indicator_shadow: '#69000000'
-    property string color_indicator_font: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 1)
+    property string color_indicator_text: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 1)
     property string color_debug_handle: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.9)  
 
     // enums
@@ -66,7 +67,6 @@ PlasmaCore.Dialog {
             enableDebugMode: KWin.readConfig("enableDebugMode", false), // enable debug mode
             filterMode: KWin.readConfig("filterMode", 0), // filter mode
             filterList: KWin.readConfig("filterList", ""), // filter list
-            fadeDuration: KWin.readConfig("fadeDuration", 100), // animation duration in milliseconds
             osdTimeout: KWin.readConfig("osdTimeout", 1000), // timeout in milliseconds for hiding the OSD after switching layouts
             layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')), // layouts
             alternateIndicatorStyle: KWin.readConfig("alternateIndicatorStyle", false), // alternate indicator style
@@ -77,28 +77,18 @@ PlasmaCore.Dialog {
     }
 
     function show() {
-        if (!config.alwaysShowLayoutName) layoutOsd.visible = false
         // refresh client area
         refreshClientArea()
-        // update main item size (needed for boot time, and to reset after hiding)
-        mainItem.width = workspace.displayWidth
-        mainItem.height = workspace.displayHeight
         // show OSD
-        if (!mainDialog.shown) {
-            mainDialog.outputOnly = false
-            mainDialog.opacity = 1
-            mainDialog.shown = true
-            highlightedZone = -1
-        }        
+        mainDialog.shown = true
+        mainDialog.visible = true
     }
 
     function hide() {
         // hide OSD
-        mainDialog.opacity = 0
         mainDialog.shown = false
-        mainDialog.outputOnly = true
-        mainItem.width = 0
-        mainItem.height = 0
+        mainDialog.visible = false
+        highlightedZone = -1
     }
 
     function refreshClientArea() {
@@ -253,15 +243,6 @@ PlasmaCore.Dialog {
         client.layout = currentLayout
     }
 
-    Behavior on opacity {
-        NumberAnimation { 
-            duration: config.fadeDuration
-            onRunningChanged: {
-                mainDialog.visible = true //running || shown
-            }
-        }
-    }
-
     Component.onCompleted: {
 
         // register window
@@ -277,11 +258,12 @@ PlasmaCore.Dialog {
                 hideOSD.start()
             }
 
+            osdCmd.exec(config.layouts[currentLayout].name)
+
             //cycle through layouts
             currentLayout = (currentLayout + 1) % config.layouts.length
             highlightedZone = -1
             show()
-            if (!config.alwaysShowLayoutName) layoutOsd.visible = true
         })
 
         // shortcut: move to zone (1-9)
@@ -341,12 +323,7 @@ PlasmaCore.Dialog {
             matchZone(workspace.clientList()[i])
         }
 
-        // delay the initialization of the overlay until the workspace is ready
-        delay.setTimeout(function() {
-            mainDialog.visible = true
-            mainDialog.opacity = 0
-            console.log("KZones: Ready!")
-        }, 1000)
+        console.log("KZones: Ready!")
     }
 
     function bindShortcut(title, sequence, callback) {
@@ -382,6 +359,7 @@ PlasmaCore.Dialog {
             }
         }
 
+        // osd qdbus
         PlasmaCore.DataSource {
             id: osdCmd
             engine: "executable"
@@ -389,17 +367,8 @@ PlasmaCore.Dialog {
             onNewData: {
                 disconnectSource(sourceName);
             }
-            function exec(text) {
-                connectSource(`qdbus org.kde.plasmashell /org/kde/osdService showText preferences-desktop-virtual "${text}"`);
-            }
-        }
-
-        // click to exit osd
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-            onPressed: {
-                hide()
+            function exec(text, icon) {
+                connectSource(`qdbus org.kde.plasmashell /org/kde/osdService showText "${icon}" "${text}"`);
             }
         }
 
@@ -449,13 +418,13 @@ PlasmaCore.Dialog {
             width: debugOsdText.paintedWidth + debugOsdText.padding * 2
             height: debugOsdText.paintedHeight + debugOsdText.padding * 2
             radius: 5
-            color: "#DD333333"
+            color: color_indicator
 
             Text {
                 id: debugOsdText
                 anchors.fill: parent
                 padding: 15
-                color: 'white'
+                color: color_indicator_text
                 text: {
                     if (config.enableDebugMode) {
                         let t = ""
@@ -479,30 +448,6 @@ PlasmaCore.Dialog {
                 }
                 font.pixelSize: 14
                 font.family: "Hack"
-            }
-        }
-
-        // layout name
-        Rectangle {
-            id: layoutOsd
-            visible: true
-            opacity: config.layouts[currentLayout].name ? 1 : 0
-            x: clientArea.x + clientArea.width / 2 - width / 2
-            y: clientArea.y + clientArea.height - 150
-            width: layoutName.paintedWidth + 30
-            height: layoutName.paintedHeight + 15
-            radius: 5
-            color: color_indicator
-
-            // layout name label
-            Text {
-                id: layoutName
-                anchors.fill: parent
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                color: 'white'
-                text: config.layouts[currentLayout].name
-                font.pixelSize: 24
             }
         }
 
@@ -541,22 +486,6 @@ PlasmaCore.Dialog {
                         verticalCenterOffset: (((modelData || {}).indicator || {}).offset || {}).y || 0
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onPressed: {
-                            moveClientToZone(workspace.activeClient, zone.zoneIndex)
-                            hide()
-                        }
-                        onEntered: {
-                            highlightedZone = zone.zoneIndex
-                        }
-                        onExited: {
-                            if (shown) highlightedZone = -1
-                        }
-                    }
-
                     // zone indicator part
                     Repeater {
                         id: indicators
@@ -586,7 +515,7 @@ PlasmaCore.Dialog {
                         anchors.fill: indicator
                         font.pixelSize: 20
                         opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 0.5 // TODO: add opacity to config
-                        color: color_indicator_font
+                        color: color_indicator_text
                         leftPadding: 30
                         rightPadding: 30
                         topPadding: 30
