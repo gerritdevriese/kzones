@@ -22,7 +22,7 @@ PlasmaCore.Dialog {
     height: clientArea.height
     visible: false
     outputOnly: true
-    opacity: 1    
+    opacity: 1
 
     // properties
     property var config: {}
@@ -54,6 +54,10 @@ PlasmaCore.Dialog {
         "indicator": 0,
         "zone": 1
     }
+    property var styles: {
+        "full": 0,
+        "mini": 1
+    }
 
     function loadConfig() {
         // load values from configuration
@@ -71,6 +75,7 @@ PlasmaCore.Dialog {
             layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')), // layouts
             alternateIndicatorStyle: KWin.readConfig("alternateIndicatorStyle", false), // alternate indicator style
             invertedMode: KWin.readConfig("invertedMode", false), // inverted mode
+            style: styles.full // style
         }
 
         console.log("KZones: Config loaded: " + JSON.stringify(config))
@@ -322,32 +327,37 @@ PlasmaCore.Dialog {
                 highlightedZone = checkZone(pos.x, pos.y)
 
                 // mini selector
-                if (!miniSelectorBackground.animating) {
-                    config.layouts.forEach((layout, layoutIndex) => {
-                        let layoutItem = repeater_layouts.itemAt(layoutIndex)
-                        layout.zones.forEach((zone, zoneIndex) => {
-                            let zoneItem = layoutItem.children[zoneIndex]
-                            // check if cursor is above zoneItem
-                            let zoneItemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0))
-                            if(isPointInside(workspace.cursorPos.x, workspace.cursorPos.y, {x: zoneItemGlobal.x, y: zoneItemGlobal.y, width: zoneItem.width, height: zoneItem.height})) {
-                                highlightedZone = zoneIndex
-                                currentLayout = layoutIndex
-                            }
+
+                if (config.style == true || styles.mini) {
+
+                    if (!miniSelectorBackground.animating) {
+                        config.layouts.forEach((layout, layoutIndex) => {
+                            let layoutItem = repeater_layouts.itemAt(layoutIndex)
+                            layout.zones.forEach((zone, zoneIndex) => {
+                                let zoneItem = layoutItem.children[zoneIndex]
+                                // check if cursor is above zoneItem
+                                let zoneItemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0))
+                                if(isPointInside(workspace.cursorPos.x, workspace.cursorPos.y, {x: zoneItemGlobal.x, y: zoneItemGlobal.y, width: zoneItem.width, height: zoneItem.height})) {
+                                    highlightedZone = zoneIndex
+                                    currentLayout = layoutIndex
+                                }
+                            })
                         })
-                    })
-                }
+                    }
 
-                let miniSelectorGlobal = miniSelectorBackground.mapToGlobal(Qt.point(0, 0))
-                if(isPointInside(workspace.cursorPos.x, workspace.cursorPos.y, {x: miniSelectorGlobal.x, y: miniSelectorGlobal.y, width: miniSelectorBackground.width, height: miniSelectorBackground.height})) {
-                    miniSelectorBackground.expanded = true
-                } else {
-                    miniSelectorBackground.expanded = false
-                }
+                    let miniSelectorGlobal = miniSelectorBackground.mapToGlobal(Qt.point(0, 0))
+                    if(isPointInside(workspace.cursorPos.x, workspace.cursorPos.y, {x: miniSelectorGlobal.x, y: miniSelectorGlobal.y, width: miniSelectorBackground.width, height: miniSelectorBackground.height})) {
+                        miniSelectorBackground.expanded = true
+                    } else {
+                        miniSelectorBackground.expanded = false
+                    }
 
-                if (workspace.cursorPos.y < miniSelectorBackground.y + miniSelectorBackground.height + 80) {
-                    miniSelectorBackground.near = true
-                } else {
-                    miniSelectorBackground.near = false
+                    if (correctedCursorPos.y < miniSelectorBackground.y + miniSelectorBackground.height + 80) {
+                        miniSelectorBackground.near = true
+                    } else {
+                        miniSelectorBackground.near = false
+                    }
+
                 }
 
             }
@@ -450,66 +460,31 @@ PlasmaCore.Dialog {
 
                 //! keep this the first child
                 Rectangle {
-                    id: indicator
-                    width: 160 //180 // TODO: make configurable (indicatorWidth)
-                    height: 90 //100 // TODO: make configurable (indicatorHeight)
-                    radius: 5
-                    color: config.alternateIndicatorStyle ? color_indicator : 'transparent'
-                    opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 1
-                    anchors {
-                        horizontalCenter: parent.horizontalCenter
-                        horizontalCenterOffset: (((modelData || {}).indicator || {}).offset || {}).x || 0
-                        verticalCenter: parent.verticalCenter
-                        verticalCenterOffset: (((modelData || {}).indicator || {}).offset || {}).y || 0
+
+                    width: 170
+                    height: 110
+                    color: "#DD222222"
+                    radius: 10      
+                    border.color: "#444444"
+                    border.width: 1   
+                    anchors.centerIn: parent
+
+                    Components.Indicator{
+                        zones: config.layouts[currentLayout].zones
+                        activeZone: index
+                        anchors.centerIn: parent
+                        width: parent.width - 30
+                        height: parent.height - 30
+                        hovering: (highlightedZone == zoneIndex)
                     }
 
-                    // zone indicator part
-                    Repeater {
-                        id: indicators
-                        model: config.layouts[currentLayout].zones
-
-                        Rectangle {
-                            property int padding: config.alternateIndicatorStyle ? 0 : 3
-                            radius: 5
-                            visible: config.alternateIndicatorStyle ? ((index == zone.zoneIndex) ? true : false) : true
-                            x: ((modelData.x / 100) * (indicator.width - padding)) + padding
-                            y: ((modelData.y / 100) * (indicator.height - padding)) + padding
-                            z: (index == zone.zoneIndex) ? 2 : 1
-                            implicitWidth: ((modelData.width / 100) * (indicator.width - padding)) - padding
-                            implicitHeight: ((modelData.height / 100) * (indicator.height - padding)) - padding
-                            color: (index == zone.zoneIndex) ? color_indicator_accent : color_indicator
-                            // opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 0.5 // TODO: add opacity to config
-                            scale: (doAnimations) ? ((highlightedZone == zone.zoneIndex) ? ((index == zone.zoneIndex) ? 1.1 : 1) : 1.0) : 1
-                            Behavior on scale {
-                                NumberAnimation { duration: 150 }
-                            }
-                        }
-                    }
-
-                    // zone indicator label
-                    Text {
-                        z: 3
-                        anchors.fill: indicator
-                        font.pixelSize: 20
-                        opacity: (highlightedZone != zone.zoneIndex) ? 1.0 : 0.5 // TODO: add opacity to config
-                        color: color_indicator_text
-                        leftPadding: 30
-                        rightPadding: 30
-                        topPadding: 30
-                        bottomPadding: 30
-                        fontSizeMode: Text.Fit
-                        minimumPixelSize: 8
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        text: modelData.name
-                    }
                 }
 
                 // zone indicator shadow
-                Components.Shadow{
-                    target: indicator
-                    visible: !config.alternateIndicatorStyle
-                }
+                // Components.Shadow{
+                //     target: indicator
+                //     visible: !config.alternateIndicatorStyle
+                // }
 
             }
 
@@ -525,7 +500,7 @@ PlasmaCore.Dialog {
             property bool near: false
             property bool animating: false
 
-            visible: false
+            visible: (config.style == styles.mini)
 
             color: "transparent"
 
@@ -540,7 +515,7 @@ PlasmaCore.Dialog {
                 NumberAnimation {
                     duration: 150 
                     onRunningChanged: {
-                        if (!running) miniSelectorBackground.visible = true
+                        if (!running) miniSelectorBackground.visible = true //(config.style == styles.mini)
                         miniSelectorBackground.animating = running
                     }
                 }
@@ -575,32 +550,12 @@ PlasmaCore.Dialog {
                         id: repeater_layouts
                         model: config.layouts
 
-                        Rectangle {
-                            id: layout
-                            width: 140
-                            height: 80
-                            color: "transparent"
-                            property int layoutIndex: index
-
-                            Repeater {
-                                id: zone
-                                model: modelData.zones
-                                property int zoneIndex: index
-
-                                // zone
-                                Rectangle {
-                                    id: zone_2
-                                    property int padding: 3
-                                    radius: 5
-                                    border.color: highlightedZone == index && currentLayout == layoutIndex ? color_indicator_accent : "#666666"
-                                    border.width: 1  
-                                    x: ((modelData.x / 100) * (layout.width - padding)) + padding
-                                    y: ((modelData.y / 100) * (layout.height - padding)) + padding
-                                    implicitWidth: ((modelData.width / 100) * (layout.width - padding)) - padding
-                                    implicitHeight: ((modelData.height / 100) * (layout.height - padding)) - padding
-                                    color: highlightedZone == index && currentLayout == layoutIndex ? color_indicator_accent : "#333333"
-                                }
-                            }
+                        Components.Indicator{
+                            zones: modelData.zones
+                            activeZone: (currentLayout == index) ? highlightedZone : -1
+                            width: 170 - 30
+                            height: 110 - 30
+                            hovering: (currentLayout == index)
                         }
                     }
                 }
