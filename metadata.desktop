@@ -13,7 +13,7 @@ X-KDE-ConfigModule=kwin/effects/configs/kcm_kwin4_genericscripted
 
 X-KDE-PluginInfo-Author=gerritdevriese
 X-KDE-PluginInfo-Name=kzones
-X-KDE-PluginInfo-Version=0.4
+X-KDE-PluginInfo-Version=0.5
 X-KDE-PluginInfo-Website=https://kde.org
 X-KDE-PluginInfo-Category=Utilities
 X-KDE-PluginInfo-License=GPL-3.0+
