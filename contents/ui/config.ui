@@ -10,12 +10,6 @@
     <height>600</height>
    </rect>
   </property>
-  <property name="minimumSize">
-   <size>
-    <width>600</width>
-    <height>600</height>
-   </size>
-  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTabWidget" name="tabWidget">
@@ -46,19 +40,83 @@
      <property name="tabBarAutoHide">
       <bool>false</bool>
      </property>
-     <widget class="QWidget" name="tab_behaviour">
+     <widget class="QWidget" name="tab_general">
       <attribute name="icon">
        <iconset theme="systemsettings">
         <normaloff>../../../../../.designer/backup</normaloff>../../../../../.designer/backup</iconset>
       </attribute>
       <attribute name="title">
-       <string>Behaviour</string>
+       <string>General</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Overlay</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QCheckBox" name="kcfg_enableZoneIndicators">
+            <property name="text">
+             <string>Show zones when I start moving a window</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget" native="true">
+            <layout class="QVBoxLayout" name="verticalLayout_10">
+             <property name="leftMargin">
+              <number>20</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>6</number>
+             </property>
+             <item>
+              <widget class="QRadioButton" name="kcfg_indicatorIsTarget">
+               <property name="text">
+                <string>Highlight zone when hovering over the indicator</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="kcfg_zoneIsTarget">
+               <property name="text">
+                <string>Highlight zone when the cursor is anywhere in the zone</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="kcfg_enableZoneSelector">
+            <property name="text">
+             <string>Show zone selector when I drag a window to the top of the screen</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox_general">
          <property name="title">
-          <string>General</string>
+          <string>Behaviour</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_11">
           <item>
@@ -78,64 +136,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="kcfg_alwaysShowLayoutName">
-            <property name="text">
-             <string>Always show layout name</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCheckBox" name="kcfg_invertedMode">
             <property name="toolTip">
              <string>When enabled, moving windows will not trigger the osd. Instead you'll have to use the &quot;Toggle OSD&quot; shortcut to show the osd.</string>
             </property>
             <property name="text">
-             <string>Inverted mode</string>
+             <string>Require shortcut to show overlay</string>
             </property>
            </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_target">
-         <property name="title">
-          <string>Zone determination</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_14">
-          <item>
-           <layout class="QFormLayout" name="formLayout_6">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_20">
-              <property name="text">
-               <string>Target</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="kcfg_zoneTarget">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>The part of the zone you need to hover over to highlight it</string>
-              </property>
-              <item>
-               <property name="text">
-                <string>Indicator</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Zone</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
           </item>
          </layout>
         </widget>
@@ -154,9 +162,9 @@
         </spacer>
        </item>
       </layout>
-      <zorder>groupBox_general</zorder>
       <zorder>verticalSpacer_3</zorder>
-      <zorder>groupBox_target</zorder>
+      <zorder>groupBox_2</zorder>
+      <zorder>groupBox_general</zorder>
      </widget>
      <widget class="QWidget" name="tab_layouts">
       <attribute name="icon">
@@ -168,125 +176,74 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QLabel" name="label_3">
-         <property name="font">
-          <font>
-           <pointsize>12</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>JSON</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPlainTextEdit" name="kcfg_layoutsJson"/>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_appearance">
-      <attribute name="icon">
-       <iconset theme="preferences-desktop-theme">
-        <normaloff>../../../../../.designer/backup</normaloff>../../../../../.designer/backup</iconset>
-      </attribute>
-      <attribute name="title">
-       <string>Appearance</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
-       <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
-          <string/>
+          <string>Layouts</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_8">
+         <layout class="QVBoxLayout" name="verticalLayout_6">
           <item>
-           <widget class="QLabel" name="label_22">
-            <property name="font">
-             <font>
-              <pointsize>11</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Animations</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QFormLayout" name="formLayout_2">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_21">
-              <property name="text">
-               <string>OSD timeout</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QSpinBox" name="kcfg_osdTimeout">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="suffix">
-               <string> ms</string>
-              </property>
-              <property name="minimum">
-               <number>500</number>
-              </property>
-              <property name="maximum">
-               <number>10000</number>
-              </property>
-              <property name="value">
-               <number>1000</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_3">
-         <property name="title">
-          <string/>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_15">
-          <item>
-           <widget class="QLabel" name="label_26">
-            <property name="font">
-             <font>
-              <pointsize>11</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Style</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="kcfg_alternateIndicatorStyle">
-            <property name="text">
-             <string>Alternate indicator style</string>
+           <widget class="QPlainTextEdit" name="kcfg_layoutsJson">
+            <property name="plainText">
+             <string>[
+    {
+        &quot;name&quot;: &quot;Priority Grid&quot;,
+        &quot;padding&quot;: 0,
+        &quot;zones&quot;: [
+            {
+                &quot;x&quot;: 0,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 25
+            },
+            {
+                &quot;x&quot;: 25,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 50
+            },
+            {
+                &quot;x&quot;: 75,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 25
+            }
+        ]
+    },
+    {
+        &quot;name&quot;: &quot;Quadrant Grid&quot;,
+        &quot;zones&quot;: [
+            {
+                &quot;x&quot;: 0,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 50,
+                &quot;width&quot;: 50
+            },
+            {
+                &quot;x&quot;: 0,
+                &quot;y&quot;: 50,
+                &quot;height&quot;: 50,
+                &quot;width&quot;: 50
+            },
+            {
+                &quot;x&quot;: 50,
+                &quot;y&quot;: 50,
+                &quot;height&quot;: 50,
+                &quot;width&quot;: 50
+            },
+            {
+                &quot;x&quot;: 50,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 50,
+                &quot;width&quot;: 50
+            }
+        ]
+    }
+]</string>
             </property>
            </widget>
           </item>
          </layout>
         </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>
@@ -300,61 +257,58 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_7">
        <item>
-        <widget class="QLabel" name="label_19">
-         <property name="font">
-          <font>
-           <pointsize>11</pointsize>
-          </font>
-         </property>
-         <property name="text">
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
           <string>Filtering</string>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_8">
+          <item>
+           <layout class="QFormLayout" name="formLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Mode</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="kcfg_filterMode">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>Include</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Exclude</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_18">
+              <property name="text">
+               <string>Filter</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QPlainTextEdit" name="kcfg_filterList">
+              <property name="toolTip">
+               <string>Enter window classes you wish to include/exclude (seperated by a new line)</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </widget>
-       </item>
-       <item>
-        <layout class="QFormLayout" name="formLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Mode</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="kcfg_filterMode">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <item>
-            <property name="text">
-             <string>Include</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Exclude</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_18">
-           <property name="text">
-            <string>Filter</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QPlainTextEdit" name="kcfg_filterList">
-           <property name="toolTip">
-            <string>Enter window classes you wish to include/exclude (seperated by a new line)</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </item>
       </layout>
      </widget>
@@ -370,13 +324,22 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0">
          <item>
-          <widget class="QLabel" name="label_23">
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To set up shortcuts for this script&lt;/p&gt;&lt;p&gt;Go to System Settings / Shortcuts and search for &amp;quot;KZones&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <widget class="QGroupBox" name="groupBox_4">
+           <property name="title">
+            <string>Shortcuts</string>
            </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_12">
+            <item>
+             <widget class="QLabel" name="label_23">
+              <property name="text">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To set up shortcuts for this script&lt;/p&gt;&lt;p&gt;Go to System Settings / Shortcuts and search for &amp;quot;KZones&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
@@ -397,21 +360,12 @@
          <item>
           <widget class="QGroupBox" name="groupBox_7">
            <property name="title">
-            <string/>
+            <string>Performance</string>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_16">
-            <item>
-             <widget class="QLabel" name="label_15">
-              <property name="font">
-               <font>
-                <pointsize>11</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Performance</string>
-              </property>
-             </widget>
-            </item>
             <item>
              <layout class="QFormLayout" name="formLayout_3">
               <item row="0" column="0">
@@ -460,27 +414,9 @@
          <item>
           <widget class="QGroupBox" name="groupBox_8">
            <property name="title">
-            <string/>
+            <string>Debug</string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_17">
-            <item>
-             <widget class="QLabel" name="label_16">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>11</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Debug</string>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="QCheckBox" name="kcfg_enableDebugMode">
               <property name="sizePolicy">
@@ -567,5 +503,22 @@
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>kcfg_enableZoneIndicators</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>widget</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>138</x>
+     <y>268</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>32</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

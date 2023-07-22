@@ -2,7 +2,7 @@ import QtGraphicalEffects 1.0
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.2
-import org.kde.kirigami 2.5 as Kirigami
+import org.kde.kirigami 2.15 as Kirigami
 import org.kde.kwin 2.0
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -11,18 +11,12 @@ import "components" as Components
 
 PlasmaCore.Dialog {
 
+    // api documentation
+    // https://api.kde.org/frameworks/plasma-framework/html/classPlasmaQuick_1_1Dialog.html
+    // https://api.kde.org/frameworks/plasma-framework/html/classPlasma_1_1Types.html
+    // https://develop.kde.org/docs/getting-started/kirigami/style-colors/
+
     id: mainDialog
-    location: PlasmaCore.Types.Floating // https://api.kde.org/frameworks/plasma-framework/html/classPlasma_1_1Types.html
-    type: PlasmaCore.Dialog.OnScreenDisplay // https://api.kde.org/frameworks/plasma-framework/html/classPlasmaQuick_1_1Dialog.html
-    backgroundHints: PlasmaCore.Types.NoBackground
-    flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
-    x: clientArea.x
-    y: clientArea.y
-    width: clientArea.width
-    height: clientArea.height
-    visible: false
-    outputOnly: true
-    opacity: 1
 
     // properties
     property var config: {}
@@ -34,65 +28,60 @@ PlasmaCore.Dialog {
     property int currentLayout: 0
     property int highlightedZone: -1
     property int activeScreen: 0
-    property bool doAnimations: true
-
-    // colors
-    property string color_zone_border: "transparent"
-    property string color_zone_border_active: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.9)
-    property string color_zone_background: "transparent"
-    property string color_zone_background_active: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.1)
-    property string color_indicator: Qt.rgba(Kirigami.Theme.alternateBackgroundColor.r, Kirigami.Theme.alternateBackgroundColor.g, Kirigami.Theme.alternateBackgroundColor.b, 1)
-    property string color_indicator_accent: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 1)
-    property string color_indicator_shadow: '#69000000'
-    property string color_indicator_text: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 1)
-    property string color_debug_handle: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.9)  
-
     property var correctedCursorPos: Qt.point(workspace.cursorPos.x - clientArea.x, workspace.cursorPos.y - clientArea.y)
 
-    // enums
-    property var zoneTargets: {
-        "indicator": 0,
-        "zone": 1
-    }
-    property var styles: {
-        "full": 0,
-        "mini": 1
-    }
+    location: PlasmaCore.Types.Floating
+    type: PlasmaCore.Dialog.OnScreenDisplay
+    backgroundHints: PlasmaCore.Types.NoBackground
+    flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    x: clientArea.x
+    y: clientArea.y
+    width: clientArea.width
+    height: clientArea.height
+    visible: false
+    outputOnly: true
+    opacity: 1
 
     function loadConfig() {
+        
         // load values from configuration
-        console.log("KZones: Reading config...")
-
         config = {
             rememberWindowGeometries: KWin.readConfig("rememberWindowGeometries", true), // remember window geometries before snapping to a zone, and restore them when the window is removed from their zone
-            alwaysShowLayoutName: KWin.readConfig("alwaysShowLayoutName", false), // always show layout name, or only when switching between them
             pollingRate: KWin.readConfig("pollingRate", 100), // polling rate in milliseconds
-            zoneTarget: KWin.readConfig("zoneTarget", 0), // the part of the zone you need to hover over to highlight it
             enableDebugMode: KWin.readConfig("enableDebugMode", false), // enable debug mode
             filterMode: KWin.readConfig("filterMode", 0), // filter mode
             filterList: KWin.readConfig("filterList", ""), // filter list
-            osdTimeout: KWin.readConfig("osdTimeout", 1000), // timeout in milliseconds for hiding the OSD after switching layouts
-            layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name": "Layout 1","padding": 0,"zones": [{"name": "1","x": 0,"y": 0,"height": 100,"width": 25},{"name": "2","x": 25,"y": 0,"height": 100,"width": 50},{"name": "3","x": 75,"y": 0,"height": 100,"width": 25}]}]')), // layouts
-            alternateIndicatorStyle: KWin.readConfig("alternateIndicatorStyle", false), // alternate indicator style
+            layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name":"Priority Grid","padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]')), // layouts
             invertedMode: KWin.readConfig("invertedMode", false), // inverted mode
-            style: styles.full // style
+            indicatorIsTarget: KWin.readConfig("indicatorIsTarget", true), // indicator is target
+            zoneIsTarget: KWin.readConfig("zoneIsTarget", false), // zone is target
+            enableZoneSelector: KWin.readConfig("enableZoneSelector", true), // enable zone selector
+            enableZoneIndicators: KWin.readConfig("enableZoneIndicators", true), // enable zone indicators
         }
 
-        console.log("KZones: Config loaded: " + JSON.stringify(config))
+        log("Config loaded: " + JSON.stringify(config))
+    }
+
+    function log(message) {
+        if (!config.enableDebugMode) return
+        console.log("KZones: " + message)
     }
 
     function show() {
-        // refresh client area
-        refreshClientArea()
         // show OSD
         mainDialog.shown = true
         mainDialog.visible = true
+
+        refreshClientArea()
     }
 
     function hide() {
         // hide OSD
         mainDialog.shown = false
         mainDialog.visible = false
+
+        zoneSelectorBackground.expanded = false
+        zoneSelectorBackground.near = false
         highlightedZone = -1
     }
 
@@ -104,16 +93,9 @@ PlasmaCore.Dialog {
     function checkZone(x, y) {
         for (let i = 0; i < repeater_zones.model.length; i++) {
             let zone
-            switch (config.zoneTarget) {
-            case zoneTargets.indicator:
-                zone = repeater_zones.itemAt(i).children[0]
-                break
-            case zoneTargets.zone:
-                zone = repeater_zones.itemAt(i)
-                break
-            }
-            let zoneItem = zone.mapToItem(null, 0, 0)
-            if (isPointInside(x, y, {x: zoneItem.x, y: zoneItem.y, width: zone.width, height: zone.height})) {
+            if (config.indicatorIsTarget) zone = repeater_zones.itemAt(i).children[0]
+            if (config.zoneIsTarget) zone = repeater_zones.itemAt(i)
+            if (isHovering(zone)) {
                 return i
             }
         }
@@ -122,6 +104,11 @@ PlasmaCore.Dialog {
 
     function isPointInside(x, y, geometry) {
         return x >= geometry.x && x <= geometry.x + geometry.width && y >= geometry.y && y <= geometry.y + geometry.height
+    }
+
+    function isHovering(item) {
+        let itemGlobal = item.mapToGlobal(Qt.point(0, 0))
+        return isPointInside(workspace.cursorPos.x, workspace.cursorPos.y, {x: itemGlobal.x, y: itemGlobal.y, width: item.width * item.scale, height: item.height * item.scale})
     }
 
     function rectOverlapArea(component1, component2) {
@@ -190,7 +177,7 @@ PlasmaCore.Dialog {
         // block abnormal windows from being moved (like plasmashell, docks, etc...)
         if (!client.normalWindow) return
         
-        console.log("KZones: Moving client " + client.resourceClass.toString() + " to zone " + zone)
+        log("Moving client " + client.resourceClass.toString() + " to zone " + zone)
 
         saveWindowGeometries(client, zone)
 
@@ -200,13 +187,15 @@ PlasmaCore.Dialog {
             let global_x = repeater_zone.mapToGlobal(Qt.point(0, 0)).x
             let global_y = repeater_zone.mapToGlobal(Qt.point(0, 0)).y
             let newGeometry = Qt.rect(Math.round(global_x), Math.round(global_y), Math.round(repeater_zone.width), Math.round(repeater_zone.height))
-            console.log("KZones: Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry))
+            log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry))
             client.geometry = newGeometry
         }
     }
 
     function saveWindowGeometries(client, zone) {
-        console.log("KZones: Saving geometry for client " + client.resourceClass.toString())
+
+        log("Saving geometry for client " + client.resourceClass.toString())
+
         // save current geometry
         if (config.rememberWindowGeometries) {
             let geometry = {
@@ -221,6 +210,7 @@ PlasmaCore.Dialog {
                 }                
             }
         }
+
         // save zone
         client.zone = zone
         client.layout = currentLayout
@@ -233,20 +223,13 @@ PlasmaCore.Dialog {
 
         // refresh client area
         refreshClientArea()        
+
         // shortcut: cycle through layouts
         bindShortcut("Cycle layouts", "Ctrl+Alt+D", function() {
-            // reset timer to prevent osd from being hidden when switching layouts
-            if (!moving) {
-                hideOSD.running = false
-                hideOSD.start()
-            }
-
-            osdCmd.exec(config.layouts[currentLayout].name)
-
             //cycle through layouts
             currentLayout = (currentLayout + 1) % config.layouts.length
             highlightedZone = -1
-            show()
+            osdCmd.exec(config.layouts[currentLayout].name)
         })
 
         // shortcut: move to zone (1-9)
@@ -275,7 +258,8 @@ PlasmaCore.Dialog {
         // shortcut: toggle osd
         bindShortcut("Toggle OSD", "Ctrl+Alt+C", function() {
             if (!shown) {
-                show()
+                if (moving) show()
+                else osdCmd.exec("The OSD will be shown when you start moving a window")
             } else {
                 hide()
             }
@@ -299,8 +283,6 @@ PlasmaCore.Dialog {
         for (var i = 0; i < workspace.clientList().length; i++) {
             matchZone(workspace.clientList()[i])
         }
-
-        console.log("KZones: Ready!")
     }
 
     function bindShortcut(title, sequence, callback) {
@@ -309,55 +291,47 @@ PlasmaCore.Dialog {
 
     Item {
         id: mainItem
+
         anchors.fill: parent
 
         // main polling timer
         Timer {
             id: timer
+
             triggeredOnStart: true
             interval: config.pollingRate
-            running: shown// && moving
+            running: shown && moving
             repeat: true
 
             onTriggered: {
 
                 refreshClientArea()
+                highlightedZone = -1
                 
-                let pos = correctedCursorPos
-                highlightedZone = checkZone(pos.x, pos.y)
+                if (config.enableZoneIndicators) {
+                    // check if cursor is above a zone
+                    let pos = workspace.cursorPos
+                    highlightedZone = checkZone(pos.x, pos.y)
+                }
 
-                // mini selector
-
-                if (config.style == true || styles.mini) {
-
-                    if (!miniSelectorBackground.animating) {
-                        config.layouts.forEach((layout, layoutIndex) => {
+                if (config.enableZoneSelector) {
+                    // check if cursor is above a zone
+                    if (!zoneSelectorBackground.animating && zoneSelectorBackground.expanded) {
+                        repeater_layouts.model.forEach((layout, layoutIndex) => {
                             let layoutItem = repeater_layouts.itemAt(layoutIndex)
                             layout.zones.forEach((zone, zoneIndex) => {
                                 let zoneItem = layoutItem.children[zoneIndex]
-                                // check if cursor is above zoneItem
-                                let zoneItemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0))
-                                if(isPointInside(workspace.cursorPos.x, workspace.cursorPos.y, {x: zoneItemGlobal.x, y: zoneItemGlobal.y, width: zoneItem.width, height: zoneItem.height})) {
+                                if(isHovering(zoneItem)) {
                                     highlightedZone = zoneIndex
                                     currentLayout = layoutIndex
                                 }
                             })
                         })
                     }
-
-                    let miniSelectorGlobal = miniSelectorBackground.mapToGlobal(Qt.point(0, 0))
-                    if(isPointInside(workspace.cursorPos.x, workspace.cursorPos.y, {x: miniSelectorGlobal.x, y: miniSelectorGlobal.y, width: miniSelectorBackground.width, height: miniSelectorBackground.height})) {
-                        miniSelectorBackground.expanded = true
-                    } else {
-                        miniSelectorBackground.expanded = false
-                    }
-
-                    if (correctedCursorPos.y < miniSelectorBackground.y + miniSelectorBackground.height + 80) {
-                        miniSelectorBackground.near = true
-                    } else {
-                        miniSelectorBackground.near = false
-                    }
-
+                    // set zoneSelectorBackground expansion state
+                    zoneSelectorBackground.expanded = isHovering(zoneSelectorBackground) && correctedCursorPos.y >= 0;
+                    // set zoneSelectorBackground near state
+                    zoneSelectorBackground.near = correctedCursorPos.y < zoneSelectorBackground.y + zoneSelectorBackground.height + 80;
                 }
 
             }
@@ -365,8 +339,11 @@ PlasmaCore.Dialog {
 
         // osd qdbus
         PlasmaCore.DataSource {
+
             id: osdCmd
+
             engine: "executable"
+
             connectedSources: []
             onNewData: {
                 disconnectSource(sourceName);
@@ -376,42 +353,28 @@ PlasmaCore.Dialog {
             }
         }
 
-        // debug handle
-        Rectangle {
-            id: handle
-            color: color_debug_handle
-            visible: config.enableDebugMode
-            width: 32
-            height: 32
-            radius: 32
-            x: correctedCursorPos.x - handle.width / 2
-            y: correctedCursorPos.y - handle.height / 2
-            z: 100
-        }
-
         // debug osd
         Rectangle {
             id: debugOsd
-            visible: config.enableDebugMode
 
+            visible: config.enableDebugMode
             anchors.left: parent.left
             anchors.leftMargin: 20
             anchors.top: parent.top
             anchors.topMargin: 20
-
             z: 100
             width: debugOsdText.paintedWidth + debugOsdText.padding * 2
             height: debugOsdText.paintedHeight + debugOsdText.padding * 2
             radius: 5
-            color: color_indicator
+            color: Kirigami.Theme.backgroundColor
 
             Text {
                 id: debugOsdText
+                
                 anchors.fill: parent
                 padding: 15
-                color: color_indicator_text
+                color: Kirigami.Theme.textColor
                 text: {
-                    // let correctedCursorPos = Qt.point(correctedCursorPos.x - clientArea.x, correctedCursorPos.y - clientArea.y)
                     if (config.enableDebugMode) {
                         let t = ""
                         t += `Active: ${workspace.activeClient.caption}\n`
@@ -422,12 +385,11 @@ PlasmaCore.Dialog {
                         t += `Layout: ${currentLayout}\n`
                         t += `Zones: ${config.layouts[currentLayout].zones.map(z => z.name).join(', ')}\n`
                         t += `Polling Rate: ${config.pollingRate}ms\n`
-                        t += `Handle X: ${handle.x}, Y: ${handle.y}, Width: ${handle.width}, Height: ${handle.height}\n`
+                        t += `Cursor pos: ${correctedCursorPos.x}, ${correctedCursorPos.y}\n`
                         t += `Moving: ${moving}\n`
                         t += `Resizing: ${resizing}\n`
                         t += `Old Geometry: ${JSON.stringify(workspace.activeClient.oldGeometry)}\n`
                         t += `Active Screen: ${activeScreen}\n`
-                        t += `Cursor pos: ${correctedCursorPos.x}, ${correctedCursorPos.y}`
                         return t
                     } else {
                         return ""
@@ -441,126 +403,145 @@ PlasmaCore.Dialog {
         // zones
         Repeater {
             id: repeater_zones
+
             model: config.layouts[currentLayout].zones
 
             // zone
             Rectangle {
                 id: zone
-                x: ((modelData.x / 100) * (clientArea.width - zone_padding)) + zone_padding
-                y: ((modelData.y / 100) * (clientArea.height - zone_padding)) + zone_padding
-                implicitWidth: ((modelData.width / 100) * (clientArea.width - zone_padding)) - zone_padding
-                implicitHeight: ((modelData.height / 100) * (clientArea.height - zone_padding)) - zone_padding
-                color: (highlightedZone == zoneIndex) ? color_zone_background_active : color_zone_background
-                radius: 8 // TODO: make configurable (zoneRadius)
-                border.color: (highlightedZone == zoneIndex) ? color_zone_border_active : color_zone_border
-                border.width: 3
 
                 property int zoneIndex: index
                 property int zone_padding: config.layouts[currentLayout].padding || 0
 
-                //! keep this the first child
+                x: ((modelData.x / 100) * (clientArea.width - zone_padding)) + zone_padding
+                y: ((modelData.y / 100) * (clientArea.height - zone_padding)) + zone_padding
+                implicitWidth: ((modelData.width / 100) * (clientArea.width - zone_padding)) - zone_padding
+                implicitHeight: ((modelData.height / 100) * (clientArea.height - zone_padding)) - zone_padding
+                color: (highlightedZone == zoneIndex) ? Qt.rgba(Kirigami.Theme.hoverColor.r, Kirigami.Theme.hoverColor.g, Kirigami.Theme.hoverColor.b, 0.1) : "transparent"
+                border.color: (highlightedZone == zoneIndex) ? Kirigami.Theme.hoverColor : "transparent"
+                border.width: 3
+                radius: 8
+
+                // zone indicator
                 Rectangle {
+                    id: zoneIndicator
 
-                    width: 170
-                    height: 110
-                    color: "#DD222222"
+                    width: 160
+                    height: 100
+                    Kirigami.Theme.inherit: false
+                    Kirigami.Theme.colorSet: Kirigami.Theme.View
+                    color: Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, Qt.rgba(0,0,0), 0.1)
                     radius: 10      
-                    border.color: "#444444"
-                    border.width: 1   
+                    border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
+                    border.width: 1
                     anchors.centerIn: parent
+                    opacity: (zoneSelectorBackground.expanded) ? 0 : (highlightedZone == zoneIndex ? 0.6 : 1)
+                    scale: highlightedZone == zoneIndex ? 1.1 : 1
+                    visible: config.enableZoneIndicators
 
-                    Components.Indicator{
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: zoneSelectorBackground.expanded ? 0 : 150
+                        }
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 150
+                        }
+                    }
+
+                    Components.Indicator {
                         zones: config.layouts[currentLayout].zones
                         activeZone: index
                         anchors.centerIn: parent
-                        width: parent.width - 30
-                        height: parent.height - 30
+                        width: parent.width - 20
+                        height: parent.height - 20
                         hovering: (highlightedZone == zoneIndex)
                     }
 
                 }
 
-                // zone indicator shadow
-                // Components.Shadow{
-                //     target: indicator
-                //     visible: !config.alternateIndicatorStyle
-                // }
+                // indicator shadow
+                Components.Shadow {
+                    target: zoneIndicator
+                    visible: zoneIndicator.visible
+                }
 
             }
 
         }
 
-        // mini selector
-
+        // zone selector
         Rectangle {
-
-            id: miniSelectorBackground
+            id: zoneSelectorBackground
 
             property bool expanded: false
             property bool near: false
             property bool animating: false
 
-            visible: (config.style == styles.mini)
-
+            visible: false
             color: "transparent"
-
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
-
-            // show small portion of the mini selector when near and fully expanded when hovered
             anchors.topMargin: expanded ? 0 : (near ? -height + 30 : -height)
 
-            // animate top margin
             Behavior on anchors.topMargin {
                 NumberAnimation {
                     duration: 150 
                     onRunningChanged: {
-                        if (!running) miniSelectorBackground.visible = true //(config.style == styles.mini)
-                        miniSelectorBackground.animating = running
+                        if (!running) zoneSelectorBackground.visible = true
+                        zoneSelectorBackground.animating = running
                     }
                 }
             }            
 
-            width: miniSelector.width + 30
-            height: miniSelector.height + 40
+            width: zoneSelector.width + 30
+            height: zoneSelector.height + 40
 
             Rectangle {
-
-                id: miniSelector                
+                id: zoneSelector    
 
                 width: row.implicitWidth + row.spacing * 2
                 height: row.implicitHeight + row.spacing * 2
-
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottomMargin: 15
-                
-                color: "#DD222222"
+                Kirigami.Theme.inherit: false
+                Kirigami.Theme.colorSet: Kirigami.Theme.View
+                color: Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, Qt.rgba(0,0,0), 0.1)
                 radius: 10      
-                border.color: "#444444"
-                border.width: 1     
+                border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
+                border.width: 1
 
                 RowLayout {
                     id: row
+
                     spacing: 15
                     anchors.fill: parent
                     anchors.margins: spacing
 
                     Repeater {
                         id: repeater_layouts
+
                         model: config.layouts
 
                         Components.Indicator{
                             zones: modelData.zones
                             activeZone: (currentLayout == index) ? highlightedZone : -1
-                            width: 170 - 30
-                            height: 110 - 30
+                            width: 160 - 30
+                            height: 100 - 30
                             hovering: (currentLayout == index)
                         }
                     }
                 }
 
-            }        
+            }
+
+            Components.Shadow {
+                target: zoneSelector
+                visible: true
+            }   
 
         }
         
@@ -578,7 +559,7 @@ PlasmaCore.Dialog {
 
             function onClientFullScreenSet(client, fullscreen, user) {
                 if (!client) return;
-                console.log("KZones: Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + fullscreen + ")");
+                log("Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + fullscreen + ")");
                 mainDialog.hide();
             }
 
@@ -597,7 +578,7 @@ PlasmaCore.Dialog {
             target: options
 
             function onConfigChanged() {
-                console.log("KZones: Config changed")
+                log("Config changed")
                 mainDialog.loadConfig()
             }
         }
@@ -614,8 +595,7 @@ PlasmaCore.Dialog {
                         cachedClientArea = clientArea
                         moving = true
                         resizing = false
-                        hideOSD.running = false
-                        console.log("KZones: Move start " + client.resourceClass.toString())
+                        log("Move start " + client.resourceClass.toString())
                         if (!config.invertedMode) mainDialog.show()
                     }
                     if (client.resize) {
@@ -653,7 +633,7 @@ PlasmaCore.Dialog {
             // stop moving
             function onClientFinishUserMovedResized(client) {
                 if (moving) {
-                    console.log("Kzones: Move end " + client.resourceClass.toString())
+                    log("Move end " + client.resourceClass.toString())
                     if (shown) {
                         moveClientToZone(client, highlightedZone)
                     } else {
@@ -685,17 +665,6 @@ PlasmaCore.Dialog {
             }
         }
 
-        // hide osd timer
-        Timer {
-            id: hideOSD
-            interval: config.osdTimeout
-            repeat: false
-
-            onTriggered: {
-                hide()
-            }
-        }
-
         // reusable timer
         Timer {
             id: delay
@@ -710,14 +679,6 @@ PlasmaCore.Dialog {
                 })
                 delay.start()
             }
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            color: "transparent"
-            visible: config.enableDebugMode
-            border.color: color_debug_handle
-            border.width: 1
         }
 
     }

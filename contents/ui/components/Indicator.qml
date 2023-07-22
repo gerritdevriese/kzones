@@ -1,5 +1,6 @@
 import QtGraphicalEffects 1.0
 import QtQuick 2.15
+import org.kde.kirigami 2.15 as Kirigami
 
 Rectangle {
     id: indicator
@@ -27,16 +28,18 @@ Rectangle {
                 property int padding: 2
                 anchors.fill: parent
                 anchors.margins: padding
-                color: (activeZone == index) ? (hovering ? color_indicator_accent : "#666666") : "#333333"
-                radius: 5
-                border.color: (activeZone == index) ? (hovering ? color_indicator_accent : "#555555") : "#555555"
+                Kirigami.Theme.colorSet: Kirigami.Theme.View
+                Kirigami.Theme.inherit: false
+                color: (activeZone == index) ? Kirigami.Theme.hoverColor : Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, Qt.rgba(1,1,1), 0.1)
+                border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
                 border.width: 1
+                radius: 5
 
-                // z: (activeZone == index) ? 2 : 1
-                // scale: (doAnimations) ? ((activeZone == index && hovering) ? 1.1 : 1) : 1
-                // Behavior on scale {
-                //     NumberAnimation { duration: 150 }
-                // }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+                }
             }            
 
         }
