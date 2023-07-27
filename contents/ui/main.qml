@@ -25,22 +25,20 @@ PlasmaCore.Dialog {
     property bool resizing: false
     property var clientArea: {}
     property var cachedClientArea: {}
+    property var displaySize: {}
     property int currentLayout: 0
     property int highlightedZone: -1
     property int activeScreen: 0
-    property var correctedCursorPos: Qt.point(workspace.cursorPos.x - clientArea.x, workspace.cursorPos.y - clientArea.y)
 
     location: PlasmaCore.Types.Floating
     type: PlasmaCore.Dialog.OnScreenDisplay
     backgroundHints: PlasmaCore.Types.NoBackground
     flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
-    x: clientArea.x
-    y: clientArea.y
-    width: clientArea.width
-    height: clientArea.height
     visible: false
     outputOnly: true
     opacity: 1
+    width: displaySize.width
+    height: displaySize.height
 
     function loadConfig() {
         
@@ -88,6 +86,7 @@ PlasmaCore.Dialog {
     function refreshClientArea() {
         activeScreen = workspace.activeScreen
         clientArea = workspace.clientArea(KWin.FullScreenArea, activeScreen, workspace.currentDesktop)
+        displaySize = workspace.displaySize
     }
 
     function checkZone(x, y) {
@@ -329,9 +328,9 @@ PlasmaCore.Dialog {
                         })
                     }
                     // set zoneSelectorBackground expansion state
-                    zoneSelectorBackground.expanded = isHovering(zoneSelectorBackground) && correctedCursorPos.y >= 0;
+                    zoneSelectorBackground.expanded = isHovering(zoneSelectorBackground) && (workspace.cursorPos.y - clientArea.y) >= 0;
                     // set zoneSelectorBackground near state
-                    zoneSelectorBackground.near = correctedCursorPos.y < zoneSelectorBackground.y + zoneSelectorBackground.height + 80;
+                    zoneSelectorBackground.near = (workspace.cursorPos.y - clientArea.y) < zoneSelectorBackground.y + zoneSelectorBackground.height + 80;
                 }
 
             }
@@ -353,195 +352,203 @@ PlasmaCore.Dialog {
             }
         }
 
-        // debug osd
-        Rectangle {
-            id: debugOsd
+        Item {
+            x: clientArea.x
+            y: clientArea.y
+            width: clientArea.width
+            height: clientArea.height
+            clip: true
 
-            visible: config.enableDebugMode
-            anchors.left: parent.left
-            anchors.leftMargin: 20
-            anchors.top: parent.top
-            anchors.topMargin: 20
-            z: 100
-            width: debugOsdText.paintedWidth + debugOsdText.padding * 2
-            height: debugOsdText.paintedHeight + debugOsdText.padding * 2
-            radius: 5
-            color: Kirigami.Theme.backgroundColor
-
-            Text {
-                id: debugOsdText
-                
-                anchors.fill: parent
-                padding: 15
-                color: Kirigami.Theme.textColor
-                text: {
-                    if (config.enableDebugMode) {
-                        let t = ""
-                        t += `Active: ${workspace.activeClient.caption}\n`
-                        t += `Window class: ${workspace.activeClient.resourceClass.toString()}\n`
-                        t += `X: ${workspace.activeClient.geometry.x}, Y: ${workspace.activeClient.geometry.y}, Width: ${workspace.activeClient.geometry.width}, Height: ${workspace.activeClient.geometry.height}\n`
-                        t += `Previous Zone: ${workspace.activeClient.zone}\n`
-                        t += `Highlighted Zone: ${highlightedZone}\n`
-                        t += `Layout: ${currentLayout}\n`
-                        t += `Zones: ${config.layouts[currentLayout].zones.map(z => z.name).join(', ')}\n`
-                        t += `Polling Rate: ${config.pollingRate}ms\n`
-                        t += `Cursor pos: ${correctedCursorPos.x}, ${correctedCursorPos.y}\n`
-                        t += `Moving: ${moving}\n`
-                        t += `Resizing: ${resizing}\n`
-                        t += `Old Geometry: ${JSON.stringify(workspace.activeClient.oldGeometry)}\n`
-                        t += `Active Screen: ${activeScreen}\n`
-                        return t
-                    } else {
-                        return ""
-                    }                 
-                }
-                font.pixelSize: 14
-                font.family: "Hack"
-            }
-        }
-
-        // zones
-        Repeater {
-            id: repeater_zones
-
-            model: config.layouts[currentLayout].zones
-
-            // zone
+            // debug osd
             Rectangle {
-                id: zone
+                id: debugOsd
 
-                property int zoneIndex: index
-                property int zone_padding: config.layouts[currentLayout].padding || 0
+                visible: config.enableDebugMode
+                anchors.left: parent.left
+                anchors.leftMargin: 20
+                anchors.top: parent.top
+                anchors.topMargin: 20
+                z: 100
+                width: debugOsdText.paintedWidth + debugOsdText.padding * 2
+                height: debugOsdText.paintedHeight + debugOsdText.padding * 2
+                radius: 5
+                color: Kirigami.Theme.backgroundColor
 
-                x: ((modelData.x / 100) * (clientArea.width - zone_padding)) + zone_padding
-                y: ((modelData.y / 100) * (clientArea.height - zone_padding)) + zone_padding
-                implicitWidth: ((modelData.width / 100) * (clientArea.width - zone_padding)) - zone_padding
-                implicitHeight: ((modelData.height / 100) * (clientArea.height - zone_padding)) - zone_padding
-                color: (highlightedZone == zoneIndex) ? Qt.rgba(Kirigami.Theme.hoverColor.r, Kirigami.Theme.hoverColor.g, Kirigami.Theme.hoverColor.b, 0.1) : "transparent"
-                border.color: (highlightedZone == zoneIndex) ? Kirigami.Theme.hoverColor : "transparent"
-                border.width: 3
-                radius: 8
+                Text {
+                    id: debugOsdText
+                    
+                    anchors.fill: parent
+                    padding: 15
+                    color: Kirigami.Theme.textColor
+                    text: {
+                        if (config.enableDebugMode) {
+                            let t = ""
+                            t += `Active: ${workspace.activeClient.caption}\n`
+                            t += `Window class: ${workspace.activeClient.resourceClass.toString()}\n`
+                            t += `X: ${workspace.activeClient.geometry.x}, Y: ${workspace.activeClient.geometry.y}, Width: ${workspace.activeClient.geometry.width}, Height: ${workspace.activeClient.geometry.height}\n`
+                            t += `Previous Zone: ${workspace.activeClient.zone}\n`
+                            t += `Highlighted Zone: ${highlightedZone}\n`
+                            t += `Layout: ${currentLayout}\n`
+                            t += `Zones: ${config.layouts[currentLayout].zones.map(z => z.name).join(', ')}\n`
+                            t += `Polling Rate: ${config.pollingRate}ms\n`
+                            t += `Moving: ${moving}\n`
+                            t += `Resizing: ${resizing}\n`
+                            t += `Old Geometry: ${JSON.stringify(workspace.activeClient.oldGeometry)}\n`
+                            t += `Active Screen: ${activeScreen}\n`
+                            return t
+                        } else {
+                            return ""
+                        }                 
+                    }
+                    font.pixelSize: 14
+                    font.family: "Hack"
+                }
+            }
 
-                // zone indicator
+            // zones
+            Repeater {
+                id: repeater_zones
+
+                model: config.layouts[currentLayout].zones
+
+                // zone
                 Rectangle {
-                    id: zoneIndicator
+                    id: zone
 
-                    width: 160
-                    height: 100
+                    property int zoneIndex: index
+                    property int zone_padding: config.layouts[currentLayout].padding || 0
+
+                    x: ((modelData.x / 100) * (clientArea.width - zone_padding)) + zone_padding
+                    y: ((modelData.y / 100) * (clientArea.height - zone_padding)) + zone_padding
+                    implicitWidth: ((modelData.width / 100) * (clientArea.width - zone_padding)) - zone_padding
+                    implicitHeight: ((modelData.height / 100) * (clientArea.height - zone_padding)) - zone_padding
+                    color: (highlightedZone == zoneIndex) ? Qt.rgba(Kirigami.Theme.hoverColor.r, Kirigami.Theme.hoverColor.g, Kirigami.Theme.hoverColor.b, 0.1) : "transparent"
+                    border.color: (highlightedZone == zoneIndex) ? Kirigami.Theme.hoverColor : "transparent"
+                    border.width: 3
+                    radius: 8
+
+                    // zone indicator
+                    Rectangle {
+                        id: zoneIndicator
+
+                        width: 160
+                        height: 100
+                        Kirigami.Theme.inherit: false
+                        Kirigami.Theme.colorSet: Kirigami.Theme.View
+                        color: Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, Qt.rgba(0,0,0), 0.1)
+                        radius: 10      
+                        border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
+                        border.width: 1
+                        anchors.centerIn: parent
+                        opacity: (zoneSelectorBackground.expanded) ? 0 : (highlightedZone == zoneIndex ? 0.6 : 1)
+                        scale: highlightedZone == zoneIndex ? 1.1 : 1
+                        visible: config.enableZoneIndicators
+
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: zoneSelectorBackground.expanded ? 0 : 150
+                            }
+                        }
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 150
+                            }
+                        }
+
+                        Components.Indicator {
+                            zones: config.layouts[currentLayout].zones
+                            activeZone: index
+                            anchors.centerIn: parent
+                            width: parent.width - 20
+                            height: parent.height - 20
+                            hovering: (highlightedZone == zoneIndex)
+                        }
+
+                    }
+
+                    // indicator shadow
+                    Components.Shadow {
+                        target: zoneIndicator
+                        visible: zoneIndicator.visible
+                    }
+
+                }
+
+            }
+
+            // zone selector
+            Rectangle {
+                id: zoneSelectorBackground
+
+                property bool expanded: false
+                property bool near: false
+                property bool animating: false
+
+                visible: false
+                color: "transparent"
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: expanded ? 0 : (near ? -height + 30 : -height)
+
+                Behavior on anchors.topMargin {
+                    NumberAnimation {
+                        duration: 150 
+                        onRunningChanged: {
+                            if (!running) zoneSelectorBackground.visible = true
+                            zoneSelectorBackground.animating = running
+                        }
+                    }
+                }            
+
+                width: zoneSelector.width + 30
+                height: zoneSelector.height + 40
+
+                Rectangle {
+                    id: zoneSelector    
+
+                    width: row.implicitWidth + row.spacing * 2
+                    height: row.implicitHeight + row.spacing * 2
+                    anchors.bottom: parent.bottom
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottomMargin: 15
                     Kirigami.Theme.inherit: false
                     Kirigami.Theme.colorSet: Kirigami.Theme.View
                     color: Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, Qt.rgba(0,0,0), 0.1)
                     radius: 10      
                     border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
                     border.width: 1
-                    anchors.centerIn: parent
-                    opacity: (zoneSelectorBackground.expanded) ? 0 : (highlightedZone == zoneIndex ? 0.6 : 1)
-                    scale: highlightedZone == zoneIndex ? 1.1 : 1
-                    visible: config.enableZoneIndicators
 
-                    Behavior on scale {
-                        NumberAnimation {
-                            duration: zoneSelectorBackground.expanded ? 0 : 150
+                    RowLayout {
+                        id: row
+
+                        spacing: 15
+                        anchors.fill: parent
+                        anchors.margins: spacing
+
+                        Repeater {
+                            id: repeater_layouts
+
+                            model: config.layouts
+
+                            Components.Indicator{
+                                zones: modelData.zones
+                                activeZone: (currentLayout == index) ? highlightedZone : -1
+                                width: 160 - 30
+                                height: 100 - 30
+                                hovering: (currentLayout == index)
+                            }
                         }
-                    }
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 150
-                        }
-                    }
-
-                    Components.Indicator {
-                        zones: config.layouts[currentLayout].zones
-                        activeZone: index
-                        anchors.centerIn: parent
-                        width: parent.width - 20
-                        height: parent.height - 20
-                        hovering: (highlightedZone == zoneIndex)
                     }
 
                 }
 
-                // indicator shadow
                 Components.Shadow {
-                    target: zoneIndicator
-                    visible: zoneIndicator.visible
-                }
+                    target: zoneSelector
+                    visible: true
+                }   
 
             }
-
-        }
-
-        // zone selector
-        Rectangle {
-            id: zoneSelectorBackground
-
-            property bool expanded: false
-            property bool near: false
-            property bool animating: false
-
-            visible: false
-            color: "transparent"
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: expanded ? 0 : (near ? -height + 30 : -height)
-
-            Behavior on anchors.topMargin {
-                NumberAnimation {
-                    duration: 150 
-                    onRunningChanged: {
-                        if (!running) zoneSelectorBackground.visible = true
-                        zoneSelectorBackground.animating = running
-                    }
-                }
-            }            
-
-            width: zoneSelector.width + 30
-            height: zoneSelector.height + 40
-
-            Rectangle {
-                id: zoneSelector    
-
-                width: row.implicitWidth + row.spacing * 2
-                height: row.implicitHeight + row.spacing * 2
-                anchors.bottom: parent.bottom
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottomMargin: 15
-                Kirigami.Theme.inherit: false
-                Kirigami.Theme.colorSet: Kirigami.Theme.View
-                color: Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, Qt.rgba(0,0,0), 0.1)
-                radius: 10      
-                border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
-                border.width: 1
-
-                RowLayout {
-                    id: row
-
-                    spacing: 15
-                    anchors.fill: parent
-                    anchors.margins: spacing
-
-                    Repeater {
-                        id: repeater_layouts
-
-                        model: config.layouts
-
-                        Components.Indicator{
-                            zones: modelData.zones
-                            activeZone: (currentLayout == index) ? highlightedZone : -1
-                            width: 160 - 30
-                            height: 100 - 30
-                            hovering: (currentLayout == index)
-                        }
-                    }
-                }
-
-            }
-
-            Components.Shadow {
-                target: zoneSelector
-                visible: true
-            }   
 
         }
         
