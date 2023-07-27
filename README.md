@@ -1,7 +1,9 @@
 # KZones
 
+<img align="right" width="125" height="75" src="./media/icon.png">
+
 KDE KWin Script for snapping windows into zones. Handy when using a (super) ultrawide monitor.  
-An alternative to PowerToys FancyZones.
+An alternative to PowerToys FancyZones and Windows 11 snap layouts.
 
 ## Features
 
@@ -23,7 +25,13 @@ Snap windows using shortcuts (full list below)
 ### Zone Selector
 
 Show a zone selector when dragging a window to the top of the screen
-![](./media/selector.jpg)
+![](./media/selector.gif)
+
+### Theming
+
+KZones uses the same colors as your selected color scheme, so it will always fit in with your desktop.
+
+![](./media/theming.png)
 
 ## Installation
 
@@ -49,13 +57,21 @@ cd kzones && ./build
 
 While moving a window you will have the option to snap it to a zone. Either by dragging it to it's indicator or the full zone.
 
-#### Show zone selector when I drag a windo to the top of the screen
+#### Show zone selector when I drag a window to the top of the screen
 
 When enabled, a zone selector will appear when you drag a window to the top of the screen. Which allows you to snap the window to a zone. The selector displays all zones from all layouts.
 
+#### Remember and restore window geometries
+
+When enabled, the script will remember the geometry of each window when it's moved to a zone. When the window is moved out of the zone, it will be restored to it's original geometry.
+
+#### Require shortcut to show overlay
+
+When enabled, the overlay will only be shown when the "Toggle OSD" shortcut is pressed. Otherwise the overlay will be shown when moving a window. Previously known as "Inverted mode".
+
 ### Layouts
 
-You can define layouts by putting them in the **Layouts** tab in the script settings, here are some examples to get you started:
+You can define your own layouts by modifying the JSON in the **Layouts** tab in the script settings, here are some examples to get you started:
 
 #### Examples
 <details open>
@@ -178,40 +194,15 @@ You can define layouts by putting them in the **Layouts** tab in the script sett
 The main array can contain as many layouts as you want:
    
 Each **layout** object needs the following keys:
-- `name`: The name of the layout, shown in the OSD when cycling between layouts
+- `name`: The name of the layout, shown when cycling between layouts
 - `padding`: The amount of space between the window and the zone in pixels
 - `zones`: An array containing all zone objects for this layout
 
 Each **zone** object needs the following keys:
-- `name`: The name of the zone, shown inside the zone indicator (can be left blank)
 - `x`, `y`: position of the top left corner of the zone in screen percentage
 - `width`, `height`: size of the zone in screen percentage
 
-#### Indicator offset
-
-If for some reason you want to move the zone indicator, you can do so by adding the following keys to a zone object:
-
-```json
-{
-    "name": "2",
-    "x": 25,
-    "y": 0,
-    "height": 100,
-    "width": 50,
-    "indicator": {
-        "offset": {
-            "x": 100,
-            "y": -50
-        }
-    }
-}
-```
-
-This example will move the indicator 100 pixels to the right and 50 pixels up.
-
 ### Other settings
-
-#### Determine zone
 
 #### Filtering
 
@@ -221,9 +212,9 @@ You can block certain windows from snapping by adding their class name to the ex
 
 The polling rate is the amount of time between each zone check when dragging a window. The default is 100ms, a faster polling rate is more accurate but will use more CPU. You can change this to your liking.
 
-#### Inverted mode
+#### Debug mode
 
-When enabled, moving windows will not trigger the osd. Instead you'll have to use the "Toggle OSD" shortcut to show the osd.
+When debug mode is enabled, the script will log more information and show extra information in the overlay.
 
 ## Shortcuts
 
