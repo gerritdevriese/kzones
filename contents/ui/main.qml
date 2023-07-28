@@ -89,18 +89,6 @@ PlasmaCore.Dialog {
         displaySize = workspace.displaySize
     }
 
-    function checkZone(x, y) {
-        for (let i = 0; i < repeater_zones.model.length; i++) {
-            let zone
-            if (config.indicatorIsTarget) zone = repeater_zones.itemAt(i).children[0]
-            if (config.zoneIsTarget) zone = repeater_zones.itemAt(i)
-            if (isHovering(zone)) {
-                return i
-            }
-        }
-        return -1
-    }
-
     function isPointInside(x, y, geometry) {
         return x >= geometry.x && x <= geometry.x + geometry.width && y >= geometry.y && y <= geometry.y + geometry.height
     }
@@ -305,32 +293,46 @@ PlasmaCore.Dialog {
             onTriggered: {
 
                 refreshClientArea()
-                highlightedZone = -1
+
+                let hoveringZone = -1
                 
-                if (config.enableZoneIndicators) {
-                    // check if cursor is above a zone
-                    let pos = workspace.cursorPos
-                    highlightedZone = checkZone(pos.x, pos.y)
+                if (config.enableZoneIndicators && !zoneSelectorBackground.expanded) {
+
+                    repeater_zones.model.forEach((zone, zoneIndex) => {
+                        if (isHovering(config.indicatorIsTarget ? repeater_zones.itemAt(zoneIndex).children[0] : repeater_zones.itemAt(zoneIndex))) {
+                            hoveringZone = zoneIndex
+                        }
+                    })
+
                 }
 
                 if (config.enableZoneSelector) {
-                    // check if cursor is above a zone
                     if (!zoneSelectorBackground.animating && zoneSelectorBackground.expanded) {
+
                         repeater_layouts.model.forEach((layout, layoutIndex) => {
                             let layoutItem = repeater_layouts.itemAt(layoutIndex)
+                            
                             layout.zones.forEach((zone, zoneIndex) => {
                                 let zoneItem = layoutItem.children[zoneIndex]
                                 if(isHovering(zoneItem)) {
-                                    highlightedZone = zoneIndex
+                                    hoveringZone = zoneIndex
                                     currentLayout = layoutIndex
                                 }
                             })
+                        
                         })
+
                     }
                     // set zoneSelectorBackground expansion state
                     zoneSelectorBackground.expanded = isHovering(zoneSelectorBackground) && (workspace.cursorPos.y - clientArea.y) >= 0;
                     // set zoneSelectorBackground near state
                     zoneSelectorBackground.near = (workspace.cursorPos.y - clientArea.y) < zoneSelectorBackground.y + zoneSelectorBackground.height + 80;
+                }
+
+                // if hovering zone changed from the last frame
+                if (hoveringZone != highlightedZone) {
+                    log("Highlighting zone " + hoveringZone + " in layout " + currentLayout)
+                    highlightedZone = hoveringZone
                 }
 
             }
@@ -389,7 +391,6 @@ PlasmaCore.Dialog {
                             t += `Previous Zone: ${workspace.activeClient.zone}\n`
                             t += `Highlighted Zone: ${highlightedZone}\n`
                             t += `Layout: ${currentLayout}\n`
-                            t += `Zones: ${config.layouts[currentLayout].zones.map(z => z.name).join(', ')}\n`
                             t += `Polling Rate: ${config.pollingRate}ms\n`
                             t += `Moving: ${moving}\n`
                             t += `Resizing: ${resizing}\n`
