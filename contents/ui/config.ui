@@ -6,109 +6,171 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>600</height>
+    <width>550</width>
+    <height>650</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTabWidget" name="tabWidget">
-     <property name="tabPosition">
-      <enum>QTabWidget::North</enum>
-     </property>
-     <property name="tabShape">
-      <enum>QTabWidget::Rounded</enum>
-     </property>
      <property name="currentIndex">
       <number>0</number>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>16</width>
-       <height>16</height>
-      </size>
-     </property>
-     <property name="elideMode">
-      <enum>Qt::ElideNone</enum>
-     </property>
-     <property name="documentMode">
-      <bool>false</bool>
-     </property>
-     <property name="tabsClosable">
-      <bool>false</bool>
-     </property>
-     <property name="tabBarAutoHide">
-      <bool>false</bool>
      </property>
      <widget class="QWidget" name="tab_general">
       <attribute name="icon">
        <iconset theme="systemsettings">
-        <normaloff>../../../../../.designer/backup</normaloff>../../../../../.designer/backup</iconset>
+        <normaloff>../../../../../../../../.designer/backup</normaloff>../../../../../../../../.designer/backup</iconset>
       </attribute>
       <attribute name="title">
        <string>General</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QGroupBox" name="groupBox_2">
+        <widget class="QGroupBox" name="kcfg_enableZoneSelector">
          <property name="title">
-          <string>Overlay</string>
+          <string>Enable Zone Selector</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
           <item>
-           <widget class="QCheckBox" name="kcfg_enableZoneIndicators">
+           <widget class="QLabel" name="label">
             <property name="text">
-             <string>Show zones when I start moving a window</string>
+             <string>The zone selector is a small widget that appears when you drag a window to the top of the screen. It allows you to snap the window to a zone regardless of the current layout.</string>
             </property>
-            <property name="checked">
+            <property name="wordWrap">
              <bool>true</bool>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="widget" native="true">
-            <layout class="QVBoxLayout" name="verticalLayout_10">
-             <property name="leftMargin">
-              <number>20</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>6</number>
-             </property>
-             <item>
-              <widget class="QRadioButton" name="kcfg_indicatorIsTarget">
+           <layout class="QFormLayout" name="formLayout_2">
+            <item row="0" column="1">
+             <widget class="QComboBox" name="kcfg_zoneSelectorTriggerDistance">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="currentText">
+               <string>Close</string>
+              </property>
+              <property name="currentIndex">
+               <number>0</number>
+              </property>
+              <item>
                <property name="text">
-                <string>Highlight zone when hovering over the indicator</string>
+                <string>Close</string>
                </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QRadioButton" name="kcfg_zoneIsTarget">
+              </item>
+              <item>
                <property name="text">
-                <string>Highlight zone when the cursor is anywhere in the zone</string>
+                <string>Medium</string>
                </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
+              </item>
+              <item>
+               <property name="text">
+                <string>Far</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Trigger distance </string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="kcfg_enableZoneOverlay">
+         <property name="title">
+          <string>Enable Zone Overlay</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_13">
           <item>
-           <widget class="QCheckBox" name="kcfg_enableZoneSelector">
+           <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>Show zone selector when I drag a window to the top of the screen</string>
+             <string>The zone overlay is a fullscreen overlay that appears when you move a window. It shows all zones from the current layout and the window will snap to the zone you drop it on.</string>
             </property>
-            <property name="checked">
+            <property name="wordWrap">
              <bool>true</bool>
             </property>
            </widget>
+          </item>
+          <item>
+           <layout class="QFormLayout" name="formLayout_4">
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>Highlight zone when</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="kcfg_zoneOverlayHighlightTarget">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>My cursor is above the zone indicator</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>My cursor is anywhere in the zone</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Show overlay when</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="kcfg_zoneOverlayShowWhen">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>I start moving a window</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>I press the toggle overlay shortcut</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -116,9 +178,12 @@
        <item>
         <widget class="QGroupBox" name="groupBox_general">
          <property name="title">
-          <string>Behaviour</string>
+          <string>Snapping Behaviour</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_11">
+          <property name="spacing">
+           <number>15</number>
+          </property>
           <item>
            <widget class="QCheckBox" name="kcfg_rememberWindowGeometries">
             <property name="sizePolicy">
@@ -132,16 +197,6 @@
             </property>
             <property name="checked">
              <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="kcfg_invertedMode">
-            <property name="toolTip">
-             <string>When enabled, moving windows will not trigger the osd. Instead you'll have to use the &quot;Toggle OSD&quot; shortcut to show the osd.</string>
-            </property>
-            <property name="text">
-             <string>Require shortcut to show overlay</string>
             </property>
            </widget>
           </item>
@@ -163,13 +218,14 @@
        </item>
       </layout>
       <zorder>verticalSpacer_3</zorder>
-      <zorder>groupBox_2</zorder>
       <zorder>groupBox_general</zorder>
+      <zorder>kcfg_enableZoneSelector</zorder>
+      <zorder>kcfg_enableZoneOverlay</zorder>
      </widget>
      <widget class="QWidget" name="tab_layouts">
       <attribute name="icon">
        <iconset theme="preferences-desktop-virtual">
-        <normaloff>../../../../../.designer/backup</normaloff>../../../../../.designer/backup</iconset>
+        <normaloff>../../../../../../../../.designer/backup</normaloff>../../../../../../../../.designer/backup</iconset>
       </attribute>
       <attribute name="title">
        <string>Layouts</string>
@@ -250,7 +306,7 @@
      <widget class="QWidget" name="tab_filters">
       <attribute name="icon">
        <iconset theme="preferences-desktop-filter">
-        <normaloff>../../../../../.designer/backup</normaloff>../../../../../.designer/backup</iconset>
+        <normaloff>../../../../../../../../.designer/backup</normaloff>../../../../../../../../.designer/backup</iconset>
       </attribute>
       <attribute name="title">
        <string>Filters</string>
@@ -262,6 +318,22 @@
           <string>Filtering</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_8">
+          <item>
+           <widget class="QLabel" name="label_8">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Choose a filter mode and enter the window classes you wish to include or exclude, seperated by a new line.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
           <item>
            <layout class="QFormLayout" name="formLayout">
             <item row="0" column="0">
@@ -315,7 +387,7 @@
      <widget class="QWidget" name="tab_shortcuts">
       <attribute name="icon">
        <iconset theme="configure-shortcuts">
-        <normaloff>.</normaloff>.</iconset>
+        <normaloff>../../../../../.designer/backup</normaloff>../../../../../.designer/backup</iconset>
       </attribute>
       <attribute name="title">
        <string>Shortcuts</string>
@@ -349,7 +421,7 @@
      <widget class="QWidget" name="tab_advanced">
       <attribute name="icon">
        <iconset theme="applications-development">
-        <normaloff>../../../../../.designer/backup</normaloff>../../../../../.designer/backup</iconset>
+        <normaloff>../../../../../../../../.designer/backup</normaloff>../../../../../../../../.designer/backup</iconset>
       </attribute>
       <attribute name="title">
        <string>Advanced</string>
@@ -503,22 +575,5 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>kcfg_enableZoneIndicators</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>widget</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>138</x>
-     <y>268</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>32</x>
-     <y>299</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

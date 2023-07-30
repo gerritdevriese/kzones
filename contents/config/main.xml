@@ -6,9 +6,32 @@
     <kcfgfile name=""/>
     <group name="">
 
+        <!-- General -->
+        <entry name="enableZoneSelector" type="Bool">
+            <default>true</default>
+        </entry>
+
+        <entry name="zoneSelectorTriggerDistance" type="Int">
+            <default>1</default>
+        </entry>
+
+        <entry name="enableZoneOverlay" type="Bool">
+            <default>true</default>
+        </entry>
+
+        <entry name="zoneOverlayShowWhen" type="Int">
+            <default>0</default>
+        </entry>
+
+        <entry name="zoneOverlayHighlightTarget" type="Int">
+            <default>0</default>
+        </entry>
+
         <entry name="rememberWindowGeometries" type="Bool">
             <default>true</default>
         </entry>
+
+        <!-- Layouts -->
 
         <entry name="layoutsJson" type="String">
             <default>
@@ -70,13 +93,7 @@
             </default>
         </entry>
 
-        <entry name="pollingRate" type="Int">
-            <default>100</default>
-        </entry>
-
-        <entry name="enableDebugMode" type="Bool">
-            <default>false</default>
-        </entry>
+        <!-- Filters -->
 
         <entry name="filterMode" type="Int">
             <default>0</default>
@@ -86,24 +103,14 @@
             <default></default>
         </entry>
 
-        <entry name="invertedMode" type="Bool">
+        <!-- Advanced -->
+
+        <entry name="pollingRate" type="Int">
+            <default>100</default>
+        </entry>
+
+        <entry name="enableDebugMode" type="Bool">
             <default>false</default>
-        </entry>
-
-        <entry name="indicatorIsTarget" type="Bool">
-            <default>true</default>
-        </entry>
-
-        <entry name="zoneIsTarget" type="Bool">
-            <default>false</default>
-        </entry>
-
-        <entry name="enableZoneSelector" type="Bool">
-            <default>true</default>
-        </entry>
-
-        <entry name="enableZoneIndicators" type="Bool">
-            <default>true</default>
         </entry>
 
     </group>

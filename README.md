@@ -2,36 +2,39 @@
 
 <img align="right" width="125" height="75" src="./media/icon.png">
 
-KDE KWin Script for snapping windows into zones. Handy when using a (super) ultrawide monitor.  
-An alternative to PowerToys FancyZones and Windows 11 snap layouts.
+KDE KWin Script for snapping windows into zones. Handy when using a (super) ultrawide monitor, an alternative to PowerToys FancyZones and Windows 11 snap layouts.
 
 ## Features
 
-### Drag & Drop
+### Zone Selector
 
-Dragging windows to a zone
+The zone selector is a small widget that appears when you drag a window to the top of the screen. It allows you to snap the window to a zone regardless of the current layout.
+
+![](./media/selector.gif)
+
+### Zone Overlay
+
+The zone overlay is a fullscreen overlay that appears when you move a window. It shows all zones from the current layout and the window will snap to the zone you drop it on.
+
 ![](./media/dragdrop.gif)
 
 ### Multiple Layouts
 
-Create multiple layouts and cycle between them
+Create multiple layouts and cycle between them.
+
 ![](./media/layouts.gif)
-
-### Shortcuts
-
-Snap windows using shortcuts (full list below)
-![](./media/shortcuts.gif)
-
-### Zone Selector
-
-Show a zone selector when dragging a window to the top of the screen
-![](./media/selector.gif)
 
 ### Theming
 
 KZones uses the same colors as your selected color scheme, so it will always fit in with your desktop.
 
 ![](./media/theming.png)
+
+### Shortcuts
+
+Snap windows using shortcuts (full list below)
+
+![](./media/shortcuts.gif)
 
 ## Installation
 

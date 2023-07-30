@@ -19,7 +19,6 @@ PlasmaCore.Dialog {
     id: mainDialog
 
     // properties
-    property var config: {}
     property bool shown: false
     property bool moving: false
     property bool resizing: false
@@ -29,11 +28,14 @@ PlasmaCore.Dialog {
     property int currentLayout: 0
     property int highlightedZone: -1
     property int activeScreen: 0
+    property var config: {}
+    property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
 
     location: PlasmaCore.Types.Floating
     type: PlasmaCore.Dialog.OnScreenDisplay
     backgroundHints: PlasmaCore.Types.NoBackground
     flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    Kirigami.Theme.colorSet: Kirigami.Theme.View
     visible: false
     outputOnly: true
     opacity: 1
@@ -44,17 +46,17 @@ PlasmaCore.Dialog {
         
         // load values from configuration
         config = {
+            enableZoneSelector: KWin.readConfig("enableZoneSelector", true), // enable zone selector
+            zoneSelectorTriggerDistance: KWin.readConfig("zoneSelectorTriggerDistance", 1), // distance from the top of the screen to trigger the zone selector
+            enableZoneOverlay: KWin.readConfig("enableZoneOverlay", true), // enable zone overlay
+            zoneOverlayShowWhen: KWin.readConfig("zoneOverlayShowWhen", 0), // show zone overlay when
+            zoneOverlayHighlightTarget: KWin.readConfig("zoneOverlayHighlightTarget", 0), // highlight target zone
             rememberWindowGeometries: KWin.readConfig("rememberWindowGeometries", true), // remember window geometries before snapping to a zone, and restore them when the window is removed from their zone
-            pollingRate: KWin.readConfig("pollingRate", 100), // polling rate in milliseconds
-            enableDebugMode: KWin.readConfig("enableDebugMode", false), // enable debug mode
+            layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name":"Priority Grid","padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]')), // layouts
             filterMode: KWin.readConfig("filterMode", 0), // filter mode
             filterList: KWin.readConfig("filterList", ""), // filter list
-            layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name":"Priority Grid","padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]')), // layouts
-            invertedMode: KWin.readConfig("invertedMode", false), // inverted mode
-            indicatorIsTarget: KWin.readConfig("indicatorIsTarget", true), // indicator is target
-            zoneIsTarget: KWin.readConfig("zoneIsTarget", false), // zone is target
-            enableZoneSelector: KWin.readConfig("enableZoneSelector", true), // enable zone selector
-            enableZoneIndicators: KWin.readConfig("enableZoneIndicators", true), // enable zone indicators
+            pollingRate: KWin.readConfig("pollingRate", 100), // polling rate in milliseconds
+            enableDebugMode: KWin.readConfig("enableDebugMode", false), // enable debug mode
         }
 
         log("Config loaded: " + JSON.stringify(config))
@@ -81,6 +83,8 @@ PlasmaCore.Dialog {
         zoneSelectorBackground.expanded = false
         zoneSelectorBackground.near = false
         highlightedZone = -1
+
+        showZoneOverlay = config.zoneOverlayShowWhen == 0
     }
 
     function refreshClientArea() {
@@ -119,11 +123,11 @@ PlasmaCore.Dialog {
         // loop through zones and compare with the geometries of the client
         for (let i = 0; i < zones.length; i++) {
             let zone = zones[i]
-            let zone_padding = config.layouts[currentLayout].padding || 0
-            let zoneX = ((zone.x / 100) * (clientArea.width - zone_padding)) + zone_padding
-            let zoneY = ((zone.y / 100) * (clientArea.height - zone_padding)) + zone_padding
-            let zoneWidth = ((zone.width / 100) * (clientArea.width - zone_padding)) - zone_padding
-            let zoneHeight = ((zone.height / 100) * (clientArea.height - zone_padding)) - zone_padding
+            let zonePadding = config.layouts[currentLayout].padding || 0
+            let zoneX = ((zone.x / 100) * (clientArea.width - zonePadding)) + zonePadding
+            let zoneY = ((zone.y / 100) * (clientArea.height - zonePadding)) + zonePadding
+            let zoneWidth = ((zone.width / 100) * (clientArea.width - zonePadding)) - zonePadding
+            let zoneHeight = ((zone.height / 100) * (clientArea.height - zonePadding)) - zonePadding
             if (client.geometry.x == zoneX && client.geometry.y == zoneY && client.geometry.width == zoneWidth && client.geometry.height == zoneHeight) {
                 // zone found, set it and exit the loop
                 client.zone = i
@@ -170,10 +174,9 @@ PlasmaCore.Dialog {
 
         // move client to zone
         if (zone != -1) {
-            let repeater_zone = repeater_zones.itemAt(zone)
-            let global_x = repeater_zone.mapToGlobal(Qt.point(0, 0)).x
-            let global_y = repeater_zone.mapToGlobal(Qt.point(0, 0)).y
-            let newGeometry = Qt.rect(Math.round(global_x), Math.round(global_y), Math.round(repeater_zone.width), Math.round(repeater_zone.height))
+            let zoneItem = repeaterZones.itemAt(zone)
+            let itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0))
+            let newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height))
             log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry))
             client.geometry = newGeometry
         }
@@ -243,13 +246,10 @@ PlasmaCore.Dialog {
         })
 
         // shortcut: toggle osd
-        bindShortcut("Toggle OSD", "Ctrl+Alt+C", function() {
-            if (!shown) {
-                if (moving) show()
-                else osdCmd.exec("The OSD will be shown when you start moving a window")
-            } else {
-                hide()
-            }
+        bindShortcut("Toggle zone overlay", "Ctrl+Alt+C", function() {
+            if (!config.enableZoneOverlay) osdCmd.exec("Zone overlay is disabled")
+            else if (moving) showZoneOverlay = !showZoneOverlay
+            else osdCmd.exec("The overlay can only be shown while moving a window")  
         })
 
         // shortcut: switch to next window in current zone
@@ -296,10 +296,10 @@ PlasmaCore.Dialog {
 
                 let hoveringZone = -1
                 
-                if (config.enableZoneIndicators && !zoneSelectorBackground.expanded) {
+                if (config.enableZoneOverlay && showZoneOverlay && !zoneSelectorBackground.expanded) {
 
-                    repeater_zones.model.forEach((zone, zoneIndex) => {
-                        if (isHovering(config.indicatorIsTarget ? repeater_zones.itemAt(zoneIndex).children[0] : repeater_zones.itemAt(zoneIndex))) {
+                    repeaterZones.model.forEach((zone, zoneIndex) => {
+                        if (isHovering(repeaterZones.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget])) {
                             hoveringZone = zoneIndex
                         }
                     })
@@ -309,8 +309,8 @@ PlasmaCore.Dialog {
                 if (config.enableZoneSelector) {
                     if (!zoneSelectorBackground.animating && zoneSelectorBackground.expanded) {
 
-                        repeater_layouts.model.forEach((layout, layoutIndex) => {
-                            let layoutItem = repeater_layouts.itemAt(layoutIndex)
+                        repeaterLayouts.model.forEach((layout, layoutIndex) => {
+                            let layoutItem = repeaterLayouts.itemAt(layoutIndex)
                             
                             layout.zones.forEach((zone, zoneIndex) => {
                                 let zoneItem = layoutItem.children[zoneIndex]
@@ -326,7 +326,8 @@ PlasmaCore.Dialog {
                     // set zoneSelectorBackground expansion state
                     zoneSelectorBackground.expanded = isHovering(zoneSelectorBackground) && (workspace.cursorPos.y - clientArea.y) >= 0;
                     // set zoneSelectorBackground near state
-                    zoneSelectorBackground.near = (workspace.cursorPos.y - clientArea.y) < zoneSelectorBackground.y + zoneSelectorBackground.height + 80;
+                    let triggerDistance = config.zoneSelectorTriggerDistance * 50 + 25
+                    zoneSelectorBackground.near = (workspace.cursorPos.y - clientArea.y) < zoneSelectorBackground.y + zoneSelectorBackground.height + triggerDistance;
                 }
 
                 // if hovering zone changed from the last frame
@@ -408,25 +409,21 @@ PlasmaCore.Dialog {
 
             // zones
             Repeater {
-                id: repeater_zones
+                id: repeaterZones
 
                 model: config.layouts[currentLayout].zones
 
                 // zone
-                Rectangle {
+                Item {
                     id: zone
 
                     property int zoneIndex: index
-                    property int zone_padding: config.layouts[currentLayout].padding || 0
+                    property int zonePadding: config.layouts[currentLayout].padding || 0
 
-                    x: ((modelData.x / 100) * (clientArea.width - zone_padding)) + zone_padding
-                    y: ((modelData.y / 100) * (clientArea.height - zone_padding)) + zone_padding
-                    implicitWidth: ((modelData.width / 100) * (clientArea.width - zone_padding)) - zone_padding
-                    implicitHeight: ((modelData.height / 100) * (clientArea.height - zone_padding)) - zone_padding
-                    color: (highlightedZone == zoneIndex) ? Qt.rgba(Kirigami.Theme.hoverColor.r, Kirigami.Theme.hoverColor.g, Kirigami.Theme.hoverColor.b, 0.1) : "transparent"
-                    border.color: (highlightedZone == zoneIndex) ? Kirigami.Theme.hoverColor : "transparent"
-                    border.width: 3
-                    radius: 8
+                    x: ((modelData.x / 100) * (clientArea.width - zonePadding)) + zonePadding
+                    y: ((modelData.y / 100) * (clientArea.height - zonePadding)) + zonePadding
+                    implicitWidth: ((modelData.width / 100) * (clientArea.width - zonePadding)) - zonePadding
+                    implicitHeight: ((modelData.height / 100) * (clientArea.height - zonePadding)) - zonePadding
 
                     // zone indicator
                     Rectangle {
@@ -434,16 +431,14 @@ PlasmaCore.Dialog {
 
                         width: 160
                         height: 100
-                        Kirigami.Theme.inherit: false
-                        Kirigami.Theme.colorSet: Kirigami.Theme.View
                         color: Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, Qt.rgba(0,0,0), 0.1)
                         radius: 10      
                         border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
                         border.width: 1
                         anchors.centerIn: parent
-                        opacity: (zoneSelectorBackground.expanded) ? 0 : (highlightedZone == zoneIndex ? 0.6 : 1)
+                        opacity: !showZoneOverlay ? 0 : (zoneSelectorBackground.expanded) ? 0 : (highlightedZone == zoneIndex ? 0.6 : 1)
                         scale: highlightedZone == zoneIndex ? 1.1 : 1
-                        visible: config.enableZoneIndicators
+                        visible: config.enableZoneOverlay
 
                         Behavior on scale {
                             NumberAnimation {
@@ -467,6 +462,17 @@ PlasmaCore.Dialog {
                         }
 
                     }
+                    
+                    // zone background
+                    Rectangle {
+                        id: zoneBackground
+
+                        anchors.fill: parent
+                        color: (highlightedZone == zoneIndex) ? Qt.rgba(Kirigami.Theme.hoverColor.r, Kirigami.Theme.hoverColor.g, Kirigami.Theme.hoverColor.b, 0.1) : "transparent"
+                        border.color: (highlightedZone == zoneIndex) ? Kirigami.Theme.hoverColor : "transparent"
+                        border.width: 3
+                        radius: 8
+                    }
 
                     // indicator shadow
                     Components.Shadow {
@@ -479,7 +485,7 @@ PlasmaCore.Dialog {
             }
 
             // zone selector
-            Rectangle {
+            Item {
                 id: zoneSelectorBackground
 
                 property bool expanded: false
@@ -487,7 +493,6 @@ PlasmaCore.Dialog {
                 property bool animating: false
 
                 visible: false
-                color: "transparent"
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: expanded ? 0 : (near ? -height + 30 : -height)
@@ -513,8 +518,6 @@ PlasmaCore.Dialog {
                     anchors.bottom: parent.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottomMargin: 15
-                    Kirigami.Theme.inherit: false
-                    Kirigami.Theme.colorSet: Kirigami.Theme.View
                     color: Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, Qt.rgba(0,0,0), 0.1)
                     radius: 10      
                     border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
@@ -528,7 +531,7 @@ PlasmaCore.Dialog {
                         anchors.margins: spacing
 
                         Repeater {
-                            id: repeater_layouts
+                            id: repeaterLayouts
 
                             model: config.layouts
 
@@ -604,7 +607,7 @@ PlasmaCore.Dialog {
                         moving = true
                         resizing = false
                         log("Move start " + client.resourceClass.toString())
-                        if (!config.invertedMode) mainDialog.show()
+                        mainDialog.show()
                     }
                     if (client.resize) {
                         moving = false
@@ -619,8 +622,6 @@ PlasmaCore.Dialog {
                 
                 if (client.resizeable) {
                     if (moving && checkFilter(client)) {
-                        // refresh client area
-                        refreshClientArea()
                         if (config.rememberWindowGeometries && client.zone != -1) {
                             if (client.oldGeometry) {
                                 let geometry = client.oldGeometry
