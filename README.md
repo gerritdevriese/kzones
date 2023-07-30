@@ -241,7 +241,7 @@ List of all available shortcuts:
 | Switch to previous window in current zone | `Ctrl+Alt+Down`  |
 | Switch to next window in current zone     | `Ctrl+Alt+Up`    |
 | Cycle between layouts                     | `Ctrl+Alt+D`     |
-| Toggle OSD                                | `Ctrl+Alt+C`     |
+| Toggle zone overlay                       | `Ctrl+Alt+C`     |
 
 *To change the default bindings, go to System Settings / Shortcuts and search for KZones*
 
