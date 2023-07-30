@@ -146,11 +146,12 @@ PlasmaCore.Dialog {
         }
     }
 
-    function getWindowsInZone(zone) {
+    function getWindowsInZone(zone, layout) {
         let windows = []
         for (let i = 0; i < workspace.clientList().length; i++) {
             let client = workspace.clientList()[i]
             if (client.zone === zone &&
+                client.layout === layout &&
                 client.desktop === workspace.currentDesktop &&
                 client.activity === workspace.currentActivity &&
                 client.normalWindow) {
@@ -160,9 +161,9 @@ PlasmaCore.Dialog {
         return windows
     }
 
-    function switchWindowInZone(zone, reverse) {
+    function switchWindowInZone(zone, layout, reverse) {
 
-        let clientsInZone = getWindowsInZone(zone)
+        let clientsInZone = getWindowsInZone(zone, layout)
 
         if (reverse) { clientsInZone.reverse() }
 
@@ -275,13 +276,15 @@ PlasmaCore.Dialog {
         // shortcut: switch to next window in current zone
         bindShortcut("Switch to next window in current zone", "Ctrl+Alt+Up", function() {
             let zone = workspace.activeClient.zone
-            switchWindowInZone(zone)
+            let layout = workspace.activeClient.layout
+            switchWindowInZone(zone, layout)
         })
 
         // shortcut: switch to previous window in current zone
         bindShortcut("Switch to previous window in current zone", "Ctrl+Alt+Down", function() {
             let zone = workspace.activeClient.zone
-            switchWindowInZone(zone, true)
+            let layout = workspace.activeClient.layout
+            switchWindowInZone(zone, layout, true)
         })
 
         mainDialog.loadConfig()
