@@ -150,7 +150,12 @@ PlasmaCore.Dialog {
         let windows = []
         for (let i = 0; i < workspace.clientList().length; i++) {
             let client = workspace.clientList()[i]
-            if (client.zone === zone && client.normalWindow) windows.push(client)
+            if (client.zone === zone &&
+                client.desktop === workspace.currentDesktop &&
+                client.activity === workspace.currentActivity &&
+                client.normalWindow) {
+                    windows.push(client)
+                }
         }
         return windows
     }
@@ -214,6 +219,8 @@ PlasmaCore.Dialog {
         // save zone
         client.zone = zone
         client.layout = currentLayout
+        client.desktop = workspace.currentDesktop
+        client.activity = workspace.currentActivity
     }
 
     Component.onCompleted: {
