@@ -16,13 +16,12 @@ Rectangle {
         id: indicators
         model: zones
 
-        Rectangle {
+        Item {
             id: zone
             x: ((modelData.x / 100) * (indicator.width)) 
             y: ((modelData.y / 100) * (indicator.height)) 
             width: ((modelData.width / 100) * (indicator.width)) 
             height: ((modelData.height / 100) * (indicator.height))
-            color: "transparent"
 
             Rectangle {
                 property int padding: 2

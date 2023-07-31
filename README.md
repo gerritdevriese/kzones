@@ -1,29 +1,40 @@
 # KZones
 
-KDE KWin Script for snapping windows into zones. Handy when using a (super) ultrawide monitor.  
-An alternative to PowerToys FancyZones.
+<img align="right" width="125" height="75" src="./media/icon.png">
+
+KDE KWin Script for snapping windows into zones. Handy when using a (super) ultrawide monitor, an alternative to PowerToys FancyZones and Windows 11 snap layouts.
 
 ## Features
 
-### Drag & Drop
+### Zone Selector
 
-Dragging windows to a zone
+The zone selector is a small widget that appears when you drag a window to the top of the screen. It allows you to snap the window to a zone regardless of the current layout.
+
+![](./media/selector.gif)
+
+### Zone Overlay
+
+The zone overlay is a fullscreen overlay that appears when you move a window. It shows all zones from the current layout and the window will snap to the zone you drop it on.
+
 ![](./media/dragdrop.gif)
 
 ### Multiple Layouts
 
-Create multiple layouts and cycle between them
+Create multiple layouts and cycle between them.
+
 ![](./media/layouts.gif)
 
 ### Shortcuts
 
-Snap windows using shortcuts (full list below)
+KZones comes with a set of shortcuts to move your windows between zones and layouts.
+
 ![](./media/shortcuts.gif)
 
-### Zone Selector
+### Theming
 
-Show a zone selector when dragging a window to the top of the screen
-![](./media/selector.jpg)
+By using the same colors as your selected color scheme, KZones will blend in perfectly with your desktop.
+
+![](./media/theming.png)
 
 ## Installation
 
@@ -41,21 +52,34 @@ git clone https://github.com/gerritdevriese/kzones
 cd kzones && ./build
 ```
 
-## Setup
+## Configuration
 
 ### General
 
-#### Show zones when I start moving a window
+#### Zone Selector
 
-While moving a window you will have the option to snap it to a zone. Either by dragging it to it's indicator or the full zone.
+The zone selector is a small widget that appears when you drag a window to the top of the screen. It allows you to snap the window to a zone regardless of the current layout.
 
-#### Show zone selector when I drag a windo to the top of the screen
+- Enable or disable the zone selector.
+- Set the distance from the top of the screen at which the zone selector will start to appear.
 
-When enabled, a zone selector will appear when you drag a window to the top of the screen. Which allows you to snap the window to a zone. The selector displays all zones from all layouts.
+#### Zone Overlay
+
+The zone overlay is a fullscreen overlay that appears when you move a window. It shows all zones from the current layout and the window will snap to the zone you drop it on.
+
+- Enable or disable the zone overlay.
+- Choose whether the overlay should be shown when you start moving a window or when you press the toggle overlay shortcut.
+- Choose where the cursor needs to be in order to highlight a zone, either in the center of the zone or anywhere inside the zone.
+
+#### Remember and restore window geometries
+
+The script will remember the geometry of each window when it's moved to a zone. When the window is moved out of the zone, it will be restored to it's original geometry.
+
+- Enable or disable this behavior.
 
 ### Layouts
 
-You can define layouts by putting them in the **Layouts** tab in the script settings, here are some examples to get you started:
+You can define your own layouts by modifying the JSON in the **Layouts** tab in the script settings, here are some examples to get you started:
 
 #### Examples
 <details open>
@@ -178,52 +202,32 @@ You can define layouts by putting them in the **Layouts** tab in the script sett
 The main array can contain as many layouts as you want:
    
 Each **layout** object needs the following keys:
-- `name`: The name of the layout, shown in the OSD when cycling between layouts
+- `name`: The name of the layout, shown when cycling between layouts
 - `padding`: The amount of space between the window and the zone in pixels
 - `zones`: An array containing all zone objects for this layout
 
 Each **zone** object needs the following keys:
-- `name`: The name of the zone, shown inside the zone indicator (can be left blank)
 - `x`, `y`: position of the top left corner of the zone in screen percentage
 - `width`, `height`: size of the zone in screen percentage
 
-#### Indicator offset
+### Filters
 
-If for some reason you want to move the zone indicator, you can do so by adding the following keys to a zone object:
+Stop certain windows from snapping to zones by adding them to the filter list.
 
-```json
-{
-    "name": "2",
-    "x": 25,
-    "y": 0,
-    "height": 100,
-    "width": 50,
-    "indicator": {
-        "offset": {
-            "x": 100,
-            "y": -50
-        }
-    }
-}
-```
+- Select the filter mode, either **Include** or **Exclude**.
+- Add window classes to the list seperated by a newline.
 
-This example will move the indicator 100 pixels to the right and 50 pixels up.
+You can enable debug mode to see the window class of the active window.
 
-### Other settings
-
-#### Determine zone
-
-#### Filtering
-
-You can block certain windows from snapping by adding their class name to the exclude list. Or you can only allow certain windows to snap by adding their class name to the include list. You can find the class name of a window by running `xprop` in a terminal and clicking on the window. The class name will be in the `WM_CLASS` property.
+### Advanced
 
 #### Polling rate
 
 The polling rate is the amount of time between each zone check when dragging a window. The default is 100ms, a faster polling rate is more accurate but will use more CPU. You can change this to your liking.
 
-#### Inverted mode
+#### Debug mode
 
-When enabled, moving windows will not trigger the osd. Instead you'll have to use the "Toggle OSD" shortcut to show the osd.
+When debug mode is enabled, the script will log more information and show extra information in the overlay.
 
 ## Shortcuts
 
@@ -237,7 +241,7 @@ List of all available shortcuts:
 | Switch to previous window in current zone | `Ctrl+Alt+Down`  |
 | Switch to next window in current zone     | `Ctrl+Alt+Up`    |
 | Cycle between layouts                     | `Ctrl+Alt+D`     |
-| Toggle OSD                                | `Ctrl+Alt+C`     |
+| Toggle zone overlay                       | `Ctrl+Alt+C`     |
 
 *To change the default bindings, go to System Settings / Shortcuts and search for KZones*
 
@@ -245,9 +249,9 @@ List of all available shortcuts:
 
 ### The script doesn't work
 
-- Check if your KDE version is at 5.27 or higher.
+- Check if your KDE Plasma version is at 5.27 or higher.
 - Make sure there is at least one layout defined in the script settings and that it contains at least one zone.
 
 ### My settings are not saved
 
-- After changing settings, you need to reload the script by disabling, saving and enabling it again. (or by restarting KWin)
+- After changing settings, you need to reload the script by disabling, saving and enabling it again. This is a known issue with the KWin Scripting API.
