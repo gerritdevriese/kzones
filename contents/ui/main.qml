@@ -146,7 +146,7 @@ PlasmaCore.Dialog {
                 client.layout === layout &&
                 client.desktop === workspace.currentDesktop &&
                 client.activity === workspace.currentActivity &&
-                client.screen === workspace.activeScreen &&
+                client.screen === workspace.activeClient.screen &&
                 client.normalWindow) {
                     windows.push(client)
                 }
@@ -178,7 +178,7 @@ PlasmaCore.Dialog {
         
         log("Moving client " + client.resourceClass.toString() + " to zone " + zone)
 
-        refreshClientArea()
+        clientArea = workspace.clientArea(KWin.FullScreenArea, client.screen, workspace.currentDesktop)
         saveWindowGeometries(client, zone)
 
         // move client to zone
