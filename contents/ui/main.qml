@@ -21,6 +21,7 @@ PlasmaCore.Dialog {
     // properties
     property bool shown: false
     property bool moving: false
+    property bool moved: false
     property bool resizing: false
     property var clientArea: {}
     property var cachedClientArea: {}
@@ -617,12 +618,14 @@ PlasmaCore.Dialog {
                         
                         cachedClientArea = clientArea
                         moving = true
+                        moved = false
                         resizing = false
                         log("Move start " + client.resourceClass.toString())
                         mainDialog.show()
                     }
                     if (client.resize) {
                         moving = false
+                        moved = false
                         resizing = true
                         // client resizing
                     }
@@ -634,6 +637,7 @@ PlasmaCore.Dialog {
                 
                 if (client.resizeable) {
                     if (moving && checkFilter(client)) {
+                        moved = true
                         if (config.rememberWindowGeometries && client.zone != -1) {
                             if (client.oldGeometry) {
                                 let geometry = client.oldGeometry
@@ -655,17 +659,20 @@ PlasmaCore.Dialog {
             function onClientFinishUserMovedResized(client) {
                 if (moving) {
                     log("Move end " + client.resourceClass.toString())
-                    if (shown) {
-                        moveClientToZone(client, highlightedZone)
-                    } else {
-                        saveWindowGeometries(client, -1)
-                    }                    
+                    if (moved) {
+                        if (shown) {
+                            moveClientToZone(client, highlightedZone)
+                        } else {
+                            saveWindowGeometries(client, -1)
+                        }
+                    }
                     hide()
                 }
                 if (resizing) {
                     // client resizing
                 }
                 moving = false
+                moved = false
                 resizing = false
             }
 
