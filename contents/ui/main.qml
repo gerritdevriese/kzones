@@ -171,6 +171,59 @@ PlasmaCore.Dialog {
         }
     }
 
+    function getZoneRect(zoneIndex) {
+        const zone = repeaterZones.itemAt(zoneIndex)
+        const zoneItem = zone.mapToItem(null, 0, 0)
+        return {
+            "x": zoneItem.x,
+            "y": zoneItem.y,
+            "width": zone.width,
+            "height": zone.height
+        }
+    }
+
+    function findZoneForRect(x, y, width = 1, height = 1) {
+        let closest = {'distance': 999999, 'zone': -1}
+        let most_overlapping = {'area': 0, 'zone': -1}
+        const inputRect = {
+            "x": x,
+            "y": y,
+            "width": width,
+            "height": height
+        }
+
+        for (let idx = 0; idx < repeaterZones.model.length; idx++) {
+            const zoneRect = getZoneRect(idx)
+            const overlap = rectOverlapArea(zoneRect, inputRect)
+            if (overlap === 0) {
+                continue
+            }
+
+            if (overlap > most_overlapping.area) {
+                most_overlapping = { 'area': overlap, 'zone': idx }
+            }
+            const xDist = Math.abs((x + width / 2) - (zoneRect.x + zoneRect.width / 2))
+            const yDist = Math.abs((y + height / 2) - (zoneRect.y + zoneRect.height / 2))
+            const distance = xDist + yDist
+            if (distance < closest.distance) {
+                closest = { 'distance': distance, 'zone': idx }
+            }
+        }
+
+        const zoneMatchingMethod = 0 // TODO `config.zoneMatchMethod`, Maybe check out how windows powertoys does this..
+        switch (zoneMatchingMethod) {
+            default:
+            case 0: // Zone with closest distance to the center
+                return closest.zone
+            case 1: // Zone with most area overlap
+                return most_overlapping.zone
+        }
+    }
+
+    function findZoneForGeometry(geometry) {
+        return findZoneForRect(geometry.x, geometry.y, geometry.width, geometry.height)
+    }
+
     function moveClientToZone(client, zone) {
 
         // block abnormal windows from being moved (like plasmashell, docks, etc...)
@@ -243,7 +296,9 @@ PlasmaCore.Dialog {
         // shortcut: move to next zone
         bindShortcut("Move active window to next zone", "Ctrl+Alt+Right", function() {
             const client = workspace.activeClient
-            // TODO: if client.zone = -1 check if client is in a zone by geometry
+            if (client.zone == -1) {
+                return moveClientToZone(client, findZoneForGeometry(client.geometry))
+            }
             const zonesLength = config.layouts[currentLayout].zones.length
             moveClientToZone(client, (client.zone + 1) % zonesLength)
         })
@@ -251,7 +306,9 @@ PlasmaCore.Dialog {
         // shortcut: move to previous zone
         bindShortcut("Move active window to previous zone", "Ctrl+Alt+Left", function() {
             const client = workspace.activeClient
-            // TODO: if client.zone = -1 check if client is in a zone by geometry
+            if (client.zone == -1) {
+                return moveClientToZone(client, findZoneForGeometry(client.geometry))
+            }
             const zonesLength = config.layouts[currentLayout].zones.length
             moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength)
         })
