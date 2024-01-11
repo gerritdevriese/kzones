@@ -255,3 +255,8 @@ List of all available shortcuts:
 ### My settings are not saved
 
 - After changing settings, you need to reload the script by disabling, saving and enabling it again. This is a known issue with the KWin Scripting API.
+
+### The screen turns black while moving a window
+
+- Make sure your compositor is enabled, as it is needed to draw transparent windows.
+- You can find this setting in Plasma settings: Display and Monitor - Compositor
