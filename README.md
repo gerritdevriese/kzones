@@ -238,8 +238,8 @@ List of all available shortcuts:
 | Move active window to zone                                         | `Ctrl+Alt+[0-9]` |
 | Move active window to previous zone                                | `Ctrl+Alt+Left`  |
 | Move active window to next zone                                    | `Ctrl+Alt+Right` |
-| ~~Switch to previous window in current zone~~ (Temporarily broken) | `Ctrl+Alt+Down`  |
-| ~~Switch to next window in current zone~~ (Temporarily broken)     | `Ctrl+Alt+Up`    |
+| Switch to previous window in current zone                          | `Ctrl+Alt+Down`  |
+| Switch to next window in current zone                              | `Ctrl+Alt+Up`    |
 | Cycle between layouts                                              | `Ctrl+Alt+D`     |
 | Toggle zone overlay                                                | `Ctrl+Alt+C`     |
 
