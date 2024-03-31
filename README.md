@@ -233,15 +233,15 @@ When debug mode is enabled, the script will log more information and show extra 
 
 List of all available shortcuts:
 
-| Shortcut                                  | Default Binding  |
-| ----------------------------------------- | ---------------- |
-| Move active window to zone                | `Ctrl+Alt+[0-9]` |
-| Move active window to previous zone       | `Ctrl+Alt+Left`  |
-| Move active window to next zone           | `Ctrl+Alt+Right` |
-| Switch to previous window in current zone | `Ctrl+Alt+Down`  |
-| Switch to next window in current zone     | `Ctrl+Alt+Up`    |
-| Cycle between layouts                     | `Ctrl+Alt+D`     |
-| Toggle zone overlay                       | `Ctrl+Alt+C`     |
+| Shortcut                                                           | Default Binding  |
+| ------------------------------------------------------------------ | ---------------- |
+| Move active window to zone                                         | `Ctrl+Alt+[0-9]` |
+| Move active window to previous zone                                | `Ctrl+Alt+Left`  |
+| Move active window to next zone                                    | `Ctrl+Alt+Right` |
+| ~~Switch to previous window in current zone~~ (Temporarily broken) | `Ctrl+Alt+Down`  |
+| ~~Switch to next window in current zone~~ (Temporarily broken)     | `Ctrl+Alt+Up`    |
+| Cycle between layouts                                              | `Ctrl+Alt+D`     |
+| Toggle zone overlay                                                | `Ctrl+Alt+C`     |
 
 *To change the default bindings, go to System Settings / Shortcuts and search for KZones*
 
@@ -249,7 +249,7 @@ List of all available shortcuts:
 
 ### The script doesn't work
 
-- Check if your KDE Plasma version is at 5.27 or higher.
+- Check if your KDE Plasma version is at 6 or higher (for older versions, check the releases)
 - Make sure there is at least one layout defined in the script settings and that it contains at least one zone.
 
 ### My settings are not saved
