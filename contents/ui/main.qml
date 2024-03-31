@@ -1,11 +1,12 @@
-import QtGraphicalEffects 1.0
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.2
-import org.kde.kirigami 2.15 as Kirigami
-import org.kde.kwin 2.0
-import org.kde.plasma.components 3.0 as PlasmaComponents
-import org.kde.plasma.core 2.0 as PlasmaCore
+import Qt5Compat.GraphicalEffects
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import org.kde.kirigami as Kirigami
+import org.kde.kwin
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.plasma.core as PlasmaCore
+import org.kde.plasma.plasma5support as Plasma5Support
 
 import "components" as Components
 
@@ -23,13 +24,13 @@ PlasmaCore.Dialog {
     property bool moving: false
     property bool moved: false
     property bool resizing: false
-    property var clientArea: {}
-    property var cachedClientArea: {}
-    property var displaySize: {}
+    property var clientArea: ({})
+    property var cachedClientArea: ({})
+    property var displaySize: ({})
     property int currentLayout: 0
     property int highlightedZone: -1
-    property int activeScreen: 0
-    property var config: {}
+    property var activeScreen: null
+    property var config: ({})
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
 
     location: PlasmaCore.Types.Floating
@@ -89,9 +90,9 @@ PlasmaCore.Dialog {
     }
 
     function refreshClientArea() {
-        activeScreen = workspace.activeScreen
-        clientArea = workspace.clientArea(KWin.FullScreenArea, activeScreen, workspace.currentDesktop)
-        displaySize = workspace.displaySize
+        activeScreen = Workspace.activeScreen
+        clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop)
+        displaySize = Workspace.virtualScreenSize
     }
 
     function isPointInside(x, y, geometry) {
@@ -100,7 +101,7 @@ PlasmaCore.Dialog {
 
     function isHovering(item) {
         let itemGlobal = item.mapToGlobal(Qt.point(0, 0))
-        return isPointInside(workspace.cursorPos.x, workspace.cursorPos.y, {x: itemGlobal.x, y: itemGlobal.y, width: item.width * item.scale, height: item.height * item.scale})
+        return isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, {x: itemGlobal.x, y: itemGlobal.y, width: item.width * item.scale, height: item.height * item.scale})
     }
 
     function rectOverlapArea(component1, component2) {
@@ -129,7 +130,7 @@ PlasmaCore.Dialog {
             let zoneY = ((zone.y / 100) * (clientArea.height - zonePadding)) + zonePadding
             let zoneWidth = ((zone.width / 100) * (clientArea.width - zonePadding)) - zonePadding
             let zoneHeight = ((zone.height / 100) * (clientArea.height - zonePadding)) - zonePadding
-            if (client.geometry.x == zoneX && client.geometry.y == zoneY && client.geometry.width == zoneWidth && client.geometry.height == zoneHeight) {
+            if (client.frameGeometry.x == zoneX && client.frameGeometry.y == zoneY && client.frameGeometry.width == zoneWidth && client.frameGeometry.height == zoneHeight) {
                 // zone found, set it and exit the loop
                 client.zone = i
                 client.zone = currentLayout
@@ -140,13 +141,13 @@ PlasmaCore.Dialog {
 
     function getWindowsInZone(zone, layout) {
         let windows = []
-        for (let i = 0; i < workspace.clientList().length; i++) {
-            let client = workspace.clientList()[i]
+        for (let i = 0; i < Workspace.stackingOrder.length; i++) {
+            let client = Workspace.stackingOrder[i]
             if (client.zone === zone &&
                 client.layout === layout &&
-                client.desktop === workspace.currentDesktop &&
-                client.activity === workspace.currentActivity &&
-                client.screen === workspace.activeClient.screen &&
+                client.desktop === Workspace.currentDesktop &&
+                client.activity === Workspace.currentActivity &&
+                client.screen === Workspace.activeWindow.screen &&
                 client.normalWindow) {
                     windows.push(client)
                 }
@@ -162,11 +163,11 @@ PlasmaCore.Dialog {
 
         // cycle through clients in zone
         if (clientsInZone.length > 0) {
-            let index = clientsInZone.indexOf(workspace.activeClient)
+            let index = clientsInZone.indexOf(Workspace.activeWindow)
             if (index === -1) {
-                workspace.activeClient = clientsInZone[0]
+                Workspace.activeWindow = clientsInZone[0]
             } else {
-                workspace.activeClient = clientsInZone[(index + 1) % clientsInZone.length]
+                Workspace.activeWindow = clientsInZone[(index + 1) % clientsInZone.length]
             }
         }
     }
@@ -178,7 +179,7 @@ PlasmaCore.Dialog {
         
         log("Moving client " + client.resourceClass.toString() + " to zone " + zone)
 
-        clientArea = workspace.clientArea(KWin.FullScreenArea, client.screen, workspace.currentDesktop)
+        clientArea = Workspace.clientArea(KWin.FullScreenArea, client.output, Workspace.currentDesktop)
         saveWindowGeometries(client, zone)
 
         // move client to zone
@@ -187,7 +188,7 @@ PlasmaCore.Dialog {
             let itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0))
             let newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height))
             log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry))
-            client.geometry = newGeometry
+            client.frameGeometry = newGeometry
         }
     }
 
@@ -198,10 +199,10 @@ PlasmaCore.Dialog {
         // save current geometry
         if (config.rememberWindowGeometries) {
             let geometry = {
-                "x": client.geometry.x,
-                "y": client.geometry.y,
-                "width": client.geometry.width,
-                "height": client.geometry.height
+                "x": client.frameGeometry.x,
+                "y": client.frameGeometry.y,
+                "width": client.frameGeometry.width,
+                "height": client.frameGeometry.height
             }
             if (zone != -1) {
                 if (client.zone == -1) {
@@ -213,80 +214,173 @@ PlasmaCore.Dialog {
         // save zone
         client.zone = zone
         client.layout = currentLayout
-        client.desktop = workspace.currentDesktop
-        client.activity = workspace.currentActivity
+        client.desktop = Workspace.currentDesktop
+        client.activity = Workspace.currentActivity
+    }
+
+    Item {
+        id: shortcuts
+
+        ShortcutHandler {
+            name: "KZones: Cycle layouts"
+            text: "KZones: Cycle layouts"
+            sequence: "Ctrl+Alt+D"
+            onActivated: {
+                currentLayout = (currentLayout + 1) % config.layouts.length
+                highlightedZone = -1
+                osdCmd.exec(config.layouts[currentLayout].name)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to next zone"
+            text: "KZones: Move active window to next zone"
+            sequence: "Ctrl+Alt+Right"
+            onActivated: {
+                const client = Workspace.activeWindow
+                // TODO: if client.zone = -1 check if client is in a zone by geometry
+                const zonesLength = config.layouts[currentLayout].zones.length
+                moveClientToZone(client, (client.zone + 1) % zonesLength)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to previous zone"
+            text: "KZones: Move active window to previous zone"
+            sequence: "Ctrl+Alt+Left"
+            onActivated: {
+                const client = Workspace.activeWindow
+                // TODO: if client.zone = -1 check if client is in a zone by geometry
+                const zonesLength = config.layouts[currentLayout].zones.length
+                moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Toggle zone overlay"
+            text: "KZones: Toggle zone overlay"
+            sequence: "Ctrl+Alt+C"
+            onActivated: {
+                if (!config.enableZoneOverlay) osdCmd.exec("Zone overlay is disabled")
+                else if (moving) showZoneOverlay = !showZoneOverlay
+                else osdCmd.exec("The overlay can only be shown while moving a window")
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Switch to next window in current zone"
+            text: "KZones: Switch to next window in current zone"
+            sequence: "Ctrl+Alt+Up"
+            onActivated: {
+                let zone = Workspace.activeWindow.zone
+                let layout = Workspace.activeWindow.layout
+                switchWindowInZone(zone, layout)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Switch to previous window in current zone"
+            text: "KZones: Switch to previous window in current zone"
+            sequence: "Ctrl+Alt+Down"
+            onActivated: {
+                let zone = Workspace.activeWindow.zone
+                let layout = Workspace.activeWindow.layout
+                switchWindowInZone(zone, layout, true)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to 1"
+            text: "KZones: Move active window to 1"
+            sequence: "Ctrl+Alt+Num+1"
+            onActivated: {
+                moveClientToZone(Workspace.activeWindow, 0)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to 2"
+            text: "KZones: Move active window to 2"
+            sequence: "Ctrl+Alt+Num+2"
+            onActivated: {
+                moveClientToZone(Workspace.activeWindow, 1)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to 3"
+            text: "KZones: Move active window to 3"
+            sequence: "Ctrl+Alt+Num+3"
+            onActivated: {
+                moveClientToZone(Workspace.activeWindow, 2)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to 4"
+            text: "KZones: Move active window to 4"
+            sequence: "Ctrl+Alt+Num+4"
+            onActivated: {
+                moveClientToZone(Workspace.activeWindow, 3)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to 5"
+            text: "KZones: Move active window to 5"
+            sequence: "Ctrl+Alt+Num+5"
+            onActivated: {
+                moveClientToZone(Workspace.activeWindow, 4)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to 6"
+            text: "KZones: Move active window to 6"
+            sequence: "Ctrl+Alt+Num+6"
+            onActivated: {
+                moveClientToZone(Workspace.activeWindow, 5)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to 7"
+            text: "KZones: Move active window to 7"
+            sequence: "Ctrl+Alt+Num+7"
+            onActivated: {
+                moveClientToZone(Workspace.activeWindow, 6)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to 8"
+            text: "KZones: Move active window to 8"
+            sequence: "Ctrl+Alt+Num+8"
+            onActivated: {
+                moveClientToZone(Workspace.activeWindow, 7)
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window to 9"
+            text: "KZones: Move active window to 9"
+            sequence: "Ctrl+Alt+Num+9"
+            onActivated: {
+                moveClientToZone(Workspace.activeWindow, 8)
+            }
+        }
     }
 
     Component.onCompleted: {
-
-        // register window
-        KWin.registerWindow(mainDialog)
-
         // refresh client area
-        refreshClientArea()        
-
-        // shortcut: cycle through layouts
-        bindShortcut("Cycle layouts", "Ctrl+Alt+D", function() {
-            //cycle through layouts
-            currentLayout = (currentLayout + 1) % config.layouts.length
-            highlightedZone = -1
-            osdCmd.exec(config.layouts[currentLayout].name)
-        })
-
-        // shortcut: move to zone (1-9)
-        for (let i = 0; i < 9; i++) {
-            bindShortcut(`Move active window to zone ${i+1}`, `Ctrl+Alt+Num+${i+1}`, function() {
-                moveClientToZone(workspace.activeClient, i)
-            })
-        }
-
-        // shortcut: move to next zone
-        bindShortcut("Move active window to next zone", "Ctrl+Alt+Right", function() {
-            const client = workspace.activeClient
-            // TODO: if client.zone = -1 check if client is in a zone by geometry
-            const zonesLength = config.layouts[currentLayout].zones.length
-            moveClientToZone(client, (client.zone + 1) % zonesLength)
-        })
-
-        // shortcut: move to previous zone
-        bindShortcut("Move active window to previous zone", "Ctrl+Alt+Left", function() {
-            const client = workspace.activeClient
-            // TODO: if client.zone = -1 check if client is in a zone by geometry
-            const zonesLength = config.layouts[currentLayout].zones.length
-            moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength)
-        })
-
-        // shortcut: toggle osd
-        bindShortcut("Toggle zone overlay", "Ctrl+Alt+C", function() {
-            if (!config.enableZoneOverlay) osdCmd.exec("Zone overlay is disabled")
-            else if (moving) showZoneOverlay = !showZoneOverlay
-            else osdCmd.exec("The overlay can only be shown while moving a window")  
-        })
-
-        // shortcut: switch to next window in current zone
-        bindShortcut("Switch to next window in current zone", "Ctrl+Alt+Up", function() {
-            let zone = workspace.activeClient.zone
-            let layout = workspace.activeClient.layout
-            switchWindowInZone(zone, layout)
-        })
-
-        // shortcut: switch to previous window in current zone
-        bindShortcut("Switch to previous window in current zone", "Ctrl+Alt+Down", function() {
-            let zone = workspace.activeClient.zone
-            let layout = workspace.activeClient.layout
-            switchWindowInZone(zone, layout, true)
-        })
+        refreshClientArea()
 
         mainDialog.loadConfig()
 
         // match all clients to zones
-        for (var i = 0; i < workspace.clientList().length; i++) {
-            matchZone(workspace.clientList()[i])
+        for (var i = 0; i < Workspace.stackingOrder.length; i++) {
+            matchZone(Workspace.stackingOrder[i])
         }
-    }
-
-    function bindShortcut(title, sequence, callback) {
-        KWin.registerShortcut(`KZones: ${title}`, `KZones: ${title}`, sequence, callback)
     }
 
     Item {
@@ -337,10 +431,10 @@ PlasmaCore.Dialog {
 
                     }
                     // set zoneSelectorBackground expansion state
-                    zoneSelectorBackground.expanded = isHovering(zoneSelectorBackground) && (workspace.cursorPos.y - clientArea.y) >= 0;
+                    zoneSelectorBackground.expanded = isHovering(zoneSelectorBackground) && (Workspace.cursorPos.y - clientArea.y) >= 0;
                     // set zoneSelectorBackground near state
                     let triggerDistance = config.zoneSelectorTriggerDistance * 50 + 25
-                    zoneSelectorBackground.near = (workspace.cursorPos.y - clientArea.y) < zoneSelectorBackground.y + zoneSelectorBackground.height + triggerDistance;
+                    zoneSelectorBackground.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelectorBackground.y + zoneSelectorBackground.height + triggerDistance;
                 }
 
                 // if hovering zone changed from the last frame
@@ -353,7 +447,7 @@ PlasmaCore.Dialog {
         }
 
         // osd qdbus
-        PlasmaCore.DataSource {
+        Plasma5Support.DataSource {
 
             id: osdCmd
 
@@ -369,10 +463,10 @@ PlasmaCore.Dialog {
         }
 
         Item {
-            x: clientArea.x
-            y: clientArea.y
-            width: clientArea.width
-            height: clientArea.height
+            x: clientArea.x || 0
+            y: clientArea.y || 0
+            width: clientArea.width || 0
+            height: clientArea.height || 0
             clip: true
 
             // debug osd
@@ -399,16 +493,16 @@ PlasmaCore.Dialog {
                     text: {
                         if (config.enableDebugMode) {
                             let t = ""
-                            t += `Active: ${workspace.activeClient.caption}\n`
-                            t += `Window class: ${workspace.activeClient.resourceClass.toString()}\n`
-                            t += `X: ${workspace.activeClient.geometry.x}, Y: ${workspace.activeClient.geometry.y}, Width: ${workspace.activeClient.geometry.width}, Height: ${workspace.activeClient.geometry.height}\n`
-                            t += `Previous Zone: ${workspace.activeClient.zone}\n`
+                            t += `Active: ${Workspace.activeWindow.caption}\n`
+                            t += `Window class: ${Workspace.activeWindow.resourceClass.toString()}\n`
+                            t += `X: ${Workspace.activeWindow.frameGeometry.x}, Y: ${Workspace.activeWindow.frameGeometry.y}, Width: ${Workspace.activeWindow.frameGeometry.width}, Height: ${Workspace.activeWindow.frameGeometry.height}\n`
+                            t += `Previous Zone: ${Workspace.activeWindow.zone}\n`
                             t += `Highlighted Zone: ${highlightedZone}\n`
                             t += `Layout: ${currentLayout}\n`
                             t += `Polling Rate: ${config.pollingRate}ms\n`
                             t += `Moving: ${moving}\n`
                             t += `Resizing: ${resizing}\n`
-                            t += `Old Geometry: ${JSON.stringify(workspace.activeClient.oldGeometry)}\n`
+                            t += `Old Geometry: ${JSON.stringify(Workspace.activeWindow.oldGeometry)}\n`
                             t += `Active Screen: ${activeScreen}\n`
                             return t
                         } else {
@@ -572,19 +666,13 @@ PlasmaCore.Dialog {
 
         // workspace connection
         Connections {
-            target: workspace
+            target: Workspace
 
-            function onClientAdded(client) {
+            function onWindowAdded(client) {
                 // check if new window spawns in a zone
                 if (client.zone == undefined || client.zone == -1) {
                     matchZone(client)
                 }
-            }
-
-            function onClientFullScreenSet(client, fullscreen, user) {
-                if (!client) return;
-                log("Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + fullscreen + ")");
-                mainDialog.hide();
             }
 
             // unused, but may be useful in the future
@@ -599,7 +687,7 @@ PlasmaCore.Dialog {
         // options connection
         Connections {
             //! not working at the moment
-            target: options
+            target: Options
 
             function onConfigChanged() {
                 log("Config changed")
@@ -607,12 +695,20 @@ PlasmaCore.Dialog {
             }
         }
 
-        // activeClient connection
+        // activeWindow connection
         Connections {
-            target: workspace.activeClient
+            target: Workspace.activeWindow
+
+            // FIXME: Is this the desired behaviour?
+            function onFullScreenChanged() {
+                let client = Workspace.activeWindow
+                log("Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + client.fullScreen + ")");
+                mainDialog.hide();
+            }
 
             // start moving
-            function onClientStartUserMovedResized(client) {
+            function onInteractiveMoveResizeStarted() {
+                let client = Workspace.activeWindow
                 if (client.resizeable && client.normalWindow) {
                     if (client.move && checkFilter(client)) {
                         
@@ -633,8 +729,8 @@ PlasmaCore.Dialog {
             }
 
             // is moving
-            function onClientStepUserMovedResized(client, r) {
-                
+            function onInteractiveMoveResizeStepped(r) {
+                let client = Workspace.activeWindow
                 if (client.resizeable) {
                     if (moving && checkFilter(client)) {
                         moved = true
@@ -645,7 +741,7 @@ PlasmaCore.Dialog {
                                 let zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x
                                 let zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x)
                                 let newGeometry = Qt.rect(Math.round((r.x - zoneX) + (zoneCenterX - geometry.width / 2)), Math.round(r.y), Math.round(geometry.width), Math.round(geometry.height))
-                                client.geometry = newGeometry
+                                client.frameGeometry = newGeometry
                             }
                         }
                     }
@@ -656,7 +752,8 @@ PlasmaCore.Dialog {
             }
 
             // stop moving
-            function onClientFinishUserMovedResized(client) {
+            function onInteractiveMoveResizeFinished() {
+                let client = Workspace.activeWindow
                 if (moving) {
                     log("Move end " + client.resourceClass.toString())
                     if (moved) {
