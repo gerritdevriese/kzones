@@ -1,0 +1,28 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "gerritdevriese"
+            }
+        ],
+        "Category": "Utilities",
+        "Description": "Utility for snapping windows into zones",
+        "EnabledByDefault": true,
+        "Icon": "preferences-desktop-virtual",
+        "Id": "kzones",
+        "License": "GPL-3.0+",
+        "Name": "KZones",
+        "ServiceTypes": [
+            "KWin/Script"
+        ],
+        "Version": "0.6",
+        "Website": "https://github.com/gerritdevriese/kzones"
+    },
+    "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
+    "X-Plasma-API": "declarativescript",
+    "X-Plasma-APIX": "javascript",
+    "X-Plasma-MainScript": "ui/main.qml",
+    "X-Plasma-MainScriptX": "code/main.js",
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "KPackageStructure": "KWin/Script"
+}
