@@ -15,7 +15,7 @@
         "ServiceTypes": [
             "KWin/Script"
         ],
-        "Version": "0.6",
+        "Version": "0.7",
         "Website": "https://github.com/gerritdevriese/kzones"
     },
     "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
@@ -24,5 +24,6 @@
     "X-Plasma-MainScript": "ui/main.qml",
     "X-Plasma-MainScriptX": "code/main.js",
     "X-Plasma-API-Minimum-Version": "6.0",
-    "KPackageStructure": "KWin/Script"
+    "KPackageStructure": "KWin/Script",
+    "X-KDE-PluginKeyword": "kzones"
 }
