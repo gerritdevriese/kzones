@@ -36,7 +36,7 @@ PlasmaCore.Dialog {
     location: PlasmaCore.Types.Floating
     type: PlasmaCore.Dialog.OnScreenDisplay
     backgroundHints: PlasmaCore.Types.NoBackground
-    flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup
     Kirigami.Theme.colorSet: Kirigami.Theme.View
     visible: false
     outputOnly: true
