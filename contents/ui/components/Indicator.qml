@@ -1,6 +1,5 @@
-import Qt5Compat.GraphicalEffects 1.0
-import QtQuick 2.15
-import org.kde.kirigami 2.15 as Kirigami
+import QtQuick
+import org.kde.kirigami as Kirigami
 
 Rectangle {
     id: indicator
