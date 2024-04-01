@@ -295,84 +295,17 @@ PlasmaCore.Dialog {
             }
         }
 
-        ShortcutHandler {
-            name: "KZones: Move active window to 1"
-            text: "KZones: Move active window to 1"
-            sequence: "Ctrl+Alt+Num+1"
-            onActivated: {
-                moveClientToZone(Workspace.activeWindow, 0);
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window to 2"
-            text: "KZones: Move active window to 2"
-            sequence: "Ctrl+Alt+Num+2"
-            onActivated: {
-                moveClientToZone(Workspace.activeWindow, 1);
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window to 3"
-            text: "KZones: Move active window to 3"
-            sequence: "Ctrl+Alt+Num+3"
-            onActivated: {
-                moveClientToZone(Workspace.activeWindow, 2);
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window to 4"
-            text: "KZones: Move active window to 4"
-            sequence: "Ctrl+Alt+Num+4"
-            onActivated: {
-                moveClientToZone(Workspace.activeWindow, 3);
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window to 5"
-            text: "KZones: Move active window to 5"
-            sequence: "Ctrl+Alt+Num+5"
-            onActivated: {
-                moveClientToZone(Workspace.activeWindow, 4);
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window to 6"
-            text: "KZones: Move active window to 6"
-            sequence: "Ctrl+Alt+Num+6"
-            onActivated: {
-                moveClientToZone(Workspace.activeWindow, 5);
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window to 7"
-            text: "KZones: Move active window to 7"
-            sequence: "Ctrl+Alt+Num+7"
-            onActivated: {
-                moveClientToZone(Workspace.activeWindow, 6);
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window to 8"
-            text: "KZones: Move active window to 8"
-            sequence: "Ctrl+Alt+Num+8"
-            onActivated: {
-                moveClientToZone(Workspace.activeWindow, 7);
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window to 9"
-            text: "KZones: Move active window to 9"
-            sequence: "Ctrl+Alt+Num+9"
-            onActivated: {
-                moveClientToZone(Workspace.activeWindow, 8);
+        Repeater {
+            model: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+            delegate: Item {
+                ShortcutHandler {
+                    name: "KZones: Move active window to " + modelData
+                    text: "KZones: Move active window to " + modelData
+                    sequence: "Ctrl+Alt+Num+" + modelData
+                    onActivated: {
+                        moveClientToZone(Workspace.activeWindow, modelData - 1);
+                    }
+                }
             }
         }
     }
