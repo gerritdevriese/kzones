@@ -455,7 +455,7 @@ PlasmaCore.Dialog {
             onNewData: {
                 disconnectSource(sourceName);
             }
-            function exec(text, icon) {
+            function exec(text, icon = "preferences-desktop-virtual") {
                 connectSource(`qdbus org.kde.plasmashell /org/kde/osdService showText "${icon}" "${text}"`);
             }
         }
