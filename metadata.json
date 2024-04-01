@@ -7,7 +7,7 @@
         ],
         "Category": "Utilities",
         "Description": "Utility for snapping windows into zones",
-        "EnabledByDefault": true,
+        "EnabledByDefault": false,
         "Icon": "preferences-desktop-virtual",
         "Id": "kzones",
         "License": "GPL-3.0+",
