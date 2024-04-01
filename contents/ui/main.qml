@@ -298,8 +298,8 @@ PlasmaCore.Dialog {
             model: [1, 2, 3, 4, 5, 6, 7, 8, 9]
             delegate: Item {
                 ShortcutHandler {
-                    name: "KZones: Move active window to " + modelData
-                    text: "KZones: Move active window to " + modelData
+                    name: "KZones: Move active window to zone " + modelData
+                    text: "KZones: Move active window to zone " + modelData
                     sequence: "Ctrl+Alt+Num+" + modelData
                     onActivated: {
                         moveClientToZone(Workspace.activeWindow, modelData - 1);
