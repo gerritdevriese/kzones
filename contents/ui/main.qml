@@ -4,7 +4,6 @@ import org.kde.kirigami as Kirigami
 import org.kde.kwin
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
-import org.kde.plasma.plasma5support as Plasma5Support
 import "components" as Components
 
 PlasmaCore.Dialog {
@@ -231,7 +230,7 @@ PlasmaCore.Dialog {
             onActivated: {
                 currentLayout = (currentLayout + 1) % config.layouts.length;
                 highlightedZone = -1;
-                osdCmd.exec(config.layouts[currentLayout].name);
+                osdDbus.exec(config.layouts[currentLayout].name);
             }
         }
 
@@ -265,11 +264,11 @@ PlasmaCore.Dialog {
             sequence: "Ctrl+Alt+C"
             onActivated: {
                 if (!config.enableZoneOverlay)
-                    osdCmd.exec("Zone overlay is disabled");
+                    osdDbus.exec("Zone overlay is disabled");
                 else if (moving)
                     showZoneOverlay = !showZoneOverlay;
                 else
-                    osdCmd.exec("The overlay can only be shown while moving a window");
+                    osdDbus.exec("The overlay can only be shown while moving a window");
             }
         }
 
@@ -373,18 +372,16 @@ PlasmaCore.Dialog {
             }
         }
 
-        // osd qdbus
-        Plasma5Support.DataSource {
-            id: osdCmd
+        DBusCall {
+            id: osdDbus
 
-            engine: "executable"
+            service: "org.kde.plasmashell"
+            path: "/org/kde/osdService"
+            method: "showText"
 
-            connectedSources: []
-            onNewData: {
-                disconnectSource(sourceName);
-            }
             function exec(text, icon = "preferences-desktop-virtual") {
-                connectSource(`qdbus org.kde.plasmashell /org/kde/osdService showText "${icon}" "${text}"`);
+                this.arguments = [icon, text];
+                this.call();
             }
         }
 
