@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import Qt5Compat.GraphicalEffects 1.0
+import QtQuick
+import Qt5Compat.GraphicalEffects
 
 DropShadow {
     property Item target : null
