@@ -42,8 +42,11 @@ Install via KDE Store or clone this repo and run the `./build` script.
 
 ### KDE Store
 
-Under System Settings / KWin Scripts / Get New Scripts, search for KZones and install it.  
-https://store.kde.org/p/1909220
+Go to `System Settings / KWin Scripts / Get New Scripts` and look for KZones.  
+
+Store pages:
+- [KZones](https://store.kde.org/p/1909220)
+- [KZones for Plasma 5](https://store.kde.org/p/2143914)
 
 ### Build it yourself
 Make sure you have "zip" installed on your system before building.
@@ -243,20 +246,26 @@ List of all available shortcuts:
 | Cycle between layouts                                              | `Ctrl+Alt+D`     |
 | Toggle zone overlay                                                | `Ctrl+Alt+C`     |
 
-*To change the default bindings, go to System Settings / Shortcuts and search for KZones*
+*To change the default bindings, go to `System Settings / Shortcuts` and search for KZones*
 
 ## Troubleshooting
 
 ### The script doesn't work
 
-- Check if your KDE Plasma version is at 6 or higher (for older versions, check the releases)
-- Make sure there is at least one layout defined in the script settings and that it contains at least one zone.
+Check if your KDE Plasma version is at 6 or higher (for older versions, check the releases)  
+Make sure there is at least one layout defined in the script settings and that it contains at least one zone.
 
 ### My settings are not saved
 
-- After changing settings, you need to reload the script by disabling, saving and enabling it again. This is a known issue with the KWin Scripting API.
+After changing settings, reload the script by disabling, saving and enabling it again.  
+This is a known issue with the KWin Scripting API
 
 ### The screen turns black while moving a window
 
-- Make sure your compositor is enabled, as it is needed to draw transparent windows.
-- You can find this setting in Plasma settings: Display and Monitor - Compositor
+If you are using X11 make sure your compositor is enabled, as it is needed to draw transparent windows.  
+You can find this setting in `System Settings / Display and Monitor / Compositor`
+
+### Auto-update broke KZones on Plasma 5
+
+Due to API changes in KWin 6, the newer versions of the script are not backwards compatible with Plasma 5.  
+If you were already subscribed to KZones using the script manager and updated to the latest version by accident, you will need to uninstall the script and subscribe to "KZones for Plasma 5" instead.
