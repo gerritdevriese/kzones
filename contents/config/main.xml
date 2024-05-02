@@ -27,6 +27,10 @@
             <default>0</default>
         </entry>
 
+        <entry name="zoneOverlayIndicatorDisplay" type="Int">
+            <default>0</default>
+        </entry>
+
         <entry name="rememberWindowGeometries" type="Bool">
             <default>true</default>
         </entry>
