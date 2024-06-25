@@ -38,13 +38,13 @@ By using the same colors as your selected color scheme, KZones will blend in per
 
 ## Installation
 
-Install via KDE Store or clone this repo and run the `./build` script.
+To install KZones you can either use the built-in script manager or clone the repo and build it yourself.
 
-### KDE Store
+### KWin Script Manager
 
-Go to `System Settings / KWin Scripts / Get New Scripts` and look for KZones.  
+Navigate to `System Settings / Window Management / KWin Scripts / Get New…` and search for KZones.  
 
-Store pages:
+Depending on your Plasma version, one of these packages will be downloaded and installed:
 - [KZones](https://store.kde.org/p/1909220)
 - [KZones for Plasma 5](https://store.kde.org/p/2143914)
 
