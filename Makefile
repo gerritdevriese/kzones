@@ -21,11 +21,11 @@ clean:
 reload:
 	if [ "$$XDG_SESSION_TYPE" = "x11" ]; then \
 		kwin_x11 --replace & disown; \
-    elif [ "$$XDG_SESSION_TYPE" = "wayland" ]; then \
-        kwin_wayland --replace & disown; \
-    else \
-        echo "Unknown session type"; \
-    fi
+	elif [ "$$XDG_SESSION_TYPE" = "wayland" ]; then \
+        	kwin_wayland --replace & disown; \
+	else \
+	        echo "Unknown session type"; \
+	fi
 
 enable:
 	kwriteconfig6 --file kwinrc --group Plugins --key $(NAME)Enabled true
