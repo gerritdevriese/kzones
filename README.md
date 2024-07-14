@@ -38,21 +38,24 @@ By using the same colors as your selected color scheme, KZones will blend in per
 
 ## Installation
 
-Install via KDE Store or clone this repo and run the `./build` script.
+To install KZones you can either use the built-in script manager or clone the repo and build it yourself.
 
-### KDE Store
+### KWin Script Manager
 
-Go to `System Settings / KWin Scripts / Get New Scripts` and look for KZones.  
+Navigate to `System Settings / Window Management / KWin Scripts / Get New…` and search for KZones.  
 
-Store pages:
+Depending on your Plasma version, one of these packages will be downloaded and installed:
+
 - [KZones](https://store.kde.org/p/1909220)
 - [KZones for Plasma 5](https://store.kde.org/p/2143914)
 
 ### Build it yourself
+
 Make sure you have "zip" installed on your system before building.
-```
+
+```sh
 git clone https://github.com/gerritdevriese/kzones
-cd kzones && ./build
+cd kzones && make
 ```
 
 ## Configuration
@@ -85,6 +88,7 @@ The script will remember the geometry of each window when it's moved to a zone. 
 You can define your own layouts by modifying the JSON in the **Layouts** tab in the script settings, here are some examples to get you started:
 
 #### Examples
+
 <details open>
   <summary>Single layout</summary>
 
@@ -203,13 +207,15 @@ You can define your own layouts by modifying the JSON in the **Layouts** tab in 
 #### Explanation
 
 The main array can contain as many layouts as you want:
-   
+
 Each **layout** object needs the following keys:
+
 - `name`: The name of the layout, shown when cycling between layouts
 - `padding`: The amount of space between the window and the zone in pixels
 - `zones`: An array containing all zone objects for this layout
 
 Each **zone** object needs the following keys:
+
 - `x`, `y`: position of the top left corner of the zone in screen percentage
 - `width`, `height`: size of the zone in screen percentage
 

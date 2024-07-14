@@ -192,6 +192,7 @@ PlasmaCore.Dialog {
             let itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
             let newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
             log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry));
+            client.setMaximize(false, false);
             client.frameGeometry = newGeometry;
         }
     }
