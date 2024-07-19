@@ -54,6 +54,7 @@ PlasmaCore.Dialog {
             zoneOverlayShowWhen: KWin.readConfig("zoneOverlayShowWhen", 0),
             // highlight target zone
             zoneOverlayHighlightTarget: KWin.readConfig("zoneOverlayHighlightTarget", 0),
+            zoneOverlayIndicatorDisplay: KWin.readConfig("zoneOverlayIndicatorDisplay", 0),
             // remember window geometries before snapping to a zone, and restore them when the window is removed from their zone
             rememberWindowGeometries: KWin.readConfig("rememberWindowGeometries", true),
             // layouts
@@ -450,6 +451,8 @@ PlasmaCore.Dialog {
 
                     property int zoneIndex: index
                     property int zonePadding: config.layouts[currentLayout].padding || 0
+                    property var renderZones: config.zoneOverlayIndicatorDisplay == 1 ? [config.layouts[currentLayout].zones[index]] : config.layouts[currentLayout].zones
+                    property int activeIndex: config.zoneOverlayIndicatorDisplay == 1 ? 0 : index
 
                     x: ((modelData.x / 100) * (clientArea.width - zonePadding)) + zonePadding
                     y: ((modelData.y / 100) * (clientArea.height - zonePadding)) + zonePadding
@@ -484,8 +487,8 @@ PlasmaCore.Dialog {
                         }
 
                         Components.Indicator {
-                            zones: config.layouts[currentLayout].zones
-                            activeZone: index
+                            zones: renderZones
+                            activeZone: activeIndex
                             anchors.centerIn: parent
                             width: parent.width - 20
                             height: parent.height - 20

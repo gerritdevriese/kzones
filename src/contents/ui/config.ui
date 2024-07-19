@@ -116,6 +116,33 @@
           </item>
           <item>
            <layout class="QFormLayout" name="formLayout_4">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Show overlay when</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="kcfg_zoneOverlayShowWhen">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>I start moving a window</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>I press the toggle overlay shortcut</string>
+               </property>
+              </item>
+             </widget>
+            </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_6">
               <property name="text">
@@ -143,15 +170,15 @@
               </item>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_7">
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_ind_disp">
               <property name="text">
-               <string>Show overlay when</string>
+               <string>Indicator Display</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="kcfg_zoneOverlayShowWhen">
+            <item row="2" column="1">
+             <widget class="QComboBox" name="kcfg_zoneOverlayIndicatorDisplay">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -160,12 +187,12 @@
               </property>
               <item>
                <property name="text">
-                <string>I start moving a window</string>
+                <string>All zones</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>I press the toggle overlay shortcut</string>
+                <string>Only target zone</string>
                </property>
               </item>
              </widget>
