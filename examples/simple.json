@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Layout 1",
+        "padding": 0,
+        "zones": [
+            {
+                "x": 0,
+                "y": 0,
+                "height": 100,
+                "width": 25
+            },
+            {
+                "x": 25,
+                "y": 0,
+                "height": 100,
+                "width": 50
+            },
+            {
+                "x": 75,
+                "y": 0,
+                "height": 100,
+                "width": 25
+            }
+        ]
+    }
+]
