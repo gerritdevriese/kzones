@@ -91,30 +91,27 @@ You can define your own layouts by modifying the JSON in the **Layouts** tab in 
 #### Examples
 
 <details open>
-  <summary>Single layout</summary>
+  <summary>Simple</summary>
 
 ```json
 [
     {
         "name": "Layout 1",
-        "padding": 10,
+        "padding": 0,
         "zones": [
             {
-                "name": "1",
                 "x": 0,
                 "y": 0,
                 "height": 100,
                 "width": 25
             },
             {
-                "name": "2",
                 "x": 25,
                 "y": 0,
                 "height": 100,
                 "width": 50
             },
             {
-                "name": "3",
                 "x": 75,
                 "y": 0,
                 "height": 100,
@@ -128,30 +125,28 @@ You can define your own layouts by modifying the JSON in the **Layouts** tab in 
 </details>
 
 <details>
-  <summary>Multiple layouts</summary>
+  <summary>Advanced</summary>
 
 ```json
 [
     {
-        "name": "Layout 1",
+        "name": "Priority Grid",
         "padding": 0,
         "zones": [
             {
-                "name": "1",
                 "x": 0,
                 "y": 0,
                 "height": 100,
                 "width": 25
             },
             {
-                "name": "2",
                 "x": 25,
                 "y": 0,
                 "height": 100,
-                "width": 50
+                "width": 50,
+                "applications": ["firefox"]
             },
             {
-                "name": "3",
                 "x": 75,
                 "y": 0,
                 "height": 100,
@@ -160,42 +155,61 @@ You can define your own layouts by modifying the JSON in the **Layouts** tab in 
         ]
     },
     {
-        "name": "Layout 2",
+        "name": "Quadrant Grid",
         "padding": 0,
         "zones": [
             {
-                "name": "1",
                 "x": 0,
                 "y": 0,
                 "height": 50,
-                "width": 25
-            },
-            {
-                "name": "2",
-                "x": 0,
-                "y": 50,
-                "height": 50,
-                "width": 25
-            },
-            {
-                "name": "3",
-                "x": 25,
-                "y": 0,
-                "height": 100,
                 "width": 50
             },
             {
-                "name": "4",
-                "x": 75,
+                "x": 0,
+                "y": 50,
+                "height": 50,
+                "width": 50
+            },
+            {
+                "x": 50,
+                "y": 50,
+                "height": 50,
+                "width": 50
+            },
+            {
+                "x": 50,
                 "y": 0,
                 "height": 50,
+                "width": 50
+            }
+        ]
+    },
+    {
+        "name": "Columns",
+        "padding": 0,
+        "zones": [
+            {
+                "x": 0,
+                "y": 0,
+                "height": 100,
                 "width": 25
             },
             {
-                "name": "5",
+                "x": 25,
+                "y": 0,
+                "height": 100,
+                "width": 25
+            },
+            {
+                "x": 50,
+                "y": 0,
+                "height": 100,
+                "width": 25
+            },
+            {
                 "x": 75,
-                "y": 50,
-                "height": 50,
+                "y": 0,
+                "height": 100,
                 "width": 25
             }
         ]
@@ -219,6 +233,7 @@ Each **zone** object needs the following keys:
 
 - `x`, `y`: position of the top left corner of the zone in screen percentage
 - `width`, `height`: size of the zone in screen percentage
+- `applications`: an array of window classes that should snap to this zone when launched (optional)
 
 ### Filters
 
