@@ -419,16 +419,16 @@ PlasmaCore.Dialog {
                     text: {
                         if (config.enableDebugMode) {
                             let t = "";
-                            t += `Active: ${Workspace.activeWindow.caption}\n`;
-                            t += `Window class: ${Workspace.activeWindow.resourceClass.toString()}\n`;
-                            t += `X: ${Workspace.activeWindow.frameGeometry.x}, Y: ${Workspace.activeWindow.frameGeometry.y}, Width: ${Workspace.activeWindow.frameGeometry.width}, Height: ${Workspace.activeWindow.frameGeometry.height}\n`;
-                            t += `Previous Zone: ${Workspace.activeWindow.zone}\n`;
+                            t += `Active: ${Workspace.activeWindow?.caption}\n`;
+                            t += `Window class: ${Workspace.activeWindow?.resourceClass?.toString()}\n`;
+                            t += `X: ${Workspace.activeWindow?.frameGeometry?.x}, Y: ${Workspace.activeWindow?.frameGeometry?.y}, Width: ${Workspace.activeWindow?.frameGeometry?.width}, Height: ${Workspace.activeWindow?.frameGeometry?.height}\n`;
+                            t += `Previous Zone: ${Workspace.activeWindow?.zone}\n`;
                             t += `Highlighted Zone: ${highlightedZone}\n`;
                             t += `Layout: ${currentLayout}\n`;
-                            t += `Polling Rate: ${config.pollingRate}ms\n`;
+                            t += `Polling Rate: ${config?.pollingRate}ms\n`;
                             t += `Moving: ${moving}\n`;
                             t += `Resizing: ${resizing}\n`;
-                            t += `Old Geometry: ${JSON.stringify(Workspace.activeWindow.oldGeometry)}\n`;
+                            t += `Old Geometry: ${JSON.stringify(Workspace.activeWindow?.oldGeometry)}\n`;
                             t += `Active Screen: ${activeScreen}\n`;
                             return t;
                         } else {
