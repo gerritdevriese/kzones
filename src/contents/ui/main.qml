@@ -591,6 +591,16 @@ PlasmaCore.Dialog {
             target: Workspace
 
             function onWindowAdded(client) {
+                // check if client is in a zone application list
+                config.layouts.forEach((layout, layoutIndex) => {
+                    layout.zones.forEach((zone, zoneIndex) => {
+                        if (zone.applications && zone.applications.includes(client.resourceClass.toString())) {
+                            moveClientToZone(client, zoneIndex);
+                            return;
+                        }
+                    });
+                });
+
                 // check if new window spawns in a zone
                 if (client.zone == undefined || client.zone == -1) {
                     matchZone(client);
