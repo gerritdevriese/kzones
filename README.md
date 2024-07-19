@@ -76,6 +76,7 @@ The zone overlay is a fullscreen overlay that appears when you move a window. It
 - Enable or disable the zone overlay.
 - Choose whether the overlay should be shown when you start moving a window or when you press the toggle overlay shortcut.
 - Choose where the cursor needs to be in order to highlight a zone, either in the center of the zone or anywhere inside the zone.
+- Choose if you want the indicator to display all zones or only the highlighted zone.
 
 #### Remember and restore window geometries
 

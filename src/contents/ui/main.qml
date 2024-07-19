@@ -54,6 +54,7 @@ PlasmaCore.Dialog {
             zoneOverlayShowWhen: KWin.readConfig("zoneOverlayShowWhen", 0),
             // highlight target zone
             zoneOverlayHighlightTarget: KWin.readConfig("zoneOverlayHighlightTarget", 0),
+            // zone overlay indicator display
             zoneOverlayIndicatorDisplay: KWin.readConfig("zoneOverlayIndicatorDisplay", 0),
             // remember window geometries before snapping to a zone, and restore them when the window is removed from their zone
             rememberWindowGeometries: KWin.readConfig("rememberWindowGeometries", true),
