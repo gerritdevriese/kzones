@@ -56,6 +56,10 @@ PlasmaCore.Dialog {
             zoneOverlayHighlightTarget: KWin.readConfig("zoneOverlayHighlightTarget", 0),
             // zone overlay indicator display
             zoneOverlayIndicatorDisplay: KWin.readConfig("zoneOverlayIndicatorDisplay", 0),
+            // enable edge snapping
+            enableEdgeSnapping: KWin.readConfig("enableEdgeSnapping", false),
+            // distance from the edge of the screen to trigger the edge snapping
+            edgeSnappingTriggerDistance: KWin.readConfig("edgeSnappingTriggerDistance", 1),
             // remember window geometries before snapping to a zone, and restore them when the window is removed from their zone
             rememberWindowGeometries: KWin.readConfig("rememberWindowGeometries", true),
             // layouts
@@ -339,7 +343,10 @@ PlasmaCore.Dialog {
 
             onTriggered: {
                 refreshClientArea();
+
                 let hoveringZone = -1;
+
+                // zone overlay
                 if (config.enableZoneOverlay && showZoneOverlay && !zoneSelectorBackground.expanded) {
                     repeaterZones.model.forEach((zone, zoneIndex) => {
                         if (isHovering(repeaterZones.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget])) {
@@ -347,6 +354,8 @@ PlasmaCore.Dialog {
                         }
                     });
                 }
+
+                // zone selector
                 if (config.enableZoneSelector) {
                     if (!zoneSelectorBackground.animating && zoneSelectorBackground.expanded) {
                         repeaterLayouts.model.forEach((layout, layoutIndex) => {
@@ -367,11 +376,33 @@ PlasmaCore.Dialog {
                     zoneSelectorBackground.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelectorBackground.y + zoneSelectorBackground.height + triggerDistance;
                 }
 
+                // edge snapping
+                if (config.enableEdgeSnapping) {
+                    let triggerDistance = config.edgeSnappingTriggerDistance * 10 + 10;
+                    if (Workspace.cursorPos.x <= clientArea.x + triggerDistance || Workspace.cursorPos.x >= clientArea.x + clientArea.width - triggerDistance || Workspace.cursorPos.y <= clientArea.y + triggerDistance || Workspace.cursorPos.y >= clientArea.y + clientArea.height - triggerDistance) {
+                        repeaterZones.model.forEach((zone, zoneIndex) => {
+                            let zoneItem = repeaterZones.itemAt(zoneIndex);
+                            let itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
+                            let zoneGeometry = {
+                                x: itemGlobal.x,
+                                y: itemGlobal.y,
+                                width: zoneItem.width,
+                                height: zoneItem.height
+                            };
+                            if (isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry)) {
+                                hoveringZone = zoneIndex;
+                            }
+                        });
+                    }
+                }
+
                 // if hovering zone changed from the last frame
                 if (hoveringZone != highlightedZone) {
                     log("Highlighting zone " + hoveringZone + " in layout " + currentLayout);
                     highlightedZone = hoveringZone;
                 }
+
+                
             }
         }
 
