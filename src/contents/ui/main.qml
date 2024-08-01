@@ -242,6 +242,17 @@ PlasmaCore.Dialog {
         }
 
         ShortcutHandler {
+            name: "KZones: Cycle layouts (reversed)"
+            text: "KZones: Cycle layouts (reversed)"
+            sequence: "Ctrl+Alt+Shift+D"
+            onActivated: {
+                currentLayout = (currentLayout - 1 + config.layouts.length) % config.layouts.length;
+                highlightedZone = -1;
+                osdDbus.exec(config.layouts[currentLayout].name);
+            }
+        }
+
+        ShortcutHandler {
             name: "KZones: Move active window to next zone"
             text: "KZones: Move active window to next zone"
             sequence: "Ctrl+Alt+Right"

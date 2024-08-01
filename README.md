@@ -271,15 +271,16 @@ When debug mode is enabled, the script will log more information and show extra 
 
 List of all available shortcuts:
 
-| Shortcut                                                           | Default Binding  |
-| ------------------------------------------------------------------ | ---------------- |
-| Move active window to zone                                         | `Ctrl+Alt+[0-9]` |
-| Move active window to previous zone                                | `Ctrl+Alt+Left`  |
-| Move active window to next zone                                    | `Ctrl+Alt+Right` |
-| Switch to previous window in current zone                          | `Ctrl+Alt+Down`  |
-| Switch to next window in current zone                              | `Ctrl+Alt+Up`    |
-| Cycle between layouts                                              | `Ctrl+Alt+D`     |
-| Toggle zone overlay                                                | `Ctrl+Alt+C`     |
+| Shortcut                                                           | Default Binding     |
+| ------------------------------------------------------------------ | ------------------- |
+| Move active window to zone                                         | `Ctrl+Alt+[0-9]`    |
+| Move active window to previous zone                                | `Ctrl+Alt+Left`     |
+| Move active window to next zone                                    | `Ctrl+Alt+Right`    |
+| Switch to previous window in current zone                          | `Ctrl+Alt+Down`     |
+| Switch to next window in current zone                              | `Ctrl+Alt+Up`       |
+| Cycle between layouts                                              | `Ctrl+Alt+D`        |
+| Cycle between layouts (reversed)                                   | `Ctrl+Alt+Shift+D`  |
+| Toggle zone overlay                                                | `Ctrl+Alt+C`        |
 
 *To change the default bindings, go to `System Settings / Shortcuts` and search for KZones*
 
