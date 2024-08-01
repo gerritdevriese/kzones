@@ -273,7 +273,7 @@ List of all available shortcuts:
 
 | Shortcut                                                           | Default Binding                                                     |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| Move active window to zone                                         | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Num[0-9]</kbd>              |
+| Move active window to zone                                         | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Num 0-9</kbd>              |
 | Move active window to previous zone                                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd>                  |
 | Move active window to next zone                                    | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd>                 |
 | Switch to previous window in current zone                          | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd>                  |
@@ -281,7 +281,7 @@ List of all available shortcuts:
 | Cycle between layouts                                              | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>                     |
 | Cycle between layouts (reversed)                                   | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>  |
 | Toggle zone overlay                                                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>                     |
-| Activate layout                                                    | <kbd>Meta</kbd> + <kbd>Num[0-9]</kbd>                               |
+| Activate layout                                                    | <kbd>Meta</kbd> + <kbd>Num 0-9</kbd>                               |
 
 *To change the default bindings, go to `System Settings / Shortcuts` and search for KZones*
 
