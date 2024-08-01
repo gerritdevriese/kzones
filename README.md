@@ -285,6 +285,20 @@ List of all available shortcuts:
 
 *To change the default bindings, go to `System Settings / Shortcuts` and search for KZones*
 
+## Tips and Tricks
+
+You can trigger KWin shortcuts using a command like this:
+
+```sh
+qdbus org.kde.kglobalaccel /component/kwin invokeShortcut "KZones: Activate layout 1"
+```
+
+Clean corrupted shortcuts left behind in the Settings after uninstalling or updating KWin Scripts:
+
+```sh
+qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.cleanUp
+```
+
 ## Troubleshooting
 
 ### The script doesn't work
