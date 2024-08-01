@@ -8,15 +8,21 @@ KDE KWin Script for snapping windows into zones. Handy when using a (super) ultr
 
 ### Zone Selector
 
-The zone selector is a small widget that appears when you drag a window to the top of the screen. It allows you to snap the window to a zone regardless of the current layout.
+The Zone Selector is a small widget that appears when you drag a window to the top of the screen. It allows you to snap the window to a zone regardless of the current layout.
 
 ![](./media/selector.gif)
 
 ### Zone Overlay
 
-The zone overlay is a fullscreen overlay that appears when you move a window. It shows all zones from the current layout and the window will snap to the zone you drop it on.
+The Zone Overlay is a fullscreen overlay that appears when you move a window. It shows all zones from the current layout and the window will snap to the zone you drop it on.
 
 ![](./media/dragdrop.gif)
+
+### Edge Snapping
+
+Edge Snapping allows you to snap windows to zones by dragging them to the edge of the screen.
+
+![](./media/edgesnapping.gif)
 
 ### Multiple Layouts
 
@@ -77,6 +83,13 @@ The zone overlay is a fullscreen overlay that appears when you move a window. It
 - Choose whether the overlay should be shown when you start moving a window or when you press the toggle overlay shortcut.
 - Choose where the cursor needs to be in order to highlight a zone, either in the center of the zone or anywhere inside the zone.
 - Choose if you want the indicator to display all zones or only the highlighted zone.
+
+#### Edge Snapping
+
+Edge Snapping allows you to snap windows to zones by dragging them to the edge of the screen. Make sure to disable the default edge snapping functionality before enabling this.
+
+- Enable or disable edge snapping.
+- Set the distance from the edge of the screen at which the edge snapping will start to appear.
 
 #### Remember and restore window geometries
 

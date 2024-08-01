@@ -217,7 +217,7 @@
           <item>
            <widget class="QLabel" name="label_edgeSnappingExplanation">
             <property name="text">
-             <string>Allows you to snap windows to zones by dragging them to the edge of the screen. Make sure to disable the default edge snapping functionality before enabling this.</string>
+             <string>Edge Snapping allows you to snap windows to zones by dragging them to the edge of the screen. Make sure to disable the default edge snapping functionality before enabling this.</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
