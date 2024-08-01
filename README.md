@@ -271,16 +271,16 @@ When debug mode is enabled, the script will log more information and show extra 
 
 List of all available shortcuts:
 
-| Shortcut                                                           | Default Binding     |
-| ------------------------------------------------------------------ | ------------------- |
-| Move active window to zone                                         | `Ctrl+Alt+[0-9]`    |
-| Move active window to previous zone                                | `Ctrl+Alt+Left`     |
-| Move active window to next zone                                    | `Ctrl+Alt+Right`    |
-| Switch to previous window in current zone                          | `Ctrl+Alt+Down`     |
-| Switch to next window in current zone                              | `Ctrl+Alt+Up`       |
-| Cycle between layouts                                              | `Ctrl+Alt+D`        |
-| Cycle between layouts (reversed)                                   | `Ctrl+Alt+Shift+D`  |
-| Toggle zone overlay                                                | `Ctrl+Alt+C`        |
+| Shortcut                                                           | Default Binding                                                     |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Move active window to zone                                         | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>[0-9]</kbd>                 |
+| Move active window to previous zone                                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd>                  |
+| Move active window to next zone                                    | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd>                 |
+| Switch to previous window in current zone                          | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd>                  |
+| Switch to next window in current zone                              | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd>                    |
+| Cycle between layouts                                              | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>                     |
+| Cycle between layouts (reversed)                                   | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>  |
+| Toggle zone overlay                                                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>                     |
 
 *To change the default bindings, go to `System Settings / Shortcuts` and search for KZones*
 
