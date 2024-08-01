@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>550</width>
-    <height>650</height>
+    <height>700</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -38,7 +38,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_14">
           <item>
-           <widget class="QLabel" name="label">
+           <widget class="QLabel" name="label_zoneSelectorExplanation">
             <property name="text">
              <string>The zone selector is a small widget that appears when you drag a window to the top of the screen. It allows you to snap the window to a zone regardless of the current layout.</string>
             </property>
@@ -48,7 +48,7 @@
            </widget>
           </item>
           <item>
-           <layout class="QFormLayout" name="formLayout_2">
+           <layout class="QFormLayout" name="formLayout_zoneSelector">
             <item row="0" column="1">
              <widget class="QComboBox" name="kcfg_zoneSelectorTriggerDistance">
               <property name="sizePolicy">
@@ -81,7 +81,7 @@
              </widget>
             </item>
             <item row="0" column="0">
-             <widget class="QLabel" name="label_5">
+             <widget class="QLabel" name="label_zoneSelectorTriggerDistance">
               <property name="text">
                <string>Trigger distance </string>
               </property>
@@ -105,7 +105,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_13">
           <item>
-           <widget class="QLabel" name="label_3">
+           <widget class="QLabel" name="label_zoneOverlayExplanation">
             <property name="text">
              <string>The zone overlay is a fullscreen overlay that appears when you move a window. It shows all zones from the current layout and the window will snap to the zone you drop it on.</string>
             </property>
@@ -115,9 +115,9 @@
            </widget>
           </item>
           <item>
-           <layout class="QFormLayout" name="formLayout_4">
+           <layout class="QFormLayout" name="formLayout_zoneOverlay">
             <item row="0" column="0">
-             <widget class="QLabel" name="label_7">
+             <widget class="QLabel" name="label_zoneOverlayShowWhen">
               <property name="text">
                <string>Show overlay when</string>
               </property>
@@ -144,7 +144,7 @@
              </widget>
             </item>
             <item row="1" column="0">
-             <widget class="QLabel" name="label_6">
+             <widget class="QLabel" name="label_zoneOverlayHighlightTarget">
               <property name="text">
                <string>Highlight zone when</string>
               </property>
@@ -171,7 +171,7 @@
              </widget>
             </item>
             <item row="2" column="0">
-             <widget class="QLabel" name="label_ind_disp">
+             <widget class="QLabel" name="label_zoneOverlayIndicatorDisplay">
               <property name="text">
                <string>Indicator Display</string>
               </property>
@@ -203,7 +203,68 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_general">
+        <widget class="QGroupBox" name="kcfg_enableEdgeSnapping">
+         <property name="title">
+          <string>Enable Edge Snapping</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_13">
+          <item>
+           <widget class="QLabel" name="label_edgeSnappingExplanation">
+            <property name="text">
+             <string>Edge Snapping allows you to snap windows to zones by dragging them to the edge of the screen. Make sure to disable the default edge snapping functionality before enabling this.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QFormLayout" name="formLayout_edgeSnapping">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_edgeSnappingTriggerDistance">
+              <property name="text">
+               <string>Trigger distance</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="kcfg_edgeSnappingTriggerDistance">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>Close</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Medium</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Far</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_snappingBehaviour">
          <property name="title">
           <string>Snapping Behaviour</string>
          </property>
@@ -231,21 +292,22 @@
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_3">
+        <spacer name="verticalSpacer_general">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
        </item>
       </layout>
-      <zorder>verticalSpacer_3</zorder>
-      <zorder>groupBox_general</zorder>
+      <zorder>kcfg_enableEdgeSnapping</zorder>
+      <zorder>verticalSpacer_general</zorder>
+      <zorder>groupBox_snappingBehaviour</zorder>
       <zorder>kcfg_enableZoneSelector</zorder>
       <zorder>kcfg_enableZoneOverlay</zorder>
      </widget>
@@ -259,7 +321,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="groupBox_layouts">
          <property name="title">
           <string>Layouts</string>
          </property>
@@ -340,13 +402,13 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_7">
        <item>
-        <widget class="QGroupBox" name="groupBox_3">
+        <widget class="QGroupBox" name="groupBox_filtering">
          <property name="title">
           <string>Filtering</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
-           <widget class="QLabel" name="label_8">
+           <widget class="QLabel" name="label_filteringExplanation">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -362,9 +424,9 @@
            </widget>
           </item>
           <item>
-           <layout class="QFormLayout" name="formLayout">
+           <layout class="QFormLayout" name="formLayout_filtering">
             <item row="0" column="0">
-             <widget class="QLabel" name="label_2">
+             <widget class="QLabel" name="label_filteringMode">
               <property name="text">
                <string>Mode</string>
               </property>
@@ -391,7 +453,7 @@
              </widget>
             </item>
             <item row="1" column="0">
-             <widget class="QLabel" name="label_18">
+             <widget class="QLabel" name="label_filteringFilter">
               <property name="text">
                <string>Filter</string>
               </property>
@@ -421,15 +483,15 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_9">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0">
+        <layout class="QVBoxLayout" name="verticalLayout_shortcuts" stretch="0">
          <item>
-          <widget class="QGroupBox" name="groupBox_4">
+          <widget class="QGroupBox" name="groupBox_shortcuts">
            <property name="title">
             <string>Shortcuts</string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_12">
             <item>
-             <widget class="QLabel" name="label_23">
+             <widget class="QLabel" name="label_shortcutsExplanation">
               <property name="text">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To set up shortcuts for this script&lt;/p&gt;&lt;p&gt;Go to System Settings / Shortcuts and search for &amp;quot;KZones&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -455,9 +517,9 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_9">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0,0">
+        <layout class="QVBoxLayout" name="verticalLayout_advanced" stretch="0,0">
          <item>
-          <widget class="QGroupBox" name="groupBox_7">
+          <widget class="QGroupBox" name="groupBox_performance">
            <property name="title">
             <string>Performance</string>
            </property>
@@ -466,9 +528,9 @@
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_16">
             <item>
-             <layout class="QFormLayout" name="formLayout_3">
+             <layout class="QFormLayout" name="formLayout_performance">
               <item row="0" column="0">
-               <widget class="QLabel" name="label_4">
+               <widget class="QLabel" name="label_pollingRate">
                 <property name="toolTip">
                  <string>Speed of which the zone checking is done</string>
                 </property>
@@ -511,7 +573,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QGroupBox" name="groupBox_8">
+          <widget class="QGroupBox" name="groupBox_debug">
            <property name="title">
             <string>Debug</string>
            </property>
@@ -535,7 +597,7 @@
         </layout>
        </item>
        <item>
-        <spacer name="verticalSpacer_2">
+        <spacer name="verticalSpacer_advanced">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -552,9 +614,9 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_main">
      <item>
-      <widget class="QLabel" name="label_25">
+      <widget class="QLabel" name="label_mainBottomLeft">
        <property name="toolTip">
         <string>https://github.com/gerritdevriese/kzones</string>
        </property>
@@ -570,7 +632,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_13">
+      <widget class="QLabel" name="label_mainBottomRight">
        <property name="font">
         <font>
          <weight>50</weight>
