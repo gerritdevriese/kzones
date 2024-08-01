@@ -378,7 +378,7 @@ PlasmaCore.Dialog {
 
                 // edge snapping
                 if (config.enableEdgeSnapping) {
-                    let triggerDistance = config.edgeSnappingTriggerDistance * 10 + 10;
+                    const triggerDistance = (config.edgeSnappingTriggerDistance + 1) * 10;
                     if (Workspace.cursorPos.x <= clientArea.x + triggerDistance || Workspace.cursorPos.x >= clientArea.x + clientArea.width - triggerDistance || Workspace.cursorPos.y <= clientArea.y + triggerDistance || Workspace.cursorPos.y >= clientArea.y + clientArea.height - triggerDistance) {
                         repeaterZones.model.forEach((zone, zoneIndex) => {
                             let zoneItem = repeaterZones.itemAt(zoneIndex);
