@@ -325,6 +325,26 @@ PlasmaCore.Dialog {
                 }
             }
         }
+
+        Repeater {
+            model: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+            delegate: Item {
+                ShortcutHandler {
+                    name: "KZones: Activate layout " + modelData
+                    text: "KZones: Activate layout " + modelData
+                    sequence: "Meta+Num+" + modelData
+                    onActivated: {
+                        if (modelData <= config.layouts.length) {
+                            currentLayout = modelData - 1;
+                            highlightedZone = -1;
+                            osdDbus.exec(config.layouts[currentLayout].name);
+                        } else {
+                            osdDbus.exec("Layout " + modelData + " does not exist");
+                        }
+                    }
+                }
+            }
+        }
     }
 
     Component.onCompleted: {
