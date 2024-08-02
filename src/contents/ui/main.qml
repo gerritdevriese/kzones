@@ -243,6 +243,14 @@ PlasmaCore.Dialog {
         
     }
 
+    function moveAllClientsToClosestZone() {
+        log("Moving all clients to closest zone");
+        for (let i = 0; i < Workspace.stackingOrder.length; i++) {
+            const client = Workspace.stackingOrder[i];
+            if (client.normalWindow) moveClientToClosestZone(client);
+        }
+    }
+
     function moveClientToNeighbour(client, direction) {
         log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
 
@@ -464,6 +472,24 @@ PlasmaCore.Dialog {
             sequence: "Meta+Right"
             onActivated: {
                 moveClientToNeighbour(Workspace.activeWindow, "right");
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Snap active window"
+            text: "KZones: Snap active window"
+            sequence: "Meta+Shift+Space"
+            onActivated: {
+                moveClientToClosestZone(Workspace.activeWindow);
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Snap all windows"
+            text: "KZones: Snap all windows"
+            sequence: "Meta+Space"
+            onActivated: {
+                moveAllClientsToClosestZone();
             }
         }
     }
