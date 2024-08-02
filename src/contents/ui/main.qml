@@ -211,6 +211,108 @@ PlasmaCore.Dialog {
         client.activity = Workspace.currentActivity;
     }
 
+    function moveClientToClosestZone(client) {
+        log("Moving client " + client.resourceClass.toString() + " to closest zone");
+
+        if (!client.normalWindow) return;
+
+        const centerPointOfClient = {
+            x: client.frameGeometry.x + (client.frameGeometry.width / 2),
+            y: client.frameGeometry.y + (client.frameGeometry.height / 2)
+        };
+
+        const zones = config.layouts[currentLayout].zones;
+        let closestZone = null;
+        let closestDistance = Infinity;
+
+        for (let i = 0; i < zones.length; i++) {
+            const zone = zones[i];
+            const zoneCenter = {
+                x: (zone.x + zone.width / 2) / 100 * clientArea.width + clientArea.x,
+                y: (zone.y + zone.height / 2) / 100 * clientArea.height + clientArea.y
+            };
+            const distance = Math.sqrt(Math.pow(centerPointOfClient.x - zoneCenter.x, 2) + Math.pow(centerPointOfClient.y - zoneCenter.y, 2));
+            if (distance < closestDistance) {
+                closestZone = i;
+                closestDistance = distance;
+            }
+        }
+
+        if (client.zone !== closestZone) moveClientToZone(client, closestZone);
+        return closestZone;
+        
+    }
+
+    function moveClientToNeighbour(client, direction) {
+        log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
+
+        if (!client.normalWindow) return;
+
+        const zones = config.layouts[currentLayout].zones;
+
+        if (client.zone === -1 || client.layout !== currentLayout) moveClientToClosestZone(client);
+
+        const currentZone = zones[client.zone];
+        let targetZoneIndex = -1;
+
+        let minDistance = Infinity;
+
+        for (let i = 0; i < zones.length; i++) {
+            if (i === client.zone) continue;
+
+            const zone = zones[i];
+            let isNeighbour = false;
+            let distance = Infinity;
+
+            switch (direction) {
+                case "left":
+                    if (zone.x + zone.width <= currentZone.x && 
+                        zone.y < currentZone.y + currentZone.height && 
+                        zone.y + zone.height > currentZone.y) {
+                        isNeighbour = true;
+                        distance = currentZone.x - (zone.x + zone.width);
+                    }
+                    break;
+                case "right":
+                    if (zone.x >= currentZone.x + currentZone.width && 
+                        zone.y < currentZone.y + currentZone.height && 
+                        zone.y + zone.height > currentZone.y) {
+                        isNeighbour = true;
+                        distance = zone.x - (currentZone.x + currentZone.width);
+                    }
+                    break;
+                case "up":
+                    if (zone.y + zone.height <= currentZone.y && 
+                        zone.x < currentZone.x + currentZone.width && 
+                        zone.x + zone.width > currentZone.x) {
+                        isNeighbour = true;
+                        distance = currentZone.y - (zone.y + zone.height);
+                    }
+                    break;
+                case "down":
+                    if (zone.y >= currentZone.y + currentZone.height && 
+                        zone.x < currentZone.x + currentZone.width && 
+                        zone.x + zone.width > currentZone.x) {
+                        isNeighbour = true;
+                        distance = zone.y - (currentZone.y + currentZone.height);
+                    }
+                    break;
+            }
+
+            if (isNeighbour && distance < minDistance) {
+                minDistance = distance;
+                targetZoneIndex = i;
+            }
+        }
+
+        if (targetZoneIndex !== -1) {
+            moveClientToZone(client, targetZoneIndex);
+        }
+
+        return targetZoneIndex;
+    }
+
+
     Item {
         id: shortcuts
 
@@ -326,6 +428,42 @@ PlasmaCore.Dialog {
                         }
                     }
                 }
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window up"
+            text: "KZones: Move active window up"
+            sequence: "Meta+Up"
+            onActivated: {
+                moveClientToNeighbour(Workspace.activeWindow, "up");
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window down"
+            text: "KZones: Move active window down"
+            sequence: "Meta+Down"
+            onActivated: {
+                moveClientToNeighbour(Workspace.activeWindow, "down");
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window left"
+            text: "KZones: Move active window left"
+            sequence: "Meta+Left"
+            onActivated: {
+                moveClientToNeighbour(Workspace.activeWindow, "left");
+            }
+        }
+
+        ShortcutHandler {
+            name: "KZones: Move active window right"
+            text: "KZones: Move active window right"
+            sequence: "Meta+Right"
+            onActivated: {
+                moveClientToNeighbour(Workspace.activeWindow, "right");
             }
         }
     }
