@@ -121,7 +121,11 @@
             <default>100</default>
         </entry>
 
-        <entry name="enableDebugMode" type="Bool">
+        <entry name="enableDebugLogging" type="Bool">
+            <default>false</default>
+        </entry>
+
+        <entry name="enableDebugOverlay" type="Bool">
             <default>false</default>
         </entry>
 

@@ -70,14 +70,16 @@ PlasmaCore.Dialog {
             filterList: KWin.readConfig("filterList", ""),
             // polling rate in milliseconds
             pollingRate: KWin.readConfig("pollingRate", 100),
-            // enable debug mode
-            enableDebugMode: KWin.readConfig("enableDebugMode", false)
+            // enable debug logging
+            enableDebugLogging: KWin.readConfig("enableDebugLogging", false),
+            // enable debug overlay
+            enableDebugOverlay: KWin.readConfig("enableDebugOverlay", false)
         };
         log("Config loaded: " + JSON.stringify(config));
     }
 
     function log(message) {
-        if (!config.enableDebugMode) return;
+        if (!config.enableDebugLogging) return;
         console.log("KZones: " + message);
     }
 
@@ -339,10 +341,14 @@ PlasmaCore.Dialog {
         }
     }
 
-    Item {
+    Rectangle {
         id: mainItem
 
         anchors.fill: parent
+
+        color: "transparent"
+        border.width: config.enableDebugOverlay ? 1 : 0
+        border.color: config.enableDebugOverlay ? Kirigami.Theme.hoverColor : "transparent"
 
         // main polling timer
         Timer {
@@ -438,29 +444,29 @@ PlasmaCore.Dialog {
             height: clientArea.height || 0
             clip: true
 
-            // debug osd
+            // debug overlay
             Rectangle {
-                id: debugOsd
+                id: debugOverlay
 
-                visible: config.enableDebugMode
+                visible: config.enableDebugOverlay
                 anchors.left: parent.left
                 anchors.leftMargin: 20
                 anchors.top: parent.top
                 anchors.topMargin: 20
                 z: 100
-                width: debugOsdText.paintedWidth + debugOsdText.padding * 2
-                height: debugOsdText.paintedHeight + debugOsdText.padding * 2
+                width: debugOverlayText.paintedWidth + debugOverlayText.padding * 2
+                height: debugOverlayText.paintedHeight + debugOverlayText.padding * 2
                 radius: 5
                 color: Kirigami.Theme.backgroundColor
 
                 Text {
-                    id: debugOsdText
+                    id: debugOverlayText
 
                     anchors.fill: parent
                     padding: 15
                     color: Kirigami.Theme.textColor
                     text: {
-                        if (config.enableDebugMode) {
+                        if (config.enableDebugOverlay) {
                             let t = "";
                             t += `Active: ${Workspace.activeWindow?.caption}\n`;
                             t += `Window class: ${Workspace.activeWindow?.resourceClass?.toString()}\n`;

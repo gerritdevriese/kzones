@@ -255,7 +255,7 @@ Stop certain windows from snapping to zones by adding them to the filter list.
 - Select the filter mode, either **Include** or **Exclude**.
 - Add window classes to the list seperated by a newline.
 
-You can enable debug mode to see the window class of the active window.
+You can enable the debug overlay to see the window class of the active window.
 
 ### Advanced
 
@@ -263,9 +263,9 @@ You can enable debug mode to see the window class of the active window.
 
 The polling rate is the amount of time between each zone check when dragging a window. The default is 100ms, a faster polling rate is more accurate but will use more CPU. You can change this to your liking.
 
-#### Debug mode
+#### Debugging
 
-When debug mode is enabled, the script will log more information and show extra information in the overlay.
+Here you can enable logging or turn on the debug overlay.
 
 ## Shortcuts
 
