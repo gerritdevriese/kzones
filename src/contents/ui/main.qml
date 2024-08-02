@@ -212,9 +212,9 @@ PlasmaCore.Dialog {
     }
 
     function moveClientToClosestZone(client) {
-        log("Moving client " + client.resourceClass.toString() + " to closest zone");
+        if (!client.normalWindow) return null;
 
-        if (!client.normalWindow) return;
+        log("Moving client " + client.resourceClass.toString() + " to closest zone");
 
         const centerPointOfClient = {
             x: client.frameGeometry.x + (client.frameGeometry.width / 2),
@@ -240,21 +240,23 @@ PlasmaCore.Dialog {
 
         if (client.zone !== closestZone) moveClientToZone(client, closestZone);
         return closestZone;
-        
     }
 
     function moveAllClientsToClosestZone() {
         log("Moving all clients to closest zone");
+        let count = 0;
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             const client = Workspace.stackingOrder[i];
-            if (client.normalWindow) moveClientToClosestZone(client);
+            moveClientToClosestZone(client) && count++;
         }
+        log("Moved " + count + " clients to closest zone");
+        return count;
     }
 
     function moveClientToNeighbour(client, direction) {
+        if (!client.normalWindow) return null;
+        
         log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
-
-        if (!client.normalWindow) return;
 
         const zones = config.layouts[currentLayout].zones;
 
@@ -352,7 +354,7 @@ PlasmaCore.Dialog {
             sequence: "Ctrl+Alt+Right"
             onActivated: {
                 const client = Workspace.activeWindow;
-                // TODO: if client.zone = -1 check if client is in a zone by geometry
+                if (client.zone == -1) moveClientToClosestZone(client);
                 const zonesLength = config.layouts[currentLayout].zones.length;
                 moveClientToZone(client, (client.zone + 1) % zonesLength);
             }
@@ -364,7 +366,7 @@ PlasmaCore.Dialog {
             sequence: "Ctrl+Alt+Left"
             onActivated: {
                 const client = Workspace.activeWindow;
-                // TODO: if client.zone = -1 check if client is in a zone by geometry
+                if (client.zone == -1) moveClientToClosestZone(client);
                 const zonesLength = config.layouts[currentLayout].zones.length;
                 moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength);
             }
