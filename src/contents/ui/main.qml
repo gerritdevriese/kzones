@@ -77,8 +77,7 @@ PlasmaCore.Dialog {
     }
 
     function log(message) {
-        if (!config.enableDebugMode)
-            return;
+        if (!config.enableDebugMode) return;
         console.log("KZones: " + message);
     }
 
@@ -110,7 +109,7 @@ PlasmaCore.Dialog {
     }
 
     function isHovering(item) {
-        let itemGlobal = item.mapToGlobal(Qt.point(0, 0));
+        const itemGlobal = item.mapToGlobal(Qt.point(0, 0));
         return isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, {
             x: itemGlobal.x,
             y: itemGlobal.y,
@@ -119,32 +118,18 @@ PlasmaCore.Dialog {
         });
     }
 
-    function rectOverlapArea(component1, component2) {
-        let x1 = component1.x;
-        let y1 = component1.y;
-        let x2 = component1.x + component1.width;
-        let y2 = component1.y + component1.height;
-        let x3 = component2.x;
-        let y3 = component2.y;
-        let x4 = component2.x + component2.width;
-        let y4 = component2.y + component2.height;
-        let xOverlap = Math.max(0, Math.min(x2, x4) - Math.max(x1, x3));
-        let yOverlap = Math.max(0, Math.min(y2, y4) - Math.max(y1, y3));
-        return xOverlap * yOverlap;
-    }
-
     function matchZone(client) {
         client.zone = -1;
         // get all zones in the current layout
-        let zones = config.layouts[currentLayout].zones;
+        const zones = config.layouts[currentLayout].zones;
         // loop through zones and compare with the geometries of the client
         for (let i = 0; i < zones.length; i++) {
-            let zone = zones[i];
-            let zonePadding = config.layouts[currentLayout].padding || 0;
-            let zoneX = ((zone.x / 100) * (clientArea.width - zonePadding)) + zonePadding;
-            let zoneY = ((zone.y / 100) * (clientArea.height - zonePadding)) + zonePadding;
-            let zoneWidth = ((zone.width / 100) * (clientArea.width - zonePadding)) - zonePadding;
-            let zoneHeight = ((zone.height / 100) * (clientArea.height - zonePadding)) - zonePadding;
+            const zone = zones[i];
+            const zonePadding = config.layouts[currentLayout].padding || 0;
+            const zoneX = ((zone.x / 100) * (clientArea.width - zonePadding)) + zonePadding;
+            const zoneY = ((zone.y / 100) * (clientArea.height - zonePadding)) + zonePadding;
+            const zoneWidth = ((zone.width / 100) * (clientArea.width - zonePadding)) - zonePadding;
+            const zoneHeight = ((zone.height / 100) * (clientArea.height - zonePadding)) - zonePadding;
             if (client.frameGeometry.x == zoneX && client.frameGeometry.y == zoneY && client.frameGeometry.width == zoneWidth && client.frameGeometry.height == zoneHeight) {
                 // zone found, set it and exit the loop
                 client.zone = i;
@@ -155,9 +140,9 @@ PlasmaCore.Dialog {
     }
 
     function getWindowsInZone(zone, layout) {
-        let windows = [];
+        const windows = [];
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
-            let client = Workspace.stackingOrder[i];
+            const client = Workspace.stackingOrder[i];
             if (client.zone === zone && client.layout === layout && client.desktop === Workspace.currentDesktop && client.activity === Workspace.currentActivity && client.screen === Workspace.activeWindow.screen && client.normalWindow) {
                 windows.push(client);
             }
@@ -166,14 +151,13 @@ PlasmaCore.Dialog {
     }
 
     function switchWindowInZone(zone, layout, reverse) {
-        let clientsInZone = getWindowsInZone(zone, layout);
-        if (reverse) {
-            clientsInZone.reverse();
-        }
+        const clientsInZone = getWindowsInZone(zone, layout);
+        if (reverse) clientsInZone.reverse();
+        
 
         // cycle through clients in zone
         if (clientsInZone.length > 0) {
-            let index = clientsInZone.indexOf(Workspace.activeWindow);
+            const index = clientsInZone.indexOf(Workspace.activeWindow);
             if (index === -1) {
                 Workspace.activeWindow = clientsInZone[0];
             } else {
@@ -183,19 +167,17 @@ PlasmaCore.Dialog {
     }
 
     function moveClientToZone(client, zone) {
-
         // block abnormal windows from being moved (like plasmashell, docks, etc...)
-        if (!client.normalWindow)
-            return;
+        if (!client.normalWindow) return;
         log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
         clientArea = Workspace.clientArea(KWin.FullScreenArea, client.output, Workspace.currentDesktop);
         saveWindowGeometries(client, zone);
 
         // move client to zone
         if (zone != -1) {
-            let zoneItem = repeaterZones.itemAt(zone);
-            let itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
-            let newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
+            const zoneItem = repeaterZones.itemAt(zone);
+            const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
+            const newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
             log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry));
             client.setMaximize(false, false);
             client.frameGeometry = newGeometry;
@@ -207,7 +189,7 @@ PlasmaCore.Dialog {
 
         // save current geometry
         if (config.rememberWindowGeometries) {
-            let geometry = {
+            const geometry = {
                 "x": client.frameGeometry.x,
                 "y": client.frameGeometry.y,
                 "width": client.frameGeometry.width,
@@ -281,12 +263,15 @@ PlasmaCore.Dialog {
             text: "KZones: Toggle zone overlay"
             sequence: "Ctrl+Alt+C"
             onActivated: {
-                if (!config.enableZoneOverlay)
+                if (!config.enableZoneOverlay) {
                     osdDbus.exec("Zone overlay is disabled");
-                else if (moving)
+                }
+                else if (moving) {
                     showZoneOverlay = !showZoneOverlay;
-                else
+                }
+                else {
                     osdDbus.exec("The overlay can only be shown while moving a window");
+                }
             }
         }
 
@@ -295,9 +280,7 @@ PlasmaCore.Dialog {
             text: "KZones: Switch to next window in current zone"
             sequence: "Ctrl+Alt+Up"
             onActivated: {
-                let zone = Workspace.activeWindow.zone;
-                let layout = Workspace.activeWindow.layout;
-                switchWindowInZone(zone, layout);
+                switchWindowInZone(Workspace.activeWindow.zone, Workspace.activeWindow.layout);
             }
         }
 
@@ -306,9 +289,7 @@ PlasmaCore.Dialog {
             text: "KZones: Switch to previous window in current zone"
             sequence: "Ctrl+Alt+Down"
             onActivated: {
-                let zone = Workspace.activeWindow.zone;
-                let layout = Workspace.activeWindow.layout;
-                switchWindowInZone(zone, layout, true);
+                switchWindowInZone(Workspace.activeWindow.zone, Workspace.activeWindow.layout, true);
             }
         }
 
@@ -353,7 +334,7 @@ PlasmaCore.Dialog {
         mainDialog.loadConfig();
 
         // match all clients to zones
-        for (var i = 0; i < Workspace.stackingOrder.length; i++) {
+        for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             matchZone(Workspace.stackingOrder[i]);
         }
     }
@@ -390,9 +371,9 @@ PlasmaCore.Dialog {
                 if (config.enableZoneSelector) {
                     if (!zoneSelectorBackground.animating && zoneSelectorBackground.expanded) {
                         repeaterLayouts.model.forEach((layout, layoutIndex) => {
-                            let layoutItem = repeaterLayouts.itemAt(layoutIndex);
+                            const layoutItem = repeaterLayouts.itemAt(layoutIndex);
                             layout.zones.forEach((zone, zoneIndex) => {
-                                let zoneItem = layoutItem.children[zoneIndex];
+                                const zoneItem = layoutItem.children[zoneIndex];
                                 if (isHovering(zoneItem)) {
                                     hoveringZone = zoneIndex;
                                     currentLayout = layoutIndex;
@@ -403,7 +384,7 @@ PlasmaCore.Dialog {
                     // set zoneSelectorBackground expansion state
                     zoneSelectorBackground.expanded = isHovering(zoneSelectorBackground) && (Workspace.cursorPos.y - clientArea.y) >= 0;
                     // set zoneSelectorBackground near state
-                    let triggerDistance = config.zoneSelectorTriggerDistance * 50 + 25;
+                    const triggerDistance = config.zoneSelectorTriggerDistance * 50 + 25;
                     zoneSelectorBackground.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelectorBackground.y + zoneSelectorBackground.height + triggerDistance;
                 }
 
@@ -412,9 +393,9 @@ PlasmaCore.Dialog {
                     const triggerDistance = (config.edgeSnappingTriggerDistance + 1) * 10;
                     if (Workspace.cursorPos.x <= clientArea.x + triggerDistance || Workspace.cursorPos.x >= clientArea.x + clientArea.width - triggerDistance || Workspace.cursorPos.y <= clientArea.y + triggerDistance || Workspace.cursorPos.y >= clientArea.y + clientArea.height - triggerDistance) {
                         repeaterZones.model.forEach((zone, zoneIndex) => {
-                            let zoneItem = repeaterZones.itemAt(zoneIndex);
-                            let itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
-                            let zoneGeometry = {
+                            const zoneItem = repeaterZones.itemAt(zoneIndex);
+                            const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
+                            const zoneGeometry = {
                                 x: itemGlobal.x,
                                 y: itemGlobal.y,
                                 width: zoneItem.width,
@@ -595,8 +576,7 @@ PlasmaCore.Dialog {
                     NumberAnimation {
                         duration: 150
                         onRunningChanged: {
-                            if (!running)
-                                zoneSelectorBackground.visible = true;
+                            if (!running) zoneSelectorBackground.visible = true;
                             zoneSelectorBackground.animating = running;
                         }
                     }
@@ -662,9 +642,8 @@ PlasmaCore.Dialog {
                 });                
 
                 // check if new window spawns in a zone
-                if (client.zone == undefined || client.zone == -1) {
-                    matchZone(client);
-                }
+                if (client.zone == undefined || client.zone == -1) matchZone(client);
+                
             }
 
             // unused, but may be useful in the future
@@ -693,14 +672,14 @@ PlasmaCore.Dialog {
 
             // fix from https://github.com/gerritdevriese/kzones/pull/25
             function onFullScreenChanged() {
-                let client = Workspace.activeWindow;
+                const client = Workspace.activeWindow;
                 log("Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + client.fullScreen + ")");
                 mainDialog.hide();
             }
 
             // start moving
             function onInteractiveMoveResizeStarted() {
-                let client = Workspace.activeWindow;
+                const client = Workspace.activeWindow;
                 if (client.resizeable && client.normalWindow) {
                     if (client.move && checkFilter(client)) {
                         cachedClientArea = clientArea;
@@ -714,38 +693,33 @@ PlasmaCore.Dialog {
                         moving = false;
                         moved = false;
                         resizing = true;
-                        // client resizing
                     }
                 }
             }
 
             // is moving
             function onInteractiveMoveResizeStepped(r) {
-                let client = Workspace.activeWindow;
+                const client = Workspace.activeWindow;
                 if (client.resizeable) {
                     if (moving && checkFilter(client)) {
                         moved = true;
                         if (config.rememberWindowGeometries && client.zone != -1) {
                             if (client.oldGeometry) {
-                                let geometry = client.oldGeometry;
-                                let zone = config.layouts[client.layout].zones[client.zone];
-                                let zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
-                                let zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
-                                let newGeometry = Qt.rect(Math.round((r.x - zoneX) + (zoneCenterX - geometry.width / 2)), Math.round(r.y), Math.round(geometry.width), Math.round(geometry.height));
+                                const geometry = client.oldGeometry;
+                                const zone = config.layouts[client.layout].zones[client.zone];
+                                const zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
+                                const zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
+                                const newGeometry = Qt.rect(Math.round((r.x - zoneX) + (zoneCenterX - geometry.width / 2)), Math.round(r.y), Math.round(geometry.width), Math.round(geometry.height));
                                 client.frameGeometry = newGeometry;
                             }
                         }
-                    }
-                    if (resizing)
-                    // client resizing
-                    {
                     }
                 }
             }
 
             // stop moving
             function onInteractiveMoveResizeFinished() {
-                let client = Workspace.activeWindow;
+                const client = Workspace.activeWindow;
                 if (moving) {
                     log("Move end " + client.resourceClass.toString());
                     if (moved) {
@@ -757,10 +731,6 @@ PlasmaCore.Dialog {
                     }
                     hide();
                 }
-                if (resizing)
-                // client resizing
-                {
-                }
                 moving = false;
                 moved = false;
                 resizing = false;
@@ -768,7 +738,7 @@ PlasmaCore.Dialog {
 
             // check filter
             function checkFilter(client) {
-                let filter = config.filterList.split(/\r?\n/);
+                const filter = config.filterList.split(/\r?\n/);
                 if (config.filterList.length > 0) {
                     if (config.filterMode == 0) {
                         // include
