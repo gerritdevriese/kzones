@@ -284,8 +284,8 @@ List of all available shortcuts:
 | Move active window to next zone                    | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd>                 |
 | Switch to previous window in current zone          | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd>                  |
 | Switch to next window in current zone              | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd>                    |
-| Cycle between layouts                              | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>                     |
-| Cycle between layouts (reversed)                   | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>  |
+| Cycle layouts                                      | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>                     |
+| Cycle layouts (reversed)                           | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>  |
 | Toggle zone overlay                                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>                     |
 | Activate layout                                    | <kbd>Meta</kbd> + <kbd>Num 0-9</kbd>                                |
 | Move active window up                              | <kbd>Meta</kbd> + <kbd>Up</kbd>                                     |
@@ -311,7 +311,7 @@ Install the "Geometry change" KWin effect to animate window movements: https://s
 Replace the last part with any shortcut from the list above:
 
 ```sh
-qdbus org.kde.kglobalaccel /component/kwin invokeShortcut "KZones: Cycle between layouts"
+qdbus org.kde.kglobalaccel /component/kwin invokeShortcut "KZones: Cycle layouts"
 ```
 
 ### Clean corrupted shortcuts
