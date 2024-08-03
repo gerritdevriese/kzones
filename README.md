@@ -30,9 +30,9 @@ Create multiple layouts and cycle between them.
 
 ![](./media/layouts.gif)
 
-### Shortcuts
+### Keyboard Shortcuts
 
-KZones comes with a set of shortcuts to move your windows between zones and layouts.
+KZones comes with a set of [shortcuts](#shortcuts) to move your windows between zones and layouts.
 
 ![](./media/shortcuts.gif)
 
@@ -271,17 +271,23 @@ Here you can enable logging or turn on the debug overlay.
 
 List of all available shortcuts:
 
-| Shortcut                                                           | Default Binding                                                     |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| Move active window to zone                                         | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Num 0-9</kbd>              |
-| Move active window to previous zone                                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd>                  |
-| Move active window to next zone                                    | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd>                 |
-| Switch to previous window in current zone                          | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd>                  |
-| Switch to next window in current zone                              | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd>                    |
-| Cycle between layouts                                              | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>                     |
-| Cycle between layouts (reversed)                                   | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>  |
-| Toggle zone overlay                                                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>                     |
-| Activate layout                                                    | <kbd>Meta</kbd> + <kbd>Num 0-9</kbd>                               |
+| Shortcut                                           | Default Binding                                                     |
+| -------------------------------------------------- | ------------------------------------------------------------------- |
+| Move active window to zone                         | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Num 0-9</kbd>               |
+| Move active window to previous zone                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd>                  |
+| Move active window to next zone                    | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd>                 |
+| Switch to previous window in current zone          | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd>                  |
+| Switch to next window in current zone              | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd>                    |
+| Cycle between layouts                              | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>                     |
+| Cycle between layouts (reversed)                   | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>  |
+| Toggle zone overlay                                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>                     |
+| Activate layout                                    | <kbd>Meta</kbd> + <kbd>Num 0-9</kbd>                                |
+| Move active window up                              | <kbd>Meta</kbd> + <kbd>Up</kbd>                                     |
+| Move active window down                            | <kbd>Meta</kbd> + <kbd>Down</kbd>                                   |
+| Move active window left                            | <kbd>Meta</kbd> + <kbd>Left</kbd>                                   |
+| Move active window right                           | <kbd>Meta</kbd> + <kbd>Right</kbd>                                  |
+| Snap all windows                                   | <kbd>Meta</kbd> + <kbd>Space</kbd>                                  |
+| Snap active window                                 | <kbd>Meta</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>               |
 
 *To change the default bindings, go to `System Settings / Shortcuts` and search for KZones*
 
