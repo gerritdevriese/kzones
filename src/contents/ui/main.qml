@@ -122,6 +122,21 @@ PlasmaCore.Dialog {
         });
     }
 
+    function checkFilter(client) {
+        const filter = config.filterList.split(/\r?\n/);
+        if (config.filterList.length > 0) {
+            if (config.filterMode == 0) {
+                // include
+                return filter.includes(client.resourceClass.toString());
+            }
+            if (config.filterMode == 1) {
+                // exclude
+                return !filter.includes(client.resourceClass.toString());
+            }
+        }
+        return true;
+    }
+
     function matchZone(client) {
         client.zone = -1;
         // get all zones in the current layout
@@ -172,7 +187,7 @@ PlasmaCore.Dialog {
 
     function moveClientToZone(client, zone) {
         // block abnormal windows from being moved (like plasmashell, docks, etc...)
-        if (!client.normalWindow) return;
+        if (!client.normalWindow || !checkFilter(client)) return;
         log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
         clientArea = Workspace.clientArea(KWin.FullScreenArea, client.output, Workspace.currentDesktop);
         saveWindowGeometries(client, zone);
@@ -214,7 +229,7 @@ PlasmaCore.Dialog {
     }
 
     function moveClientToClosestZone(client) {
-        if (!client.normalWindow) return null;
+        if (!client.normalWindow || !checkFilter(client)) return null;
 
         log("Moving client " + client.resourceClass.toString() + " to closest zone");
 
@@ -256,7 +271,7 @@ PlasmaCore.Dialog {
     }
 
     function moveClientToNeighbour(client, direction) {
-        if (!client.normalWindow) return null;
+        if (!client.normalWindow || !checkFilter(client)) return null;
         
         log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
 
@@ -322,21 +337,6 @@ PlasmaCore.Dialog {
         }
 
         return targetZoneIndex;
-    }
-
-    function checkFilter(client) {
-        const filter = config.filterList.split(/\r?\n/);
-        if (config.filterList.length > 0) {
-            if (config.filterMode == 0) {
-                // include
-                return filter.includes(client.resourceClass.toString());
-            }
-            if (config.filterMode == 1) {
-                // exclude
-                return !filter.includes(client.resourceClass.toString());
-            }
-        }
-        return true;
     }
 
 
