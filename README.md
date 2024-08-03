@@ -97,6 +97,12 @@ The script will remember the geometry of each window when it's moved to a zone. 
 
 - Enable or disable this behavior.
 
+#### Automatically snap all new windows
+
+When a new window is launched, the script will automatically snap it to its closest zone.
+
+- Enable or disable this behavior.
+
 ### Layouts
 
 You can define your own layouts by modifying the JSON in the **Layouts** tab in the script settings, here are some examples to get you started:

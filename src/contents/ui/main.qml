@@ -62,6 +62,8 @@ PlasmaCore.Dialog {
             edgeSnappingTriggerDistance: KWin.readConfig("edgeSnappingTriggerDistance", 1),
             // remember window geometries before snapping to a zone, and restore them when the window is removed from their zone
             rememberWindowGeometries: KWin.readConfig("rememberWindowGeometries", true),
+            // auto snap all windows
+            autoSnapAllNew: KWin.readConfig("autoSnapAllNew", false),
             // layouts
             layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name":"Priority Grid","padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]')),
             // filter mode
@@ -320,6 +322,21 @@ PlasmaCore.Dialog {
         }
 
         return targetZoneIndex;
+    }
+
+    function checkFilter(client) {
+        const filter = config.filterList.split(/\r?\n/);
+        if (config.filterList.length > 0) {
+            if (config.filterMode == 0) {
+                // include
+                return filter.includes(client.resourceClass.toString());
+            }
+            if (config.filterMode == 1) {
+                // exclude
+                return !filter.includes(client.resourceClass.toString());
+            }
+        }
+        return true;
     }
 
 
@@ -811,7 +828,12 @@ PlasmaCore.Dialog {
                         moveClientToZone(client, zoneIndex);
                         return;
                     }
-                });                
+                });
+
+                // auto snap to closest zone
+                if (config.autoSnapAllNew && checkFilter(client)) {
+                    moveClientToClosestZone(client);
+                }
 
                 // check if new window spawns in a zone
                 if (client.zone == undefined || client.zone == -1) matchZone(client);
@@ -906,22 +928,6 @@ PlasmaCore.Dialog {
                 moving = false;
                 moved = false;
                 resizing = false;
-            }
-
-            // check filter
-            function checkFilter(client) {
-                const filter = config.filterList.split(/\r?\n/);
-                if (config.filterList.length > 0) {
-                    if (config.filterMode == 0) {
-                        // include
-                        return filter.includes(client.resourceClass.toString());
-                    }
-                    if (config.filterMode == 1) {
-                        // exclude
-                        return !filter.includes(client.resourceClass.toString());
-                    }
-                }
-                return true;
             }
         }
 
