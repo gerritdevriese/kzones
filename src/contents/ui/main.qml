@@ -255,7 +255,7 @@ PlasmaCore.Dialog {
             }
         }
 
-        if (client.zone !== closestZone) moveClientToZone(client, closestZone);
+        if (client.zone !== closestZone || client.layout !== currentLayout) moveClientToZone(client, closestZone);
         return closestZone;
     }
 
