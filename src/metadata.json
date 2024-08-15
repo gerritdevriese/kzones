@@ -15,7 +15,7 @@
         "ServiceTypes": [
             "KWin/Script"
         ],
-        "Version": "0.8",
+        "Version": "0.9",
         "Website": "https://github.com/gerritdevriese/kzones"
     },
     "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
