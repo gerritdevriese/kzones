@@ -63,8 +63,8 @@ PlasmaCore.Dialog {
             edgeSnappingTriggerDistance: KWin.readConfig("edgeSnappingTriggerDistance", 1),
             // remember window geometries before snapping to a zone, and restore them when the window is removed from their zone
             rememberWindowGeometries: KWin.readConfig("rememberWindowGeometries", true),
-            // layout per monitor
-            layoutPerMonitor: KWin.readConfig("layoutPerMonitor", false),
+            // track active layout per screen
+            trackLayoutPerScreen: KWin.readConfig("trackLayoutPerScreen", false),
             // auto snap all windows
             autoSnapAllNew: KWin.readConfig("autoSnapAllNew", false),
             // layouts
@@ -344,7 +344,7 @@ PlasmaCore.Dialog {
     }
 
     function getCurrentLayout() {
-        if (config.layoutPerMonitor) {
+        if (config.trackLayoutPerScreen) {
             const screenLayout = screenLayouts[Workspace.activeScreen.name]
             if (!screenLayout) {
                 screenLayouts[Workspace.activeScreen.name] = 0
@@ -356,7 +356,7 @@ PlasmaCore.Dialog {
     }
 
     function setCurrentLayout(layout) {
-        if (config.layoutPerMonitor) screenLayouts[Workspace.activeScreen.name] = layout
+        if (config.trackLayoutPerScreen) screenLayouts[Workspace.activeScreen.name] = layout
         currentLayout = layout
     }
 

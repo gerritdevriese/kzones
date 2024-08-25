@@ -286,9 +286,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="kcfg_layoutPerMonitor">
+           <widget class="QCheckBox" name="kcfg_trackLayoutPerScreen">
             <property name="text">
-             <string>Save active layout per monitor</string>
+             <string>Track active layout per screen</string>
             </property>
            </widget>
           </item>
