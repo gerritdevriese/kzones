@@ -197,7 +197,7 @@ PlasmaCore.Dialog {
         if (!client.normalWindow || !checkFilter(client)) return;
 
         log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
-        
+
         refreshClientArea()
         saveWindowGeometries(client, zone);
 
@@ -379,9 +379,8 @@ PlasmaCore.Dialog {
             sequence: "Ctrl+Alt+D"
             onActivated: {
                 setCurrentLayout((currentLayout + 1) % config.layouts.length);
-
                 highlightedZone = -1;
-                osdDbus.exec(config.layouts[currentLayout].name);
+                osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
             }
         }
 
@@ -392,7 +391,7 @@ PlasmaCore.Dialog {
             onActivated: {
                 setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
                 highlightedZone = -1;
-                osdDbus.exec(config.layouts[currentLayout].name);
+                osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
             }
         }
 
