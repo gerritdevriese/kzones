@@ -6,7 +6,7 @@ KDE KWin Script for snapping windows into zones. Handy when using a (super) ultr
 
 [![kde-store](https://img.shields.io/badge/KDE%20Store-download-blue?logo=KDE)](https://store.kde.org/p/1909220)
 [![aur-package](https://img.shields.io/aur/version/kwin-scripts-kzones?logo=archlinux)](https://aur.archlinux.org/packages/kwin-scripts-kzones)
-[![nixos-package](https://img.shields.io/badge/NixOS-package-blue?logo=nixos)](https://mynixos.com/nixpkgs/package/libsForQt5.kzones)
+[![nixos-package](https://img.shields.io/badge/NixOS-package-blue?logo=nixos)](https://mynixos.com/nixpkgs/package/kdePackages.kzones)
 
 ## Features
 
