@@ -142,6 +142,9 @@ PlasmaCore.Dialog {
     }
 
     function matchZone(client) {
+
+        refreshClientArea();
+
         client.zone = -1;
         // get all zones in the current layout
         const zones = config.layouts[currentLayout].zones;
@@ -192,8 +195,10 @@ PlasmaCore.Dialog {
     function moveClientToZone(client, zone) {
         // block abnormal windows from being moved (like plasmashell, docks, etc...)
         if (!client.normalWindow || !checkFilter(client)) return;
+
         log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
-        clientArea = Workspace.clientArea(KWin.FullScreenArea, client.output, Workspace.currentDesktop);
+        
+        refreshClientArea()
         saveWindowGeometries(client, zone);
 
         // move client to zone
@@ -237,6 +242,8 @@ PlasmaCore.Dialog {
 
         log("Moving client " + client.resourceClass.toString() + " to closest zone");
 
+        refreshClientArea();
+
         const centerPointOfClient = {
             x: client.frameGeometry.x + (client.frameGeometry.width / 2),
             y: client.frameGeometry.y + (client.frameGeometry.height / 2)
@@ -278,6 +285,8 @@ PlasmaCore.Dialog {
         if (!client.normalWindow || !checkFilter(client)) return null;
         
         log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
+
+        refreshClientArea();
 
         const zones = config.layouts[currentLayout].zones;
 
