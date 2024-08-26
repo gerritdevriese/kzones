@@ -479,7 +479,7 @@ PlasmaCore.Dialog {
                         if (modelData <= config.layouts.length) {
                             setCurrentLayout(modelData - 1)
                             highlightedZone = -1;
-                            osdDbus.exec(config.layouts[currentLayout].name);
+                            osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
                         } else {
                             osdDbus.exec("Layout " + modelData + " does not exist");
                         }
