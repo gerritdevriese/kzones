@@ -123,6 +123,11 @@ PlasmaCore.Dialog {
     }
 
     function checkFilter(client) {
+
+        if (!client.normalWindow) return false;
+        if (client.popupWindow) return false;
+        if (client.skipTaskbar) return false;
+        
         const filter = config.filterList.split(/\r?\n/);
         if (config.filterList.length > 0) {
             if (config.filterMode == 0) {
@@ -162,7 +167,7 @@ PlasmaCore.Dialog {
         const windows = [];
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             const client = Workspace.stackingOrder[i];
-            if (client.zone === zone && client.layout === layout && client.desktop === Workspace.currentDesktop && client.activity === Workspace.currentActivity && client.screen === Workspace.activeWindow.screen && client.normalWindow) {
+            if (client.zone === zone && client.layout === layout && client.desktop === Workspace.currentDesktop && client.activity === Workspace.currentActivity && client.screen === Workspace.activeWindow.screen && checkFilter(client)) {
                 windows.push(client);
             }
         }
@@ -187,7 +192,7 @@ PlasmaCore.Dialog {
 
     function moveClientToZone(client, zone) {
         // block abnormal windows from being moved (like plasmashell, docks, etc...)
-        if (!client.normalWindow || !checkFilter(client)) return;
+        if (!checkFilter(client)) return;
         log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
         clientArea = Workspace.clientArea(KWin.FullScreenArea, client.output, Workspace.currentDesktop);
         saveClientProperties(client, zone);
@@ -229,7 +234,7 @@ PlasmaCore.Dialog {
     }
 
     function moveClientToClosestZone(client) {
-        if (!client.normalWindow || !checkFilter(client)) return null;
+        if (!checkFilter(client)) return null;
 
         log("Moving client " + client.resourceClass.toString() + " to closest zone");
 
@@ -271,7 +276,7 @@ PlasmaCore.Dialog {
     }
 
     function moveClientToNeighbour(client, direction) {
-        if (!client.normalWindow || !checkFilter(client)) return null;
+        if (!checkFilter(client)) return null;
         
         log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
 
@@ -874,7 +879,7 @@ PlasmaCore.Dialog {
             // start moving
             function onInteractiveMoveResizeStarted() {
                 const client = Workspace.activeWindow;
-                if (client.resizeable && client.normalWindow) {
+                if (client.resizeable && checkFilter(client)) {
                     if (client.move && checkFilter(client)) {
                         cachedClientArea = clientArea;
 
