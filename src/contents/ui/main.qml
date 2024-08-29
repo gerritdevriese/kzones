@@ -269,6 +269,7 @@ PlasmaCore.Dialog {
         let count = 0;
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             const client = Workspace.stackingOrder[i];
+            if (client.move) continue;
             moveClientToClosestZone(client) && count++;
         }
         log("Moved " + count + " clients to closest zone");
