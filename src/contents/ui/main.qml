@@ -190,7 +190,7 @@ PlasmaCore.Dialog {
         if (!client.normalWindow || !checkFilter(client)) return;
         log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
         clientArea = Workspace.clientArea(KWin.FullScreenArea, client.output, Workspace.currentDesktop);
-        saveWindowGeometries(client, zone);
+        saveClientProperties(client, zone);
 
         // move client to zone
         if (zone != -1) {
@@ -203,7 +203,7 @@ PlasmaCore.Dialog {
         }
     }
 
-    function saveWindowGeometries(client, zone) {
+    function saveClientProperties(client, zone) {
         log("Saving geometry for client " + client.resourceClass.toString());
 
         // save current geometry
@@ -877,11 +877,23 @@ PlasmaCore.Dialog {
                 if (client.resizeable && client.normalWindow) {
                     if (client.move && checkFilter(client)) {
                         cachedClientArea = clientArea;
+
+                        if (config.rememberWindowGeometries && client.zone != -1) {
+                            if (client.oldGeometry) {
+                                const geometry = client.oldGeometry;
+                                const zone = config.layouts[client.layout].zones[client.zone];
+                                const zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
+                                const zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
+                                const newGeometry = Qt.rect(Math.round(Workspace.cursorPos.x - geometry.width / 2), Math.round(client.frameGeometry.y), Math.round(geometry.width), Math.round(geometry.height));
+                                client.frameGeometry = newGeometry;
+                            }
+                        }
+
                         moving = true;
                         moved = false;
                         resizing = false;
                         log("Move start " + client.resourceClass.toString());
-                        mainDialog.show();
+                        mainDialog.show();                      
                     }
                     if (client.resize) {
                         moving = false;
@@ -897,16 +909,6 @@ PlasmaCore.Dialog {
                 if (client.resizeable) {
                     if (moving && checkFilter(client)) {
                         moved = true;
-                        if (config.rememberWindowGeometries && client.zone != -1) {
-                            if (client.oldGeometry) {
-                                const geometry = client.oldGeometry;
-                                const zone = config.layouts[client.layout].zones[client.zone];
-                                const zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
-                                const zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
-                                const newGeometry = Qt.rect(Math.round((r.x - zoneX) + (zoneCenterX - geometry.width / 2)), Math.round(r.y), Math.round(geometry.width), Math.round(geometry.height));
-                                client.frameGeometry = newGeometry;
-                            }
-                        }
                     }
                 }
             }
@@ -920,7 +922,7 @@ PlasmaCore.Dialog {
                         if (shown) {
                             moveClientToZone(client, highlightedZone);
                         } else {
-                            saveWindowGeometries(client, -1);
+                            saveClientProperties(client, -1);
                         }
                     }
                     hide();
