@@ -127,6 +127,11 @@ PlasmaCore.Dialog {
     }
 
     function checkFilter(client) {
+
+        if (!client.normalWindow) return false;
+        if (client.popupWindow) return false;
+        if (client.skipTaskbar) return false;
+        
         const filter = config.filterList.split(/\r?\n/);
         if (config.filterList.length > 0) {
             if (config.filterMode == 0) {
@@ -169,7 +174,7 @@ PlasmaCore.Dialog {
         const windows = [];
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             const client = Workspace.stackingOrder[i];
-            if (client.zone === zone && client.layout === layout && client.desktop === Workspace.currentDesktop && client.activity === Workspace.currentActivity && client.screen === Workspace.activeWindow.screen && client.normalWindow) {
+            if (client.zone === zone && client.layout === layout && client.desktop === Workspace.currentDesktop && client.activity === Workspace.currentActivity && client.screen === Workspace.activeWindow.screen && checkFilter(client)) {
                 windows.push(client);
             }
         }
@@ -194,12 +199,12 @@ PlasmaCore.Dialog {
 
     function moveClientToZone(client, zone) {
         // block abnormal windows from being moved (like plasmashell, docks, etc...)
-        if (!client.normalWindow || !checkFilter(client)) return;
+        if (!checkFilter(client)) return;
 
         log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
 
         refreshClientArea()
-        saveWindowGeometries(client, zone);
+        saveClientProperties(client, zone);
 
         // move client to zone
         if (zone != -1) {
@@ -212,7 +217,7 @@ PlasmaCore.Dialog {
         }
     }
 
-    function saveWindowGeometries(client, zone) {
+    function saveClientProperties(client, zone) {
         log("Saving geometry for client " + client.resourceClass.toString());
 
         // save current geometry
@@ -238,7 +243,7 @@ PlasmaCore.Dialog {
     }
 
     function moveClientToClosestZone(client) {
-        if (!client.normalWindow || !checkFilter(client)) return null;
+        if (!checkFilter(client)) return null;
 
         log("Moving client " + client.resourceClass.toString() + " to closest zone");
 
@@ -275,6 +280,7 @@ PlasmaCore.Dialog {
         let count = 0;
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             const client = Workspace.stackingOrder[i];
+            if (client.move) continue;
             moveClientToClosestZone(client) && count++;
         }
         log("Moved " + count + " clients to closest zone");
@@ -282,7 +288,7 @@ PlasmaCore.Dialog {
     }
 
     function moveClientToNeighbour(client, direction) {
-        if (!client.normalWindow || !checkFilter(client)) return null;
+        if (!checkFilter(client)) return null;
         
         log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
 
@@ -905,14 +911,26 @@ PlasmaCore.Dialog {
             // start moving
             function onInteractiveMoveResizeStarted() {
                 const client = Workspace.activeWindow;
-                if (client.resizeable && client.normalWindow) {
+                if (client.resizeable && checkFilter(client)) {
                     if (client.move && checkFilter(client)) {
                         cachedClientArea = clientArea;
+
+                        if (config.rememberWindowGeometries && client.zone != -1) {
+                            if (client.oldGeometry) {
+                                const geometry = client.oldGeometry;
+                                const zone = config.layouts[client.layout].zones[client.zone];
+                                const zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
+                                const zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
+                                const newGeometry = Qt.rect(Math.round(Workspace.cursorPos.x - geometry.width / 2), Math.round(client.frameGeometry.y), Math.round(geometry.width), Math.round(geometry.height));
+                                client.frameGeometry = newGeometry;
+                            }
+                        }
+
                         moving = true;
                         moved = false;
                         resizing = false;
                         log("Move start " + client.resourceClass.toString());
-                        mainDialog.show();
+                        mainDialog.show();                      
                     }
                     if (client.resize) {
                         moving = false;
@@ -928,16 +946,6 @@ PlasmaCore.Dialog {
                 if (client.resizeable) {
                     if (moving && checkFilter(client)) {
                         moved = true;
-                        if (config.rememberWindowGeometries && client.zone != -1) {
-                            if (client.oldGeometry) {
-                                const geometry = client.oldGeometry;
-                                const zone = config.layouts[client.layout].zones[client.zone];
-                                const zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
-                                const zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
-                                const newGeometry = Qt.rect(Math.round((r.x - zoneX) + (zoneCenterX - geometry.width / 2)), Math.round(r.y), Math.round(geometry.width), Math.round(geometry.height));
-                                client.frameGeometry = newGeometry;
-                            }
-                        }
                     }
                 }
             }
@@ -951,7 +959,7 @@ PlasmaCore.Dialog {
                         if (shown) {
                             moveClientToZone(client, highlightedZone);
                         } else {
-                            saveWindowGeometries(client, -1);
+                            saveClientProperties(client, -1);
                         }
                     }
                     hide();
