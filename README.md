@@ -101,6 +101,12 @@ The script will remember the geometry of each window when it's moved to a zone. 
 
 - Enable or disable this behavior.
 
+#### Track active layout per screen
+
+If you have multiple monitors, you can enable this to track the active layout per screen. This will allow you to have different active layouts on different screens.
+
+- Enable or disable this behavior.
+
 #### Automatically snap all new windows
 
 When a new window is launched, the script will automatically snap it to its closest zone.

@@ -24,6 +24,7 @@ PlasmaCore.Dialog {
     property var cachedClientArea: ({})
     property var displaySize: ({})
     property int currentLayout: 0
+    property var screenLayouts: ({})
     property int highlightedZone: -1
     property var activeScreen: null
     property var config: ({})
@@ -62,6 +63,8 @@ PlasmaCore.Dialog {
             edgeSnappingTriggerDistance: KWin.readConfig("edgeSnappingTriggerDistance", 1),
             // remember window geometries before snapping to a zone, and restore them when the window is removed from their zone
             rememberWindowGeometries: KWin.readConfig("rememberWindowGeometries", true),
+            // track active layout per screen
+            trackLayoutPerScreen: KWin.readConfig("trackLayoutPerScreen", false),
             // auto snap all windows
             autoSnapAllNew: KWin.readConfig("autoSnapAllNew", false),
             // layouts
@@ -106,6 +109,7 @@ PlasmaCore.Dialog {
         activeScreen = Workspace.activeScreen;
         clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop);
         displaySize = Workspace.virtualScreenSize;
+        currentLayout = getCurrentLayout();
     }
 
     function isPointInside(x, y, geometry) {
@@ -143,6 +147,9 @@ PlasmaCore.Dialog {
     }
 
     function matchZone(client) {
+
+        refreshClientArea();
+
         client.zone = -1;
         // get all zones in the current layout
         const zones = config.layouts[currentLayout].zones;
@@ -193,8 +200,10 @@ PlasmaCore.Dialog {
     function moveClientToZone(client, zone) {
         // block abnormal windows from being moved (like plasmashell, docks, etc...)
         if (!checkFilter(client)) return;
+
         log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
-        clientArea = Workspace.clientArea(KWin.FullScreenArea, client.output, Workspace.currentDesktop);
+
+        refreshClientArea()
         saveClientProperties(client, zone);
 
         // move client to zone
@@ -238,6 +247,8 @@ PlasmaCore.Dialog {
 
         log("Moving client " + client.resourceClass.toString() + " to closest zone");
 
+        refreshClientArea();
+
         const centerPointOfClient = {
             x: client.frameGeometry.x + (client.frameGeometry.width / 2),
             y: client.frameGeometry.y + (client.frameGeometry.height / 2)
@@ -280,6 +291,8 @@ PlasmaCore.Dialog {
         if (!checkFilter(client)) return null;
         
         log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
+
+        refreshClientArea();
 
         const zones = config.layouts[currentLayout].zones;
 
@@ -345,6 +358,23 @@ PlasmaCore.Dialog {
         return targetZoneIndex;
     }
 
+    function getCurrentLayout() {
+        if (config.trackLayoutPerScreen) {
+            const screenLayout = screenLayouts[Workspace.activeScreen.name]
+            if (!screenLayout) {
+                screenLayouts[Workspace.activeScreen.name] = 0
+            }
+            return screenLayouts[Workspace.activeScreen.name];
+        } else {
+            return currentLayout;
+        }
+    }
+
+    function setCurrentLayout(layout) {
+        if (config.trackLayoutPerScreen) screenLayouts[Workspace.activeScreen.name] = layout
+        currentLayout = layout
+    }
+
 
     Item {
         id: shortcuts
@@ -354,9 +384,9 @@ PlasmaCore.Dialog {
             text: "KZones: Cycle layouts"
             sequence: "Ctrl+Alt+D"
             onActivated: {
-                currentLayout = (currentLayout + 1) % config.layouts.length;
+                setCurrentLayout((currentLayout + 1) % config.layouts.length);
                 highlightedZone = -1;
-                osdDbus.exec(config.layouts[currentLayout].name);
+                osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
             }
         }
 
@@ -365,9 +395,9 @@ PlasmaCore.Dialog {
             text: "KZones: Cycle layouts (reversed)"
             sequence: "Ctrl+Alt+Shift+D"
             onActivated: {
-                currentLayout = (currentLayout - 1 + config.layouts.length) % config.layouts.length;
+                setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
                 highlightedZone = -1;
-                osdDbus.exec(config.layouts[currentLayout].name);
+                osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
             }
         }
 
@@ -453,9 +483,9 @@ PlasmaCore.Dialog {
                     sequence: "Meta+Num+" + modelData
                     onActivated: {
                         if (modelData <= config.layouts.length) {
-                            currentLayout = modelData - 1;
+                            setCurrentLayout(modelData - 1)
                             highlightedZone = -1;
-                            osdDbus.exec(config.layouts[currentLayout].name);
+                            osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
                         } else {
                             osdDbus.exec("Layout " + modelData + " does not exist");
                         }
@@ -571,7 +601,7 @@ PlasmaCore.Dialog {
                                 const zoneItem = layoutItem.children[zoneIndex];
                                 if (isHovering(zoneItem)) {
                                     hoveringZone = zoneIndex;
-                                    currentLayout = layoutIndex;
+                                    setCurrentLayout(layoutIndex);
                                 }
                             });
                         });
@@ -662,12 +692,13 @@ PlasmaCore.Dialog {
                             t += `X: ${Workspace.activeWindow?.frameGeometry?.x}, Y: ${Workspace.activeWindow?.frameGeometry?.y}, Width: ${Workspace.activeWindow?.frameGeometry?.width}, Height: ${Workspace.activeWindow?.frameGeometry?.height}\n`;
                             t += `Previous Zone: ${Workspace.activeWindow?.zone}\n`;
                             t += `Highlighted Zone: ${highlightedZone}\n`;
-                            t += `Layout: ${currentLayout}\n`;
                             t += `Polling Rate: ${config?.pollingRate}ms\n`;
                             t += `Moving: ${moving}\n`;
                             t += `Resizing: ${resizing}\n`;
                             t += `Old Geometry: ${JSON.stringify(Workspace.activeWindow?.oldGeometry)}\n`;
-                            t += `Active Screen: ${activeScreen}\n`;
+                            t += `Active Screen: ${activeScreen.name}\n`;
+                            t += `Current layout: ${currentLayout}\n`;
+                            t += `Screen layouts: ${JSON.stringify(screenLayouts, null, 4)}\n`;
                             return t;
                         } else {
                             return "";
