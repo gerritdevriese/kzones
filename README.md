@@ -113,6 +113,12 @@ When a new window is launched, the script will automatically snap it to its clos
 
 - Enable or disable this behavior.
 
+#### Display OSD messages
+
+Disable this if you don't want to see any OSD messages.
+
+- Enable or disable this behavior.
+
 ### Layouts
 
 You can define your own layouts by modifying the JSON in the **Layouts** tab in the script settings, here are some examples to get you started:

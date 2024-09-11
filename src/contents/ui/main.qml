@@ -65,6 +65,8 @@ PlasmaCore.Dialog {
             rememberWindowGeometries: KWin.readConfig("rememberWindowGeometries", true),
             // track active layout per screen
             trackLayoutPerScreen: KWin.readConfig("trackLayoutPerScreen", false),
+            // show osd messages
+            showOsdMessages: KWin.readConfig("showOsdMessages", true),
             // auto snap all windows
             autoSnapAllNew: KWin.readConfig("autoSnapAllNew", false),
             // layouts
@@ -651,6 +653,7 @@ PlasmaCore.Dialog {
             method: "showText"
 
             function exec(text, icon = "preferences-desktop-virtual") {
+                if (!config.showOsdMessages) return;
                 this.arguments = [icon, text];
                 this.call();
             }

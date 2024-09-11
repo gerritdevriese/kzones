@@ -299,6 +299,16 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="kcfg_showOsdMessages">
+            <property name="text">
+             <string>Display OSD messages</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

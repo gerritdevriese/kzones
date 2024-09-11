@@ -51,6 +51,10 @@
             <default>false</default>
         </entry>
 
+        <entry name="showOsdMessages" type="Bool">
+            <default>true</default>
+        </entry>
+
         <!-- Layouts -->
 
         <entry name="layoutsJson" type="String">
