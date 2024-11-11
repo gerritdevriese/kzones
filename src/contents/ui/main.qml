@@ -29,6 +29,7 @@ PlasmaCore.Dialog {
     property var activeScreen: null
     property var config: ({})
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
+    property var errors: []
 
     location: PlasmaCore.Types.Floating
     type: PlasmaCore.Dialog.OnScreenDisplay
@@ -42,6 +43,17 @@ PlasmaCore.Dialog {
     height: displaySize.height
 
     function loadConfig() {
+
+        const defaultLayouts = '[{"name":"Priority Grid","padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]'
+       
+        let layouts;
+
+        try {
+            layouts = JSON.parse(KWin.readConfig("layoutsJson", defaultLayouts));
+        } catch (e) {
+            errors = errors.concat(`Could not load layouts from configuration, using default layouts.\nError: ${e.message}`);
+            layouts = JSON.parse(defaultLayouts);
+        }
 
         // load values from configuration
         config = {
@@ -70,7 +82,7 @@ PlasmaCore.Dialog {
             // auto snap all windows
             autoSnapAllNew: KWin.readConfig("autoSnapAllNew", false),
             // layouts
-            layouts: JSON.parse(KWin.readConfig("layoutsJson", '[{"name":"Priority Grid","padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]')),
+            layouts: layouts,
             // filter mode
             filterMode: KWin.readConfig("filterMode", 0),
             // filter list
@@ -82,6 +94,7 @@ PlasmaCore.Dialog {
             // enable debug overlay
             enableDebugOverlay: KWin.readConfig("enableDebugOverlay", false)
         };
+
         log("Config loaded: " + JSON.stringify(config));
     }
 
@@ -666,50 +679,74 @@ PlasmaCore.Dialog {
             height: clientArea.height || 0
             clip: true
 
-            // debug overlay
-            Rectangle {
-                id: debugOverlay
+            ColumnLayout {
 
-                visible: config.enableDebugOverlay
                 anchors.left: parent.left
                 anchors.leftMargin: 20
                 anchors.top: parent.top
                 anchors.topMargin: 20
                 z: 100
-                width: debugOverlayText.paintedWidth + debugOverlayText.padding * 2
-                height: debugOverlayText.paintedHeight + debugOverlayText.padding * 2
-                radius: 5
-                color: Kirigami.Theme.backgroundColor
+                spacing: 10
 
-                Text {
-                    id: debugOverlayText
+                Rectangle {
+                    id: debugOverlay
 
-                    anchors.fill: parent
-                    padding: 15
-                    color: Kirigami.Theme.textColor
-                    text: {
-                        if (config.enableDebugOverlay) {
-                            let t = "";
-                            t += `Active: ${Workspace.activeWindow?.caption}\n`;
-                            t += `Window class: ${Workspace.activeWindow?.resourceClass?.toString()}\n`;
-                            t += `X: ${Workspace.activeWindow?.frameGeometry?.x}, Y: ${Workspace.activeWindow?.frameGeometry?.y}, Width: ${Workspace.activeWindow?.frameGeometry?.width}, Height: ${Workspace.activeWindow?.frameGeometry?.height}\n`;
-                            t += `Previous Zone: ${Workspace.activeWindow?.zone}\n`;
-                            t += `Highlighted Zone: ${highlightedZone}\n`;
-                            t += `Polling Rate: ${config?.pollingRate}ms\n`;
-                            t += `Moving: ${moving}\n`;
-                            t += `Resizing: ${resizing}\n`;
-                            t += `Old Geometry: ${JSON.stringify(Workspace.activeWindow?.oldGeometry)}\n`;
-                            t += `Active Screen: ${activeScreen.name}\n`;
-                            t += `Current layout: ${currentLayout}\n`;
-                            t += `Screen layouts: ${JSON.stringify(screenLayouts, null, 4)}\n`;
-                            return t;
-                        } else {
-                            return "";
+                    visible: config.enableDebugOverlay
+                    Layout.preferredWidth: children[0].paintedWidth + children[0].padding * 2
+                    Layout.preferredHeight: children[0].paintedHeight + children[0].padding * 2
+                    color: Kirigami.Theme.backgroundColor
+                    radius: 5
+
+                    Text {
+                        anchors.fill: parent
+                        padding: 15
+                        color: Kirigami.Theme.textColor
+                        text: JSON.stringify({
+                            activeWindow: {
+                                caption: Workspace.activeWindow?.caption,
+                                resourceClass: Workspace.activeWindow?.resourceClass?.toString(),
+                                frameGeometry: {
+                                    x: Workspace.activeWindow?.frameGeometry?.x,
+                                    y: Workspace.activeWindow?.frameGeometry?.y,
+                                    width: Workspace.activeWindow?.frameGeometry?.width,
+                                    height: Workspace.activeWindow?.frameGeometry?.height
+                                },
+                                zone: Workspace.activeWindow?.zone
+                            },
+                            highlightedZone: highlightedZone,
+                            moving: moving,
+                            resizing: resizing,
+                            oldGeometry: Workspace.activeWindow?.oldGeometry,
+                            activeScreen: activeScreen?.name,
+                            currentLayout: currentLayout,
+                            screenLayouts: screenLayouts
+                        }, null, 2)
+                        font.pixelSize: 14
+                        font.family: "Hack"
+                    }
+                }
+
+                Repeater {
+                    model: errors
+
+                    Rectangle {
+                    
+                        Layout.preferredWidth: children[0].paintedWidth + children[0].padding * 2
+                        Layout.preferredHeight: children[0].paintedHeight + children[0].padding * 2
+                        color: Kirigami.Theme.backgroundColor
+                        radius: 5
+
+                        Text {
+                            anchors.fill: parent
+                            padding: 15
+                            color: "red"
+                            text: modelData
+                            font.pixelSize: 14
+                            font.family: "Hack"
                         }
                     }
-                    font.pixelSize: 14
-                    font.family: "Hack"
                 }
+                
             }
 
             // zones
