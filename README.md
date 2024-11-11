@@ -264,11 +264,15 @@ Each **layout** object needs the following keys:
 - `padding`: The amount of space between the window and the zone in pixels
 - `zones`: An array containing all zone objects for this layout
 
-Each **zone** object needs the following keys:
+Each **zone** object can contain the following keys:
 
 - `x`, `y`: position of the top left corner of the zone in screen percentage
 - `width`, `height`: size of the zone in screen percentage
 - `applications`: an array of window classes that should snap to this zone when launched (optional)
+- `indicator`: an object containing the indicator settings (optional)
+  - `position`: default is `center`, other options are `top-left`, `top-center`, `top-right`, `right-center`, `bottom-right`, `bottom-center`, `bottom-left`, `left-center`
+  - `margin`: an object containing the margin for the indicator
+    - `top`, `right`, `bottom`, `left`: margin in pixels
 
 ### Filters
 

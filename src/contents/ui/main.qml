@@ -726,6 +726,7 @@ PlasmaCore.Dialog {
                     property int zonePadding: config.layouts[currentLayout].padding || 0
                     property var renderZones: config.zoneOverlayIndicatorDisplay == 1 ? [config.layouts[currentLayout].zones[index]] : config.layouts[currentLayout].zones
                     property int activeIndex: config.zoneOverlayIndicatorDisplay == 1 ? 0 : index
+                    property var indicatorPos: modelData?.indicator?.position || "center"
 
                     x: ((modelData.x / 100) * (clientArea.width - zonePadding)) + zonePadding
                     y: ((modelData.y / 100) * (clientArea.height - zonePadding)) + zonePadding
@@ -742,10 +743,28 @@ PlasmaCore.Dialog {
                         radius: 10
                         border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
                         border.width: 1
-                        anchors.centerIn: parent
                         opacity: !showZoneOverlay ? 0 : (zoneSelectorBackground.expanded) ? 0 : (highlightedZone == zoneIndex ? 0.6 : 1)
                         scale: highlightedZone == zoneIndex ? 1.1 : 1
                         visible: config.enableZoneOverlay
+
+                        // position
+                        anchors.left: (indicatorPos === "top-left" || indicatorPos === "left-center" || indicatorPos === "bottom-left") ? parent.left : undefined
+                        anchors.right: (indicatorPos === "top-right" || indicatorPos === "right-center" || indicatorPos === "bottom-right") ? parent.right : undefined
+                        anchors.top: (indicatorPos === "top-left" || indicatorPos === "top-center" || indicatorPos === "top-right") ? parent.top : undefined
+                        anchors.bottom: (indicatorPos === "bottom-left" || indicatorPos === "bottom-center" || indicatorPos === "bottom-right") ? parent.bottom : undefined
+                        anchors.horizontalCenter: (indicatorPos === "center" || indicatorPos === "top-center" || indicatorPos === "bottom-center") ? parent.horizontalCenter : undefined
+                        anchors.verticalCenter: (indicatorPos === "center" || indicatorPos === "left-center" || indicatorPos === "right-center") ? parent.verticalCenter : undefined
+
+                        // margin
+                        anchors.leftMargin: modelData?.indicator?.margin?.left || 0
+                        anchors.rightMargin: modelData?.indicator?.margin?.right || 0
+                        anchors.topMargin: modelData?.indicator?.margin?.top || 0
+                        anchors.bottomMargin: modelData?.indicator?.margin?.bottom || 0
+
+                        // offset
+                        anchors.horizontalCenterOffset: (modelData?.indicator?.margin?.left || 0) - (modelData?.indicator?.margin?.right || 0)
+                        anchors.verticalCenterOffset: (modelData?.indicator?.margin?.top || 0) - (modelData?.indicator?.margin?.bottom || 0)
+
 
                         Behavior on scale {
                             NumberAnimation {
