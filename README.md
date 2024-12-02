@@ -119,6 +119,12 @@ Disable this if you don't want to see any OSD messages.
 
 - Enable or disable this behavior.
 
+#### Fade windows while moving
+
+Reduce the opacity of other windows while the active window is being moved.
+
+- Enable or disable this behavior.
+
 ### Layouts
 
 You can define your own layouts by modifying the JSON in the **Layouts** tab in the script settings, here are some examples to get you started:

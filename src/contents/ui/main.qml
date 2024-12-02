@@ -79,6 +79,8 @@ PlasmaCore.Dialog {
             trackLayoutPerScreen: KWin.readConfig("trackLayoutPerScreen", false),
             // show osd messages
             showOsdMessages: KWin.readConfig("showOsdMessages", true),
+            // fade windows while moving
+            fadeWindowsWhileMoving: KWin.readConfig("fadeWindowsWhileMoving", false),
             // auto snap all windows
             autoSnapAllNew: KWin.readConfig("autoSnapAllNew", false),
             // layouts
@@ -969,10 +971,20 @@ PlasmaCore.Dialog {
 
             // start moving
             function onInteractiveMoveResizeStarted() {
+
                 const client = Workspace.activeWindow;
                 if (client.resizeable && checkFilter(client)) {
                     if (client.move && checkFilter(client)) {
                         cachedClientArea = clientArea;
+
+                        if (config.fadeWindowsWhileMoving) {
+                            for (let i = 0; i < Workspace.stackingOrder.length; i++) {
+                                const client = Workspace.stackingOrder[i];
+                                client.previousOpacity = client.opacity;
+                                if (client.move ||!client.normalWindow) continue;
+                                client.opacity = 0.5;
+                            }
+                        }
 
                         if (config.rememberWindowGeometries && client.zone != -1) {
                             if (client.oldGeometry) {
@@ -1011,6 +1023,14 @@ PlasmaCore.Dialog {
 
             // stop moving
             function onInteractiveMoveResizeFinished() {
+
+                if (config.fadeWindowsWhileMoving) {
+                    for (let i = 0; i < Workspace.stackingOrder.length; i++) {
+                        const client = Workspace.stackingOrder[i];
+                        client.opacity = client.previousOpacity || 1;
+                    }
+                }
+
                 const client = Workspace.activeWindow;
                 if (moving) {
                     log("Move end " + client.resourceClass.toString());

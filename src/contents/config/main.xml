@@ -55,6 +55,10 @@
             <default>true</default>
         </entry>
 
+        <entry name="fadeWindowsWhileMoving" type="Bool">
+            <default>false</default>
+        </entry>
+
         <!-- Layouts -->
 
         <entry name="layoutsJson" type="String">
