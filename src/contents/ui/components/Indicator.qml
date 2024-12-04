@@ -7,7 +7,6 @@ Rectangle {
     property int activeZone: 0
     property bool hovering: false
     property var zones: []
-    property var colors: ({})
     width: parent.width
     height: parent.height
     color: "transparent"
