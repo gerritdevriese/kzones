@@ -26,9 +26,15 @@ Rectangle {
                 property int padding: 2
                 anchors.fill: parent
                 anchors.margins: padding
-                Kirigami.Theme.colorSet: Kirigami.Theme.View
+                Kirigami.Theme.colorSet: Kirigami.Theme.Button
                 Kirigami.Theme.inherit: false
-                color: (activeZone == index) ? Kirigami.Theme.hoverColor : Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, Qt.rgba(1,1,1), 0.1)
+                color: {
+                    if (activeZone == index) {
+                        return modelData.color ? Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, modelData.color || Qt.rgba(1,1,1), 0.8) : Kirigami.Theme.highlightColor
+                    } else {
+                        return modelData.color ? Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, modelData.color, 0.2) :  Kirigami.Theme.backgroundColor
+                    }
+                }
                 border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
                 border.width: 1
                 radius: 5

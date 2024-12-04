@@ -873,7 +873,9 @@ PlasmaCore.Dialog {
 
                         width: 160
                         height: 100
-                        color: Kirigami.ColorUtils.tintWithAlpha(Kirigami.Theme.backgroundColor, Qt.rgba(0, 0, 0), 0.1)
+                        Kirigami.Theme.colorSet: Kirigami.Theme.Window
+                        Kirigami.Theme.inherit: false
+                        color: Kirigami.Theme.backgroundColor
                         radius: 10
                         border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
                         border.width: 1
@@ -922,14 +924,22 @@ PlasmaCore.Dialog {
                         }
                     }
 
+                    // zone border
+                    Rectangle {
+                        id: zoneBorder
+                        anchors.fill: parent
+                        color: "transparent"
+                        border.color: (highlightedZone == zoneIndex) ? modelData.color || Kirigami.Theme.hoverColor : "transparent"
+                        border.width: 3
+                        radius: 8
+                    }
+
                     // zone background
                     Rectangle {
                         id: zoneBackground
-
+                        opacity: (highlightedZone == zoneIndex) ? 0.1 : 0
                         anchors.fill: parent
-                        color: (highlightedZone == zoneIndex) ? Qt.rgba(Kirigami.Theme.hoverColor.r, Kirigami.Theme.hoverColor.g, Kirigami.Theme.hoverColor.b, 0.1) : "transparent"
-                        border.color: (highlightedZone == zoneIndex) ? Kirigami.Theme.hoverColor : "transparent"
-                        border.width: 3
+                        color: modelData.color || Kirigami.Theme.hoverColor
                         radius: 8
                     }
 
@@ -948,6 +958,9 @@ PlasmaCore.Dialog {
                 property bool expanded: false
                 property bool near: false
                 property bool animating: false
+
+                Kirigami.Theme.colorSet: Kirigami.Theme.Window
+                Kirigami.Theme.inherit: false
 
                 visible: false
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -975,7 +988,7 @@ PlasmaCore.Dialog {
                     anchors.bottom: parent.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottomMargin: 15
-                    color: Kirigami.ColorUtils.tintWithAlpha(Kirigami.Theme.backgroundColor, Qt.rgba(0, 0, 0), 0.1)
+                    color: Kirigami.Theme.backgroundColor
                     radius: 10
                     border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
                     border.width: 1
