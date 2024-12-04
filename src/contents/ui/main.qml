@@ -145,6 +145,7 @@ PlasmaCore.Dialog {
 
     function checkFilter(client) {
 
+        if (!client) return false;
         if (!client.normalWindow) return false;
         if (client.popupWindow) return false;
         if (client.skipTaskbar) return false;
@@ -392,6 +393,99 @@ PlasmaCore.Dialog {
         currentLayout = layout
     }
 
+    function connectSignals(client) {
+
+        if (!checkFilter(client)) return;
+
+        log("Connecting signals for client " + client.resourceClass.toString());
+
+        client.onInteractiveMoveResizeStarted.connect(onInteractiveMoveResizeStarted);
+        client.onInteractiveMoveResizeStepped.connect(onInteractiveMoveResizeStepped);
+        client.onInteractiveMoveResizeFinished.connect(onInteractiveMoveResizeFinished);
+        client.onFullScreenChanged.connect(onFullScreenChanged);
+
+        function onInteractiveMoveResizeStarted() {
+            log("Interactive move/resize started for client " + client.resourceClass.toString());
+            if (client.resizeable && checkFilter(client)) {
+                if (client.move && checkFilter(client)) {
+                    cachedClientArea = clientArea;
+
+                    if (config.fadeWindowsWhileMoving) {
+                        for (let i = 0; i < Workspace.stackingOrder.length; i++) {
+                            const client = Workspace.stackingOrder[i];
+                            client.previousOpacity = client.opacity;
+                            if (client.move ||!client.normalWindow) continue;
+                            client.opacity = 0.5;
+                        }
+                    }
+
+                    if (config.rememberWindowGeometries && client.zone != -1) {
+                        if (client.oldGeometry) {
+                            const geometry = client.oldGeometry;
+                            const zone = config.layouts[client.layout].zones[client.zone];
+                            const zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
+                            const zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
+                            const newGeometry = Qt.rect(Math.round(Workspace.cursorPos.x - geometry.width / 2), Math.round(client.frameGeometry.y), Math.round(geometry.width), Math.round(geometry.height));
+                            client.frameGeometry = newGeometry;
+                        }
+                    }
+
+                    moving = true;
+                    moved = false;
+                    resizing = false;
+                    log("Move start " + client.resourceClass.toString());
+                    mainDialog.show();                      
+                }
+                if (client.resize) {
+                    moving = false;
+                    moved = false;
+                    resizing = true;
+                }
+            }
+        }
+
+        function onInteractiveMoveResizeStepped() {
+            if (client.resizeable) {
+                if (moving && checkFilter(client)) {
+                    moved = true;
+                }
+            }
+        }
+
+        function onInteractiveMoveResizeFinished() {
+            log("Interactive move/resize finished for client " + client.resourceClass.toString());
+
+            if (config.fadeWindowsWhileMoving) {
+                for (let i = 0; i < Workspace.stackingOrder.length; i++) {
+                    const client = Workspace.stackingOrder[i];
+                    client.opacity = client.previousOpacity || 1;
+                }
+            }
+
+            if (moving) {
+                log("Move end " + client.resourceClass.toString());
+                if (moved) {
+                    if (shown) {
+                        moveClientToZone(client, highlightedZone);
+                    } else {
+                        saveClientProperties(client, -1);
+                    }
+                }
+                hide();
+            }
+            moving = false;
+            moved = false;
+            resizing = false;
+        }
+
+        // fix from https://github.com/gerritdevriese/kzones/pull/25
+        function onFullScreenChanged() {
+            log("Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + client.fullScreen + ")");
+            mainDialog.hide();
+        }
+        
+    }
+
 
     Item {
         id: shortcuts
@@ -571,9 +665,10 @@ PlasmaCore.Dialog {
         refreshClientArea();
         mainDialog.loadConfig();
 
-        // match all clients to zones
+        // match all clients to zones and connect signals
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             matchZone(Workspace.stackingOrder[i]);
+            connectSignals(Workspace.stackingOrder[i]);
         }
     }
 
@@ -920,6 +1015,9 @@ PlasmaCore.Dialog {
             target: Workspace
 
             function onWindowAdded(client) {
+
+                connectSignals(client);
+
                 // check if client is in a zone application list
                 config.layouts[currentLayout].zones.forEach((zone, zoneIndex) => {
                     if (zone.applications && zone.applications.includes(client.resourceClass.toString())) {
@@ -937,14 +1035,6 @@ PlasmaCore.Dialog {
                 if (client.zone == undefined || client.zone == -1) matchZone(client);
                 
             }
-
-            // unused, but may be useful in the future
-            // function onClientActivated(client) {
-            //     if (client) {
-            //         console.log("KZones: Client activated: " + client.resourceClass.toString() + " (zone " + client.zone + ")");
-            //     }
-            // }
-            // function onVirtualScreenSizeChanged(){ }
         }
 
         // options connection
@@ -955,97 +1045,6 @@ PlasmaCore.Dialog {
             function onConfigChanged() {
                 log("Config changed");
                 mainDialog.loadConfig();
-            }
-        }
-
-        // activeWindow connection
-        Connections {
-            target: Workspace.activeWindow
-
-            // fix from https://github.com/gerritdevriese/kzones/pull/25
-            function onFullScreenChanged() {
-                const client = Workspace.activeWindow;
-                log("Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + client.fullScreen + ")");
-                mainDialog.hide();
-            }
-
-            // start moving
-            function onInteractiveMoveResizeStarted() {
-
-                const client = Workspace.activeWindow;
-                if (client.resizeable && checkFilter(client)) {
-                    if (client.move && checkFilter(client)) {
-                        cachedClientArea = clientArea;
-
-                        if (config.fadeWindowsWhileMoving) {
-                            for (let i = 0; i < Workspace.stackingOrder.length; i++) {
-                                const client = Workspace.stackingOrder[i];
-                                client.previousOpacity = client.opacity;
-                                if (client.move ||!client.normalWindow) continue;
-                                client.opacity = 0.5;
-                            }
-                        }
-
-                        if (config.rememberWindowGeometries && client.zone != -1) {
-                            if (client.oldGeometry) {
-                                const geometry = client.oldGeometry;
-                                const zone = config.layouts[client.layout].zones[client.zone];
-                                const zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
-                                const zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
-                                const newGeometry = Qt.rect(Math.round(Workspace.cursorPos.x - geometry.width / 2), Math.round(client.frameGeometry.y), Math.round(geometry.width), Math.round(geometry.height));
-                                client.frameGeometry = newGeometry;
-                            }
-                        }
-
-                        moving = true;
-                        moved = false;
-                        resizing = false;
-                        log("Move start " + client.resourceClass.toString());
-                        mainDialog.show();                      
-                    }
-                    if (client.resize) {
-                        moving = false;
-                        moved = false;
-                        resizing = true;
-                    }
-                }
-            }
-
-            // is moving
-            function onInteractiveMoveResizeStepped(r) {
-                const client = Workspace.activeWindow;
-                if (client.resizeable) {
-                    if (moving && checkFilter(client)) {
-                        moved = true;
-                    }
-                }
-            }
-
-            // stop moving
-            function onInteractiveMoveResizeFinished() {
-
-                if (config.fadeWindowsWhileMoving) {
-                    for (let i = 0; i < Workspace.stackingOrder.length; i++) {
-                        const client = Workspace.stackingOrder[i];
-                        client.opacity = client.previousOpacity || 1;
-                    }
-                }
-
-                const client = Workspace.activeWindow;
-                if (moving) {
-                    log("Move end " + client.resourceClass.toString());
-                    if (moved) {
-                        if (shown) {
-                            moveClientToZone(client, highlightedZone);
-                        } else {
-                            saveClientProperties(client, -1);
-                        }
-                    }
-                    hide();
-                }
-                moving = false;
-                moved = false;
-                resizing = false;
             }
         }
 
