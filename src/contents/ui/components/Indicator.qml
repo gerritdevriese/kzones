@@ -1,11 +1,13 @@
 import QtQuick
-import org.kde.kirigami as Kirigami
+
+import "../components" as Components
 
 Rectangle {
     id: indicator
     property int activeZone: 0
     property bool hovering: false
     property var zones: []
+    property var colors: ({})
     width: parent.width
     height: parent.height
     color: "transparent"
@@ -26,16 +28,14 @@ Rectangle {
                 property int padding: 2
                 anchors.fill: parent
                 anchors.margins: padding
-                Kirigami.Theme.colorSet: Kirigami.Theme.Button
-                Kirigami.Theme.inherit: false
                 color: {
                     if (activeZone == index) {
-                        return modelData.color ? Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, modelData.color || Qt.rgba(1,1,1), 0.8) : Kirigami.Theme.highlightColor
+                        return modelData.color ? colorHelper.tintWithAlpha(colorHelper.buttonColor, modelData.color, 0.6) : colorHelper.accentColor
                     } else {
-                        return modelData.color ? Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, modelData.color, 0.2) :  Kirigami.Theme.backgroundColor
+                        return modelData.color ? colorHelper.tintWithAlpha(colorHelper.buttonColor, modelData.color, 0.2) : colorHelper.buttonColor
                     }
                 }
-                border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
+                border.color: colorHelper.getBorderColor(color)
                 border.width: 1
                 radius: 5
 
@@ -44,10 +44,14 @@ Rectangle {
                         duration: 150
                     }
                 }
-            }            
+            }
 
         }
 
+    }
+
+    Components.ColorHelper {
+        id: colorHelper
     }
 
 }

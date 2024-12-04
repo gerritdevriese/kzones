@@ -1,9 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
-import org.kde.kirigami as Kirigami
 import org.kde.kwin
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
+
 import "components" as Components
 
 PlasmaCore.Dialog {
@@ -35,7 +35,6 @@ PlasmaCore.Dialog {
     type: PlasmaCore.Dialog.OnScreenDisplay
     backgroundHints: PlasmaCore.Types.NoBackground
     flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup
-    Kirigami.Theme.colorSet: Kirigami.Theme.View
     visible: false
     outputOnly: true
     opacity: 1
@@ -486,6 +485,9 @@ PlasmaCore.Dialog {
         
     }
 
+    Components.ColorHelper {
+        id: colorHelper
+    }
 
     Item {
         id: shortcuts
@@ -541,7 +543,7 @@ PlasmaCore.Dialog {
             text: "KZones: Toggle zone overlay"
             sequence: "Ctrl+Alt+C"
             onActivated: {
-                if (!config.enableZoneOverlay) {
+                                if (!config.enableZoneOverlay) {
                     osdDbus.exec("Zone overlay is disabled");
                 }
                 else if (moving) {
@@ -672,14 +674,8 @@ PlasmaCore.Dialog {
         }
     }
 
-    Rectangle {
+    Item {
         id: mainItem
-
-        anchors.fill: parent
-
-        color: "transparent"
-        border.width: config.enableDebugOverlay ? 1 : 0
-        border.color: config.enableDebugOverlay ? Kirigami.Theme.hoverColor : "transparent"
 
         // main polling timer
         Timer {
@@ -791,13 +787,13 @@ PlasmaCore.Dialog {
                     visible: config.enableDebugOverlay
                     Layout.preferredWidth: children[0].paintedWidth + children[0].padding * 2
                     Layout.preferredHeight: children[0].paintedHeight + children[0].padding * 2
-                    color: Kirigami.Theme.backgroundColor
+                    color: colorHelper.backgroundColor
                     radius: 5
 
                     Text {
                         anchors.fill: parent
                         padding: 15
-                        color: Kirigami.Theme.textColor
+                        color: colorHelper.textColor
                         text: JSON.stringify({
                             activeWindow: {
                                 caption: Workspace.activeWindow?.caption,
@@ -830,7 +826,7 @@ PlasmaCore.Dialog {
                     
                         Layout.preferredWidth: children[0].paintedWidth + children[0].padding * 2
                         Layout.preferredHeight: children[0].paintedHeight + children[0].padding * 2
-                        color: Kirigami.Theme.backgroundColor
+                        color: colorHelper.backgroundColor
                         radius: 5
 
                         Text {
@@ -873,11 +869,9 @@ PlasmaCore.Dialog {
 
                         width: 160
                         height: 100
-                        Kirigami.Theme.colorSet: Kirigami.Theme.Window
-                        Kirigami.Theme.inherit: false
-                        color: Kirigami.Theme.backgroundColor
+                        color: colorHelper.backgroundColor
                         radius: 10
-                        border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
+                        border.color: colorHelper.getBorderColor(color)
                         border.width: 1
                         opacity: !showZoneOverlay ? 0 : (zoneSelectorBackground.expanded) ? 0 : (highlightedZone == zoneIndex ? 0.6 : 1)
                         scale: highlightedZone == zoneIndex ? 1.1 : 1
@@ -929,7 +923,7 @@ PlasmaCore.Dialog {
                         id: zoneBorder
                         anchors.fill: parent
                         color: "transparent"
-                        border.color: (highlightedZone == zoneIndex) ? modelData.color || Kirigami.Theme.hoverColor : "transparent"
+                        border.color: (highlightedZone == zoneIndex) ? modelData.color || colorHelper.accentColor : "transparent"
                         border.width: 3
                         radius: 8
                     }
@@ -939,7 +933,7 @@ PlasmaCore.Dialog {
                         id: zoneBackground
                         opacity: (highlightedZone == zoneIndex) ? 0.1 : 0
                         anchors.fill: parent
-                        color: modelData.color || Kirigami.Theme.hoverColor
+                        color: modelData.color || colorHelper.accentColor
                         radius: 8
                     }
 
@@ -958,9 +952,6 @@ PlasmaCore.Dialog {
                 property bool expanded: false
                 property bool near: false
                 property bool animating: false
-
-                Kirigami.Theme.colorSet: Kirigami.Theme.Window
-                Kirigami.Theme.inherit: false
 
                 visible: false
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -988,9 +979,9 @@ PlasmaCore.Dialog {
                     anchors.bottom: parent.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottomMargin: 15
-                    color: Kirigami.Theme.backgroundColor
+                    color: colorHelper.backgroundColor
                     radius: 10
-                    border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
+                    border.color: colorHelper.getBorderColor(color)
                     border.width: 1
 
                     RowLayout {
