@@ -20,9 +20,9 @@ clean:
 
 reload:
 	if [ "$$XDG_SESSION_TYPE" = "x11" ]; then \
-		kwin_x11 --replace & disown; \
+		kwin_x11 --replace & \
 	elif [ "$$XDG_SESSION_TYPE" = "wayland" ]; then \
-		kwin_wayland --replace & disown; \
+		kwin_wayland --replace & \
 	else \
 		echo "Unknown session type"; \
 	fi
