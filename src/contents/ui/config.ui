@@ -383,6 +383,24 @@
         ]
     },
     {
+        &quot;name&quot;: &quot;Dual Split&quot;,
+        &quot;padding&quot;: 0,
+        &quot;zones&quot;: [
+            {
+                &quot;x&quot;: 0,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 50
+            },
+            {
+                &quot;x&quot;: 50,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 50
+            }
+        ]
+    },
+    {
         &quot;name&quot;: &quot;Quadrant Grid&quot;,
         &quot;zones&quot;: [
             {
