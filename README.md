@@ -70,6 +70,8 @@ cd kzones && make
 
 ## Configuration
 
+The script settings can be found under `System Settings / Window Management / KWin Scripts / KZones / ⚙️`
+
 ### General
 
 #### Zone Selector
