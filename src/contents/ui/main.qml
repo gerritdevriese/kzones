@@ -772,74 +772,29 @@ PlasmaCore.Dialog {
             height: clientArea.height || 0
             clip: true
 
-            ColumnLayout {
-
-                anchors.left: parent.left
-                anchors.leftMargin: 20
-                anchors.top: parent.top
-                anchors.topMargin: 20
-                z: 100
-                spacing: 10
-
-                Rectangle {
-                    id: debugOverlay
-
-                    visible: config.enableDebugOverlay
-                    Layout.preferredWidth: children[0].paintedWidth + children[0].padding * 2
-                    Layout.preferredHeight: children[0].paintedHeight + children[0].padding * 2
-                    color: colorHelper.backgroundColor
-                    radius: 5
-
-                    Text {
-                        anchors.fill: parent
-                        padding: 15
-                        color: colorHelper.textColor
-                        text: JSON.stringify({
-                            activeWindow: {
-                                caption: Workspace.activeWindow?.caption,
-                                resourceClass: Workspace.activeWindow?.resourceClass?.toString(),
-                                frameGeometry: {
-                                    x: Workspace.activeWindow?.frameGeometry?.x,
-                                    y: Workspace.activeWindow?.frameGeometry?.y,
-                                    width: Workspace.activeWindow?.frameGeometry?.width,
-                                    height: Workspace.activeWindow?.frameGeometry?.height
-                                },
-                                zone: Workspace.activeWindow?.zone
-                            },
-                            highlightedZone: highlightedZone,
-                            moving: moving,
-                            resizing: resizing,
-                            oldGeometry: Workspace.activeWindow?.oldGeometry,
-                            activeScreen: activeScreen?.name,
-                            currentLayout: currentLayout,
-                            screenLayouts: screenLayouts
-                        }, null, 2)
-                        font.pixelSize: 14
-                        font.family: "Hack"
-                    }
-                }
-
-                Repeater {
-                    model: errors
-
-                    Rectangle {
-                    
-                        Layout.preferredWidth: children[0].paintedWidth + children[0].padding * 2
-                        Layout.preferredHeight: children[0].paintedHeight + children[0].padding * 2
-                        color: colorHelper.backgroundColor
-                        radius: 5
-
-                        Text {
-                            anchors.fill: parent
-                            padding: 15
-                            color: "red"
-                            text: modelData
-                            font.pixelSize: 14
-                            font.family: "Hack"
-                        }
-                    }
-                }
-                
+            Components.Debug {
+                info: ({
+                    activeWindow: {
+                        caption: Workspace.activeWindow?.caption,
+                        resourceClass: Workspace.activeWindow?.resourceClass?.toString(),
+                        frameGeometry: {
+                            x: Workspace.activeWindow?.frameGeometry?.x,
+                            y: Workspace.activeWindow?.frameGeometry?.y,
+                            width: Workspace.activeWindow?.frameGeometry?.width,
+                            height: Workspace.activeWindow?.frameGeometry?.height
+                        },
+                        zone: Workspace.activeWindow?.zone
+                    },
+                    highlightedZone: highlightedZone,
+                    moving: moving,
+                    resizing: resizing,
+                    oldGeometry: Workspace.activeWindow?.oldGeometry,
+                    activeScreen: activeScreen?.name,
+                    currentLayout: currentLayout,
+                    screenLayouts: screenLayouts
+                })
+                errors: mainDialog.errors
+                config: mainDialog.config
             }
 
             // zones
