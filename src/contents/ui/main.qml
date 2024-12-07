@@ -489,176 +489,89 @@ PlasmaCore.Dialog {
         id: colorHelper
     }
 
-    Item {
-        id: shortcuts
+    Components.Shortcuts {
+        onCycleLayouts: {
+            setCurrentLayout((currentLayout + 1) % config.layouts.length);
+            highlightedZone = -1;
+            osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
+        }
 
-        ShortcutHandler {
-            name: "KZones: Cycle layouts"
-            text: "KZones: Cycle layouts"
-            sequence: "Ctrl+Alt+D"
-            onActivated: {
-                setCurrentLayout((currentLayout + 1) % config.layouts.length);
+        onCycleLayoutsReversed: {
+            setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
+            highlightedZone = -1;
+            osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
+        }
+
+        onMoveActiveWindowToNextZone: {
+            const client = Workspace.activeWindow;
+            if (client.zone == -1) moveClientToClosestZone(client);
+            const zonesLength = config.layouts[currentLayout].zones.length;
+            moveClientToZone(client, (client.zone + 1) % zonesLength);
+        }
+
+        onMoveActiveWindowToPreviousZone: {
+            const client = Workspace.activeWindow;
+            if (client.zone == -1) moveClientToClosestZone(client);
+            const zonesLength = config.layouts[currentLayout].zones.length;
+            moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength);
+        }
+
+        onToggleZoneOverlay: {
+            if (!config.enableZoneOverlay) {
+                osdDbus.exec("Zone overlay is disabled");
+            }
+            else if (moving) {
+                showZoneOverlay = !showZoneOverlay;
+            }
+            else {
+                osdDbus.exec("The overlay can only be shown while moving a window");
+            }
+        }
+
+        onSwitchToNextWindowInCurrentZone: {
+            switchWindowInZone(Workspace.activeWindow.zone, Workspace.activeWindow.layout);
+        }
+
+        onSwitchToPreviousWindowInCurrentZone: {
+            switchWindowInZone(Workspace.activeWindow.zone, Workspace.activeWindow.layout, true);
+        }
+        
+        onMoveActiveWindowToZone: {
+            moveClientToZone(Workspace.activeWindow, zone);
+        }
+
+        onActivateLayout: {
+            if (layout <= config.layouts.length - 1) {
+                setCurrentLayout(layout);
                 highlightedZone = -1;
                 osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
+            } else {
+                osdDbus.exec(`Layout ${layout + 1} does not exist`);
             }
         }
 
-        ShortcutHandler {
-            name: "KZones: Cycle layouts (reversed)"
-            text: "KZones: Cycle layouts (reversed)"
-            sequence: "Ctrl+Alt+Shift+D"
-            onActivated: {
-                setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
-                highlightedZone = -1;
-                osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
-            }
+        onMoveActiveWindowUp: {
+            moveClientToNeighbour(Workspace.activeWindow, "up");
         }
 
-        ShortcutHandler {
-            name: "KZones: Move active window to next zone"
-            text: "KZones: Move active window to next zone"
-            sequence: "Ctrl+Alt+Right"
-            onActivated: {
-                const client = Workspace.activeWindow;
-                if (client.zone == -1) moveClientToClosestZone(client);
-                const zonesLength = config.layouts[currentLayout].zones.length;
-                moveClientToZone(client, (client.zone + 1) % zonesLength);
-            }
+        onMoveActiveWindowDown: {
+            moveClientToNeighbour(Workspace.activeWindow, "down");
         }
 
-        ShortcutHandler {
-            name: "KZones: Move active window to previous zone"
-            text: "KZones: Move active window to previous zone"
-            sequence: "Ctrl+Alt+Left"
-            onActivated: {
-                const client = Workspace.activeWindow;
-                if (client.zone == -1) moveClientToClosestZone(client);
-                const zonesLength = config.layouts[currentLayout].zones.length;
-                moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength);
-            }
+        onMoveActiveWindowLeft: {
+            moveClientToNeighbour(Workspace.activeWindow, "left");
         }
 
-        ShortcutHandler {
-            name: "KZones: Toggle zone overlay"
-            text: "KZones: Toggle zone overlay"
-            sequence: "Ctrl+Alt+C"
-            onActivated: {
-                if (!config.enableZoneOverlay) {
-                    osdDbus.exec("Zone overlay is disabled");
-                }
-                else if (moving) {
-                    showZoneOverlay = !showZoneOverlay;
-                }
-                else {
-                    osdDbus.exec("The overlay can only be shown while moving a window");
-                }
-            }
+        onMoveActiveWindowRight: {
+            moveClientToNeighbour(Workspace.activeWindow, "right");
         }
 
-        ShortcutHandler {
-            name: "KZones: Switch to next window in current zone"
-            text: "KZones: Switch to next window in current zone"
-            sequence: "Ctrl+Alt+Up"
-            onActivated: {
-                switchWindowInZone(Workspace.activeWindow.zone, Workspace.activeWindow.layout);
-            }
+        onSnapActiveWindow: {
+            moveClientToClosestZone(Workspace.activeWindow);
         }
 
-        ShortcutHandler {
-            name: "KZones: Switch to previous window in current zone"
-            text: "KZones: Switch to previous window in current zone"
-            sequence: "Ctrl+Alt+Down"
-            onActivated: {
-                switchWindowInZone(Workspace.activeWindow.zone, Workspace.activeWindow.layout, true);
-            }
-        }
-
-        Repeater {
-            model: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-            delegate: Item {
-                ShortcutHandler {
-                    name: "KZones: Move active window to zone " + modelData
-                    text: "KZones: Move active window to zone " + modelData
-                    sequence: "Ctrl+Alt+Num+" + modelData
-                    onActivated: {
-                        moveClientToZone(Workspace.activeWindow, modelData - 1);
-                    }
-                }
-            }
-        }
-
-        Repeater {
-            model: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-            delegate: Item {
-                ShortcutHandler {
-                    name: "KZones: Activate layout " + modelData
-                    text: "KZones: Activate layout " + modelData
-                    sequence: "Meta+Num+" + modelData
-                    onActivated: {
-                        if (modelData <= config.layouts.length) {
-                            setCurrentLayout(modelData - 1)
-                            highlightedZone = -1;
-                            osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
-                        } else {
-                            osdDbus.exec("Layout " + modelData + " does not exist");
-                        }
-                    }
-                }
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window up"
-            text: "KZones: Move active window up"
-            sequence: "Meta+Up"
-            onActivated: {
-                moveClientToNeighbour(Workspace.activeWindow, "up");
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window down"
-            text: "KZones: Move active window down"
-            sequence: "Meta+Down"
-            onActivated: {
-                moveClientToNeighbour(Workspace.activeWindow, "down");
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window left"
-            text: "KZones: Move active window left"
-            sequence: "Meta+Left"
-            onActivated: {
-                moveClientToNeighbour(Workspace.activeWindow, "left");
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Move active window right"
-            text: "KZones: Move active window right"
-            sequence: "Meta+Right"
-            onActivated: {
-                moveClientToNeighbour(Workspace.activeWindow, "right");
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Snap active window"
-            text: "KZones: Snap active window"
-            sequence: "Meta+Shift+Space"
-            onActivated: {
-                moveClientToClosestZone(Workspace.activeWindow);
-            }
-        }
-
-        ShortcutHandler {
-            name: "KZones: Snap all windows"
-            text: "KZones: Snap all windows"
-            sequence: "Meta+Space"
-            onActivated: {
-                moveAllClientsToClosestZone();
-            }
+        onSnapAllWindows: {
+            moveAllClientsToClosestZone();
         }
     }
 
