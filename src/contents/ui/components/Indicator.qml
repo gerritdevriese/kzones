@@ -1,5 +1,6 @@
 import QtQuick
-import org.kde.kirigami as Kirigami
+
+import "../components" as Components
 
 Rectangle {
     id: indicator
@@ -26,10 +27,14 @@ Rectangle {
                 property int padding: 2
                 anchors.fill: parent
                 anchors.margins: padding
-                Kirigami.Theme.colorSet: Kirigami.Theme.View
-                Kirigami.Theme.inherit: false
-                color: (activeZone == index) ? Kirigami.Theme.hoverColor : Kirigami.ColorUtils.tintWithAlpha( Kirigami.Theme.backgroundColor, Qt.rgba(1,1,1), 0.1)
-                border.color: Kirigami.ColorUtils.tintWithAlpha(color, Kirigami.Theme.textColor, 0.2)
+                color: {
+                    if (activeZone == index) {
+                        return modelData.color ? colorHelper.tintWithAlpha(colorHelper.buttonColor, modelData.color, 0.6) : colorHelper.accentColor
+                    } else {
+                        return modelData.color ? colorHelper.tintWithAlpha(colorHelper.buttonColor, modelData.color, 0.2) : colorHelper.buttonColor
+                    }
+                }
+                border.color: colorHelper.getBorderColor(color)
                 border.width: 1
                 radius: 5
 
@@ -38,10 +43,14 @@ Rectangle {
                         duration: 150
                     }
                 }
-            }            
+            }
 
         }
 
+    }
+
+    Components.ColorHelper {
+        id: colorHelper
     }
 
 }

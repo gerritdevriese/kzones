@@ -281,6 +281,7 @@ Each **zone** object can contain the following keys:
   - `position`: default is `center`, other options are `top-left`, `top-center`, `top-right`, `right-center`, `bottom-right`, `bottom-center`, `bottom-left`, `left-center`
   - `margin`: an object containing the margin for the indicator
     - `top`, `right`, `bottom`, `left`: margin in pixels
+- `color`: a color name or hex value to tint the zone with (optional)
 
 ### Filters
 
