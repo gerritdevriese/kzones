@@ -115,8 +115,8 @@ PlasmaCore.Dialog {
         // hide OSD
         mainDialog.shown = false;
         mainDialog.visible = false;
-        zoneSelectorBackground.expanded = false;
-        zoneSelectorBackground.near = false;
+        zoneSelector.expanded = false;
+        zoneSelector.near = false;
         highlightedZone = -1;
         showZoneOverlay = config.zoneOverlayShowWhen == 0;
     }
@@ -225,7 +225,7 @@ PlasmaCore.Dialog {
 
         // move client to zone
         if (zone != -1) {
-            const zoneItem = repeaterZones.itemAt(zone);
+            const zoneItem = zones.repeater.itemAt(zone);
             const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
             const newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
             log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry));
@@ -543,7 +543,7 @@ PlasmaCore.Dialog {
             text: "KZones: Toggle zone overlay"
             sequence: "Ctrl+Alt+C"
             onActivated: {
-                                if (!config.enableZoneOverlay) {
+                if (!config.enableZoneOverlay) {
                     osdDbus.exec("Zone overlay is disabled");
                 }
                 else if (moving) {
@@ -692,9 +692,9 @@ PlasmaCore.Dialog {
                 let hoveringZone = -1;
 
                 // zone overlay
-                if (config.enableZoneOverlay && showZoneOverlay && !zoneSelectorBackground.expanded) {
-                    repeaterZones.model.forEach((zone, zoneIndex) => {
-                        if (isHovering(repeaterZones.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget])) {
+                if (config.enableZoneOverlay && showZoneOverlay && !zoneSelector.expanded) {
+                    zones.repeater.model.forEach((zone, zoneIndex) => {
+                        if (isHovering(zones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget])) {
                             hoveringZone = zoneIndex;
                         }
                     });
@@ -702,9 +702,9 @@ PlasmaCore.Dialog {
 
                 // zone selector
                 if (config.enableZoneSelector) {
-                    if (!zoneSelectorBackground.animating && zoneSelectorBackground.expanded) {
-                        repeaterLayouts.model.forEach((layout, layoutIndex) => {
-                            const layoutItem = repeaterLayouts.itemAt(layoutIndex);
+                    if (!zoneSelector.animating && zoneSelector.expanded) {
+                        zoneSelector.repeater.model.forEach((layout, layoutIndex) => {
+                            const layoutItem = zoneSelector.repeater.itemAt(layoutIndex);
                             layout.zones.forEach((zone, zoneIndex) => {
                                 const zoneItem = layoutItem.children[zoneIndex];
                                 if (isHovering(zoneItem)) {
@@ -714,19 +714,19 @@ PlasmaCore.Dialog {
                             });
                         });
                     }
-                    // set zoneSelectorBackground expansion state
-                    zoneSelectorBackground.expanded = isHovering(zoneSelectorBackground) && (Workspace.cursorPos.y - clientArea.y) >= 0;
-                    // set zoneSelectorBackground near state
+                    // set zoneSelector expansion state
+                    zoneSelector.expanded = isHovering(zoneSelector) && (Workspace.cursorPos.y - clientArea.y) >= 0;
+                    // set zoneSelector near state
                     const triggerDistance = config.zoneSelectorTriggerDistance * 50 + 25;
-                    zoneSelectorBackground.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelectorBackground.y + zoneSelectorBackground.height + triggerDistance;
+                    zoneSelector.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelector.y + zoneSelector.height + triggerDistance;
                 }
 
                 // edge snapping
                 if (config.enableEdgeSnapping) {
                     const triggerDistance = (config.edgeSnappingTriggerDistance + 1) * 10;
                     if (Workspace.cursorPos.x <= clientArea.x + triggerDistance || Workspace.cursorPos.x >= clientArea.x + clientArea.width - triggerDistance || Workspace.cursorPos.y <= clientArea.y + triggerDistance || Workspace.cursorPos.y >= clientArea.y + clientArea.height - triggerDistance) {
-                        repeaterZones.model.forEach((zone, zoneIndex) => {
-                            const zoneItem = repeaterZones.itemAt(zoneIndex);
+                        zones.repeater.model.forEach((zone, zoneIndex) => {
+                            const zoneItem = zones.repeater.itemAt(zoneIndex);
                             const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
                             const zoneGeometry = {
                                 x: itemGlobal.x,
@@ -746,7 +746,6 @@ PlasmaCore.Dialog {
                     log("Highlighting zone " + hoveringZone + " in layout " + currentLayout);
                     highlightedZone = hoveringZone;
                 }
-
                 
             }
         }
@@ -797,175 +796,18 @@ PlasmaCore.Dialog {
                 config: mainDialog.config
             }
 
-            // zones
-            Repeater {
-                id: repeaterZones
+            Components.Zones {
+                id: zones
+                config: mainDialog.config
+                currentLayout: mainDialog.currentLayout
+                highlightedZone: mainDialog.highlightedZone
+             }
 
-                model: config.layouts[currentLayout].zones
-
-                // zone
-                Item {
-                    id: zone
-
-                    property int zoneIndex: index
-                    property int zonePadding: config.layouts[currentLayout].padding || 0
-                    property var renderZones: config.zoneOverlayIndicatorDisplay == 1 ? [config.layouts[currentLayout].zones[index]] : config.layouts[currentLayout].zones
-                    property int activeIndex: config.zoneOverlayIndicatorDisplay == 1 ? 0 : index
-                    property var indicatorPos: modelData?.indicator?.position || "center"
-
-                    x: ((modelData.x / 100) * (clientArea.width - zonePadding)) + zonePadding
-                    y: ((modelData.y / 100) * (clientArea.height - zonePadding)) + zonePadding
-                    implicitWidth: ((modelData.width / 100) * (clientArea.width - zonePadding)) - zonePadding
-                    implicitHeight: ((modelData.height / 100) * (clientArea.height - zonePadding)) - zonePadding
-
-                    // zone indicator
-                    Rectangle {
-                        id: zoneIndicator
-
-                        width: 160
-                        height: 100
-                        color: colorHelper.backgroundColor
-                        radius: 10
-                        border.color: colorHelper.getBorderColor(color)
-                        border.width: 1
-                        opacity: !showZoneOverlay ? 0 : (zoneSelectorBackground.expanded) ? 0 : (highlightedZone == zoneIndex ? 0.6 : 1)
-                        scale: highlightedZone == zoneIndex ? 1.1 : 1
-                        visible: config.enableZoneOverlay
-
-                        // position
-                        anchors.left: (indicatorPos === "top-left" || indicatorPos === "left-center" || indicatorPos === "bottom-left") ? parent.left : undefined
-                        anchors.right: (indicatorPos === "top-right" || indicatorPos === "right-center" || indicatorPos === "bottom-right") ? parent.right : undefined
-                        anchors.top: (indicatorPos === "top-left" || indicatorPos === "top-center" || indicatorPos === "top-right") ? parent.top : undefined
-                        anchors.bottom: (indicatorPos === "bottom-left" || indicatorPos === "bottom-center" || indicatorPos === "bottom-right") ? parent.bottom : undefined
-                        anchors.horizontalCenter: (indicatorPos === "center" || indicatorPos === "top-center" || indicatorPos === "bottom-center") ? parent.horizontalCenter : undefined
-                        anchors.verticalCenter: (indicatorPos === "center" || indicatorPos === "left-center" || indicatorPos === "right-center") ? parent.verticalCenter : undefined
-
-                        // margin
-                        anchors.leftMargin: modelData?.indicator?.margin?.left || 0
-                        anchors.rightMargin: modelData?.indicator?.margin?.right || 0
-                        anchors.topMargin: modelData?.indicator?.margin?.top || 0
-                        anchors.bottomMargin: modelData?.indicator?.margin?.bottom || 0
-
-                        // offset
-                        anchors.horizontalCenterOffset: (modelData?.indicator?.margin?.left || 0) - (modelData?.indicator?.margin?.right || 0)
-                        anchors.verticalCenterOffset: (modelData?.indicator?.margin?.top || 0) - (modelData?.indicator?.margin?.bottom || 0)
-
-
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: zoneSelectorBackground.expanded ? 0 : 150
-                            }
-                        }
-
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: 150
-                            }
-                        }
-
-                        Components.Indicator {
-                            zones: renderZones
-                            activeZone: activeIndex
-                            anchors.centerIn: parent
-                            width: parent.width - 20
-                            height: parent.height - 20
-                            hovering: (highlightedZone == zoneIndex)
-                        }
-                    }
-
-                    // zone border
-                    Rectangle {
-                        id: zoneBorder
-                        anchors.fill: parent
-                        color: "transparent"
-                        border.color: (highlightedZone == zoneIndex) ? modelData.color || colorHelper.accentColor : "transparent"
-                        border.width: 3
-                        radius: 8
-                    }
-
-                    // zone background
-                    Rectangle {
-                        id: zoneBackground
-                        opacity: (highlightedZone == zoneIndex) ? 0.1 : 0
-                        anchors.fill: parent
-                        color: modelData.color || colorHelper.accentColor
-                        radius: 8
-                    }
-
-                    // indicator shadow
-                    Components.Shadow {
-                        target: zoneIndicator
-                        visible: zoneIndicator.visible
-                    }
-                }
-            }
-
-            // zone selector
-            Item {
-                id: zoneSelectorBackground
-
-                property bool expanded: false
-                property bool near: false
-                property bool animating: false
-
-                visible: false
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                anchors.topMargin: expanded ? 0 : (near ? -height + 30 : -height)
-
-                Behavior on anchors.topMargin {
-                    NumberAnimation {
-                        duration: 150
-                        onRunningChanged: {
-                            if (!running) zoneSelectorBackground.visible = true;
-                            zoneSelectorBackground.animating = running;
-                        }
-                    }
-                }
-
-                width: zoneSelector.width + 30
-                height: zoneSelector.height + 40
-
-                Rectangle {
-                    id: zoneSelector
-
-                    width: row.implicitWidth + row.spacing * 2
-                    height: row.implicitHeight + row.spacing * 2
-                    anchors.bottom: parent.bottom
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottomMargin: 15
-                    color: colorHelper.backgroundColor
-                    radius: 10
-                    border.color: colorHelper.getBorderColor(color)
-                    border.width: 1
-
-                    RowLayout {
-                        id: row
-
-                        spacing: 15
-                        anchors.fill: parent
-                        anchors.margins: spacing
-
-                        Repeater {
-                            id: repeaterLayouts
-
-                            model: config.layouts
-
-                            Components.Indicator {
-                                zones: modelData.zones
-                                activeZone: (currentLayout == index) ? highlightedZone : -1
-                                width: 160 - 30
-                                height: 100 - 30
-                                hovering: (currentLayout == index)
-                            }
-                        }
-                    }
-                }
-
-                Components.Shadow {
-                    target: zoneSelector
-                    visible: true
-                }
+            Components.Selector {
+                id: zoneSelector
+                config: mainDialog.config
+                currentLayout: mainDialog.currentLayout
+                highlightedZone: mainDialog.highlightedZone
             }
         }
 
