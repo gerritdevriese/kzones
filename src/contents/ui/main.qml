@@ -537,7 +537,7 @@ PlasmaCore.Dialog {
         }
 
         onSwitchToWindowInZone: {
-            switchWindowInZone(zone, Workspace.activeWindow.layout);
+            switchWindowInZone(zone, Workspace.activeWindow.layout, true);
         }
         
         onMoveActiveWindowToZone: {
