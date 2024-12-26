@@ -80,6 +80,22 @@ Item {
         }
     }
 
+    signal switchToWindowInZone(int zone)
+
+    Repeater {
+        model: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        delegate: Item {
+            ShortcutHandler {
+                name: "KZones: Switch to window in zone " + modelData
+                text: "KZones: Switch to window in zone " + modelData
+                sequence: "Ctrl+Alt+Shift+Num+" + modelData
+                onActivated: {
+                    switchToWindowInZone(modelData - 1)
+                }
+            }
+        }
+    }
+
     signal moveActiveWindowToZone(int zone)
 
     Repeater {
