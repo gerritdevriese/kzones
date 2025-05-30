@@ -34,7 +34,7 @@ PlasmaCore.Dialog {
     location: PlasmaCore.Types.Floating
     type: PlasmaCore.Dialog.OnScreenDisplay
     backgroundHints: PlasmaCore.Types.NoBackground
-    flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup
+    flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.Popup
     visible: false
     outputOnly: true
     opacity: 1
