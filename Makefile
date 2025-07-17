@@ -1,38 +1,56 @@
-NAME=kzones
-PKGFILE = $(NAME).kwinscript
-PKGDIR = pkg
+SCRIPT_NAME := kzones
+PKGFILE := $(SCRIPT_NAME).kwinscript
+SRC_DIR := src
+SESSION_WIDTH := 1920
+SESSION_HEIGHT := 1080
+SESSION_OUTPUT_COUNT := 1
 
 .NOTPARALLEL: all
 
-all: build install clean reload enable
+.PHONY: all test build install uninstall clean enable disable start-session
 
-build: $(PKGDIR)
-	cp -rf src/metadata.json $(PKGDIR)/
-	cp -rf src/contents/* $(PKGDIR)/contents/
-	zip -r $(PKGFILE) $(PKGDIR)
+all: install clean
 
-install:
-	kpackagetool6 --type=KWin/Script -i $(PKGFILE) || kpackagetool6 --type=KWin/Script -u $(PKGFILE)
+test: all start-session
+
+build: $(PKGFILE)
+
+$(PKGFILE): $(shell find $(SRC_DIR) -type f)
+	@echo "Packaging $(SRC_DIR) into $(PKGFILE)..."
+	@zip -rq $(PKGFILE) $(SRC_DIR)
+
+install: build
+	@echo "Installing $(PKGFILE)..."
+	@kpackagetool6 --type=KWin/Script -i $(PKGFILE) || \
+	kpackagetool6 --type=KWin/Script -u $(PKGFILE)
+
+uninstall:
+	@echo "Uninstalling $(SCRIPT_NAME)..."
+	@kpackagetool6 --type=KWin/Script -r $(SCRIPT_NAME)
 
 clean:
-	rm -r $(PKGDIR)
-	rm $(PKGFILE)
-
-reload:
-	if [ "$$XDG_SESSION_TYPE" = "x11" ]; then \
-		kwin_x11 --replace & \
-	elif [ "$$XDG_SESSION_TYPE" = "wayland" ]; then \
-		kwin_wayland --replace & \
-	else \
-		echo "Unknown session type"; \
-	fi
+	@echo "Cleaning up $(PKGFILE)..."
+	@rm -f $(PKGFILE)
 
 enable:
-	kwriteconfig6 --file kwinrc --group Plugins --key $(NAME)Enabled true
-	qdbus org.kde.KWin /KWin reconfigure
+	@echo "Enabling $(SCRIPT_NAME)..."
+	@kwriteconfig6 --file kwinrc --group Plugins --key $(SCRIPT_NAME)Enabled true
+	@qdbus org.kde.KWin /KWin reconfigure
 
-$(PKGDIR):
-	mkdir -p $(PKGDIR)
-	mkdir -p $(PKGDIR)/contents/code
-	mkdir $(PKGDIR)/contents/config
-	mkdir $(PKGDIR)/contents/ui
+disable:
+	@echo "Disabling $(SCRIPT_NAME)..."
+	@kwriteconfig6 --file kwinrc --group Plugins --key $(SCRIPT_NAME)Enabled false
+	@qdbus org.kde.KWin /KWin reconfigure
+
+start-session:
+	@echo "Starting nested Wayland session..."
+	@sh -c '\
+		unset LD_PRELOAD; \
+		NESTED_DIR="$$XDG_RUNTIME_DIR/nested_plasma"; \
+		mkdir -p "$$NESTED_DIR"; \
+		WRAPPER="$$NESTED_DIR/kwin_wayland_wrapper"; \
+		printf "#!/bin/sh\n/usr/bin/kwin_wayland_wrapper --width $(SESSION_WIDTH) --height $(SESSION_HEIGHT) --no-lockscreen --output-count $(SESSION_OUTPUT_COUNT) \\\$$@\n" > "$$WRAPPER"; \
+		chmod a+x "$$WRAPPER"; \
+		export PATH="$$NESTED_DIR:$$PATH"; \
+		dbus-run-session startplasma-wayland; \
+		rm -f "$$WRAPPER"'
