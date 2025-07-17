@@ -4,6 +4,8 @@ SRC_DIR := src
 SESSION_WIDTH := 1920
 SESSION_HEIGHT := 1080
 SESSION_OUTPUT_COUNT := 1
+SESSION_VERBOSE := 0
+SESSION_APPLICATIONS := # dolphin konsole kate
 
 .NOTPARALLEL: all
 
@@ -49,8 +51,12 @@ start-session:
 		NESTED_DIR="$$XDG_RUNTIME_DIR/nested_plasma"; \
 		mkdir -p "$$NESTED_DIR"; \
 		WRAPPER="$$NESTED_DIR/kwin_wayland_wrapper"; \
-		printf "#!/bin/sh\n/usr/bin/kwin_wayland_wrapper --width $(SESSION_WIDTH) --height $(SESSION_HEIGHT) --no-lockscreen --output-count $(SESSION_OUTPUT_COUNT) \\\$$@\n" > "$$WRAPPER"; \
+		printf "#!/bin/sh\n/usr/bin/kwin_wayland_wrapper --width $(SESSION_WIDTH) --height $(SESSION_HEIGHT) --no-lockscreen --output-count $(SESSION_OUTPUT_COUNT) $(SESSION_APPLICATIONS) \\\$$@\n" > "$$WRAPPER"; \
 		chmod a+x "$$WRAPPER"; \
 		export PATH="$$NESTED_DIR:$$PATH"; \
-		dbus-run-session startplasma-wayland; \
+		if [ "$(SESSION_VERBOSE)" = "1" ]; then \
+			dbus-run-session startplasma-wayland; \
+		else \
+			dbus-run-session startplasma-wayland 2>&1 | grep -E "qml"; \
+		fi; \
 		rm -f "$$WRAPPER"'
