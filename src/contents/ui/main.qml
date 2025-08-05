@@ -306,7 +306,10 @@ PlasmaCore.Dialog {
 
     function moveClientToNeighbour(client, direction) {
         if (!checkFilter(client)) return null;
-        
+
+        log(`activeScreen: ${activeScreen?.name}`);
+        log(`currentLayout: ${currentLayout}`);
+        log(`screenLayouts: ${JSON.stringify(screenLayouts)}`);
         log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
 
         refreshClientArea();
@@ -371,6 +374,27 @@ PlasmaCore.Dialog {
         if (targetZoneIndex !== -1) {
             moveClientToZone(client, targetZoneIndex);
         }
+        else {
+            switch (direction) {
+                case "left":
+                    Workspace.slotWindowToPrevScreen();
+                    moveClientToClosestZone(Workspace.activeWindow);
+                    break;
+                case "right":
+                    Workspace.slotWindowToNextScreen();
+                    moveClientToClosestZone(Workspace.activeWindow);
+                    break;
+                case "up":
+                    Workspace.slotWindowToAboveScreen()
+                    moveClientToClosestZone(Workspace.activeWindow);
+                    break;
+                case "down":
+                    Workspace.slotWindowToBelowScreen()
+                    moveClientToClosestZone(Workspace.activeWindow);
+                    break;
+            }
+        }
+
 
         return targetZoneIndex;
     }
