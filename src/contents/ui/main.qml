@@ -292,6 +292,72 @@ PlasmaCore.Dialog {
         return closestZone;
     }
 
+    function findClientToSpecularZone(client, isHorizontal=false) {
+        if (!checkFilter(client)) return null;
+        refreshClientArea();
+        const centerPointOfClient = {
+            x: client.frameGeometry.x + (client.frameGeometry.width / 2),
+            y: client.frameGeometry.y + (client.frameGeometry.height / 2)
+        };
+        const zones = config.layouts[currentLayout].zones;
+        let currentZoneIndex = null;
+        let closestDistance = Infinity;
+        for (let i = 0; i < zones.length; i++) {
+            const zone = zones[i];
+            let zoneCenter = {
+                x: (zone.x + zone.width / 2) / 100 * clientArea.width + clientArea.x,
+                y: (zone.y + zone.height / 2) / 100 * clientArea.height + clientArea.y
+            };
+            const distance = Math.sqrt(
+                Math.pow(centerPointOfClient.x - zoneCenter.x, 2) +
+                Math.pow(centerPointOfClient.y - zoneCenter.y, 2)
+            );
+            if (distance < closestDistance) {
+                currentZoneIndex = i;
+                closestDistance = distance;
+            }
+        }
+        if (currentZoneIndex === null) return null;
+        const currentZone = zones[currentZoneIndex];
+        const currentZoneCenter = {
+            x: currentZone.x + currentZone.width / 2,
+            y: currentZone.y + currentZone.height / 2
+        };
+        let specularZoneIndex = null;
+        let minDistance = Infinity;
+        for (let i = 0; i < zones.length; i++) {
+            if (i === currentZoneIndex) continue;
+            const zone = zones[i];
+            const zoneCenter = {
+                x: zone.x + zone.width / 2,
+                y: zone.y + zone.height / 2
+            };
+            let isSpecular = false;
+            if (isHorizontal) {
+                isSpecular = Math.abs(zoneCenter.x - currentZoneCenter.x) < 5 &&
+                            Math.abs((zoneCenter.y - 50) - (50 - currentZoneCenter.y)) < 5;
+            } else {
+                isSpecular = Math.abs(zoneCenter.y - currentZoneCenter.y) < 5 &&
+                            Math.abs((zoneCenter.x - 50) - (50 - currentZoneCenter.x)) < 5;
+            }
+            if (isSpecular) {
+                const specularPoint = {
+                    x: !isHorizontal ? (100 - currentZoneCenter.x) : currentZoneCenter.x,
+                    y: isHorizontal ? (100 - currentZoneCenter.y) : currentZoneCenter.y
+                };
+                const distance = Math.sqrt(
+                    Math.pow(zoneCenter.x - specularPoint.x, 2) +
+                    Math.pow(zoneCenter.y - specularPoint.y, 2)
+                );
+                if (distance < minDistance) {
+                    specularZoneIndex = i;
+                    minDistance = distance;
+                }
+            }
+        }
+        return specularZoneIndex !== null ? specularZoneIndex : currentZoneIndex;
+    }
+
     function moveAllClientsToClosestZone() {
         log("Moving all clients to closest zone");
         let count = 0;
@@ -307,9 +373,6 @@ PlasmaCore.Dialog {
     function moveClientToNeighbour(client, direction) {
         if (!checkFilter(client)) return null;
 
-        log(`activeScreen: ${activeScreen?.name}`);
-        log(`currentLayout: ${currentLayout}`);
-        log(`screenLayouts: ${JSON.stringify(screenLayouts)}`);
         log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
 
         refreshClientArea();
@@ -370,32 +433,33 @@ PlasmaCore.Dialog {
                 targetZoneIndex = i;
             }
         }
-
         if (targetZoneIndex !== -1) {
             moveClientToZone(client, targetZoneIndex);
-        }
-        else {
+        } else {
+            let specularZone = -1;
             switch (direction) {
                 case "left":
+                    specularZone = findClientToSpecularZone(client);
                     Workspace.slotWindowToPrevScreen();
-                    moveClientToClosestZone(Workspace.activeWindow);
+                    moveClientToZone(client, specularZone);
                     break;
                 case "right":
+                    specularZone = findClientToSpecularZone(client);
                     Workspace.slotWindowToNextScreen();
-                    moveClientToClosestZone(Workspace.activeWindow);
+                    moveClientToZone(client, specularZone);
                     break;
                 case "up":
-                    Workspace.slotWindowToAboveScreen()
-                    moveClientToClosestZone(Workspace.activeWindow);
+                    specularZone = findClientToSpecularZone(client, true);
+                    Workspace.slotWindowToAboveScreen();
+                    moveClientToZone(client, specularZone);
                     break;
                 case "down":
-                    Workspace.slotWindowToBelowScreen()
-                    moveClientToClosestZone(Workspace.activeWindow);
+                    specularZone = findClientToSpecularZone(client, true);
+                    Workspace.slotWindowToBelowScreen();
+                    moveClientToZone(client, specularZone);
                     break;
             }
         }
-
-
         return targetZoneIndex;
     }
 
