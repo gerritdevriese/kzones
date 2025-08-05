@@ -379,7 +379,10 @@ PlasmaCore.Dialog {
 
         const zones = config.layouts[currentLayout].zones;
 
-        if (client.zone === -1 || client.layout !== currentLayout) moveClientToClosestZone(client);
+        if (client.zone === -1 || client.layout !== currentLayout) {
+            moveClientToClosestZone(client);
+            return client.zone;
+        };
 
         const currentZone = zones[client.zone];
         let targetZoneIndex = -1;
