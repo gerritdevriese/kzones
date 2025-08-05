@@ -292,7 +292,7 @@ PlasmaCore.Dialog {
         return closestZone;
     }
 
-    function findClientToSpecularZone(client, isHorizontal=false) {
+    function findClientSpecularZone(client, isHorizontal=false) {
         if (!checkFilter(client)) return null;
         refreshClientArea();
         const centerPointOfClient = {
@@ -302,6 +302,7 @@ PlasmaCore.Dialog {
         const zones = config.layouts[currentLayout].zones;
         let currentZoneIndex = null;
         let closestDistance = Infinity;
+
         for (let i = 0; i < zones.length; i++) {
             const zone = zones[i];
             let zoneCenter = {
@@ -325,8 +326,10 @@ PlasmaCore.Dialog {
         };
         let specularZoneIndex = null;
         let minDistance = Infinity;
+
         for (let i = 0; i < zones.length; i++) {
             if (i === currentZoneIndex) continue;
+
             const zone = zones[i];
             const zoneCenter = {
                 x: zone.x + zone.width / 2,
@@ -335,10 +338,10 @@ PlasmaCore.Dialog {
             let isSpecular = false;
             if (isHorizontal) {
                 isSpecular = Math.abs(zoneCenter.x - currentZoneCenter.x) < 5 &&
-                            Math.abs((zoneCenter.y - 50) - (50 - currentZoneCenter.y)) < 5;
+                    Math.abs((zoneCenter.y - 50) - (50 - currentZoneCenter.y)) < 5;
             } else {
                 isSpecular = Math.abs(zoneCenter.y - currentZoneCenter.y) < 5 &&
-                            Math.abs((zoneCenter.x - 50) - (50 - currentZoneCenter.x)) < 5;
+                    Math.abs((zoneCenter.x - 50) - (50 - currentZoneCenter.x)) < 5;
             }
             if (isSpecular) {
                 const specularPoint = {
@@ -442,22 +445,22 @@ PlasmaCore.Dialog {
             let specularZone = -1;
             switch (direction) {
                 case "left":
-                    specularZone = findClientToSpecularZone(client);
+                    specularZone = findClientSpecularZone(client);
                     Workspace.slotWindowToPrevScreen();
                     moveClientToZone(client, specularZone);
                     break;
                 case "right":
-                    specularZone = findClientToSpecularZone(client);
+                    specularZone = findClientSpecularZone(client);
                     Workspace.slotWindowToNextScreen();
                     moveClientToZone(client, specularZone);
                     break;
                 case "up":
-                    specularZone = findClientToSpecularZone(client, true);
+                    specularZone = findClientSpecularZone(client, true);
                     Workspace.slotWindowToAboveScreen();
                     moveClientToZone(client, specularZone);
                     break;
                 case "down":
-                    specularZone = findClientToSpecularZone(client, true);
+                    specularZone = findClientSpecularZone(client, true);
                     Workspace.slotWindowToBelowScreen();
                     moveClientToZone(client, specularZone);
                     break;
