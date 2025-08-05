@@ -44,7 +44,7 @@ PlasmaCore.Dialog {
     function loadConfig() {
 
         const defaultLayouts = '[{"name":"Priority Grid","padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]'
-       
+
         let layouts;
 
         try {
@@ -148,7 +148,7 @@ PlasmaCore.Dialog {
         if (!client.normalWindow) return false;
         if (client.popupWindow) return false;
         if (client.skipTaskbar) return false;
-        
+
         const filter = config.filterList.split(/\r?\n/);
         if (config.filterList.length > 0) {
             if (config.filterMode == 0) {
@@ -201,7 +201,7 @@ PlasmaCore.Dialog {
     function switchWindowInZone(zone, layout, reverse) {
         const clientsInZone = getWindowsInZone(zone, layout);
         if (reverse) clientsInZone.reverse();
-        
+
 
         // cycle through clients in zone
         if (clientsInZone.length > 0) {
@@ -329,32 +329,32 @@ PlasmaCore.Dialog {
 
             switch (direction) {
                 case "left":
-                    if (zone.x + zone.width <= currentZone.x && 
-                        zone.y < currentZone.y + currentZone.height && 
+                    if (zone.x + zone.width <= currentZone.x &&
+                        zone.y < currentZone.y + currentZone.height &&
                         zone.y + zone.height > currentZone.y) {
                         isNeighbour = true;
                         distance = currentZone.x - (zone.x + zone.width);
                     }
                     break;
                 case "right":
-                    if (zone.x >= currentZone.x + currentZone.width && 
-                        zone.y < currentZone.y + currentZone.height && 
+                    if (zone.x >= currentZone.x + currentZone.width &&
+                        zone.y < currentZone.y + currentZone.height &&
                         zone.y + zone.height > currentZone.y) {
                         isNeighbour = true;
                         distance = zone.x - (currentZone.x + currentZone.width);
                     }
                     break;
                 case "up":
-                    if (zone.y + zone.height <= currentZone.y && 
-                        zone.x < currentZone.x + currentZone.width && 
+                    if (zone.y + zone.height <= currentZone.y &&
+                        zone.x < currentZone.x + currentZone.width &&
                         zone.x + zone.width > currentZone.x) {
                         isNeighbour = true;
                         distance = currentZone.y - (zone.y + zone.height);
                     }
                     break;
                 case "down":
-                    if (zone.y >= currentZone.y + currentZone.height && 
-                        zone.x < currentZone.x + currentZone.width && 
+                    if (zone.y >= currentZone.y + currentZone.height &&
+                        zone.x < currentZone.x + currentZone.width &&
                         zone.x + zone.width > currentZone.x) {
                         isNeighbour = true;
                         distance = zone.y - (currentZone.y + currentZone.height);
@@ -433,7 +433,7 @@ PlasmaCore.Dialog {
                     moved = false;
                     resizing = false;
                     log("Move start " + client.resourceClass.toString());
-                    mainDialog.show();                      
+                    mainDialog.show();
                 }
                 if (client.resize) {
                     moving = false;
@@ -482,7 +482,7 @@ PlasmaCore.Dialog {
             log("Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + client.fullScreen + ")");
             mainDialog.hide();
         }
-        
+
     }
 
     Components.ColorHelper {
@@ -535,7 +535,7 @@ PlasmaCore.Dialog {
         onSwitchToPreviousWindowInCurrentZone: {
             switchWindowInZone(Workspace.activeWindow.zone, Workspace.activeWindow.layout, true);
         }
-        
+
         onMoveActiveWindowToZone: {
             moveClientToZone(Workspace.activeWindow, zone);
         }
@@ -659,7 +659,7 @@ PlasmaCore.Dialog {
                     log("Highlighting zone " + hoveringZone + " in layout " + currentLayout);
                     highlightedZone = hoveringZone;
                 }
-                
+
             }
         }
 
@@ -747,7 +747,7 @@ PlasmaCore.Dialog {
 
                 // check if new window spawns in a zone
                 if (client.zone == undefined || client.zone == -1) matchZone(client);
-                
+
             }
         }
 
