@@ -371,4 +371,4 @@ You can find this setting in `System Settings / Display and Monitor / Compositor
 ### Auto-update broke KZones on Plasma 5
 
 Due to API changes in KWin 6, the newer versions of the script are not backwards compatible with Plasma 5.  
-If you were already subscribed to KZones using the script manager and updated to the latest version by accident, you will need to uninstall the script and subscribe to "KZones for Plasma 5" instead.
+If you were already subscribed to KZones using the script manager and updated to the latest version by accident, you will need to uninstall the script and subscribe to [KZones for Plasma 5](https://store.kde.org/p/2143914) instead.
