@@ -441,7 +441,7 @@ PlasmaCore.Dialog {
         }
         if (targetZoneIndex !== -1) {
             moveClientToZone(client, targetZoneIndex);
-        } else {
+        } else if(!config.trackLayoutPerScreen) {
             const toScreenMap = {
                 left: "slotWindowToPrevScreen",
                 right: "slotWindowToNextScreen",
