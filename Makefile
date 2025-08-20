@@ -44,6 +44,15 @@ disable:
 	@kwriteconfig6 --file kwinrc --group Plugins --key $(SCRIPT_NAME)Enabled false
 	@qdbus org.kde.KWin /KWin reconfigure
 
+restart-kwin:
+	if [ "$$XDG_SESSION_TYPE" = "x11" ]; then \
+		kwin_x11 --replace & \
+	elif [ "$$XDG_SESSION_TYPE" = "wayland" ]; then \
+		kwin_wayland --replace & \
+	else \
+		echo "Unknown session type"; \
+	fi
+
 start-session:
 	@echo "Starting nested Wayland session..."
 	@sh -c '\
@@ -60,3 +69,11 @@ start-session:
 			dbus-run-session startplasma-wayland 2>&1 | grep -E "qml"; \
 		fi; \
 		rm -f "$$WRAPPER"'
+
+load:
+	bin/load.sh "$(SRC_DIR)" "$(SCRIPT_NAME)-test"
+
+unload:
+	bin/unload.sh "$(SCRIPT_NAME)-test"
+
+reload: unload load
