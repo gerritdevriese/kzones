@@ -1,0 +1,24 @@
+name: Feature request
+description: Request a new feature for KZones
+labels: ["enhancement"]
+body:
+    - type: textarea
+      id: problem
+      attributes:
+          label: Is your feature request related to a problem? Or is it a new idea?
+          description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+    - type: textarea
+      id: solution
+      attributes:
+          label: Describe the solution you'd like
+          description: A clear and concise description of the solution you would like to see.
+    - type: textarea
+      id: alternatives
+      attributes:
+          label: Describe alternatives you've considered
+          description: A clear and concise description of the alternatives you've considered.
+    - type: textarea
+      id: screenshots
+      attributes:
+          label: Screenshots
+          description: If possible, include screenshots (or a video) to help explain your suggestion.

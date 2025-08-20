@@ -1,0 +1,52 @@
+name: Bug Report
+description: Report a bug in KZones
+labels: ["bug"]
+body:
+    - type: checkboxes
+      id: checklist
+      attributes:
+          label: Before continuing, please confirm that
+          options:
+              - label: You have read the usage instructions and tried the basic troubleshooting steps
+                required: true
+              - label: There are no open issues that match your problem
+                required: true
+              - label: The issue is also reproducible on Wayland
+                required: true
+    - type: textarea
+      id: description
+      attributes:
+          label: Describe the bug
+          description: A clear and concise description of what the bug is.
+      validations:
+          required: true
+    - type: textarea
+      id: reproduce
+      attributes:
+          label: To reproduce
+          description: Steps to reproduce the bug.
+      validations:
+          required: true
+    - type: textarea
+      id: expected_behavior
+      attributes:
+          label: Expected behavior
+          description: What you expected to happen instead.
+      validations:
+          required: true
+    - type: textarea
+      id: screenshots
+      attributes:
+          label: Screenshots
+          description: If possible, include screenshots (or a video) to help explain the issue.
+    - type: textarea
+      id: system_info
+      attributes:
+          label: System Information
+          description: Include your system information (KZones version, Plasma version, hardware specs, etc.).
+    - type: textarea
+      id: logs
+      attributes:
+          label: Log output
+          description: If applicable, include the relevant log output.
+          render: shell
