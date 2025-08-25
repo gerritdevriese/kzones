@@ -9,23 +9,26 @@ Item {
     property var config
     property int currentLayout
     property int highlightedZone
+    property int layoutIndex
 
     property alias repeater: repeater
 
     Repeater {
         id: repeater
 
-        model: config.layouts[currentLayout].zones
+        model: config.layouts[layoutIndex].zones
 
         // zone
         Item {
             id: zone
 
             property int zoneIndex: index
-            property int zonePadding: config.layouts[currentLayout].padding || 0
-            property var renderZones: config.zoneOverlayIndicatorDisplay == 1 ? [config.layouts[currentLayout].zones[index]] : config.layouts[currentLayout].zones
+            property int zonePadding: config.layouts[layoutIndex].padding || 0
+            property var renderZones: config.zoneOverlayIndicatorDisplay == 1 ? [config.layouts[layoutIndex].zones[index]] : config.layouts[layoutIndex].zones
             property int activeIndex: config.zoneOverlayIndicatorDisplay == 1 ? 0 : index
             property var indicatorPos: modelData?.indicator?.position || "center"
+
+            property bool active: ( highlightedZone == zoneIndex && currentLayout == layoutIndex )
 
             x: ((modelData.x / 100) * (clientArea.width - zonePadding)) + zonePadding
             y: ((modelData.y / 100) * (clientArea.height - zonePadding)) + zonePadding
@@ -42,8 +45,8 @@ Item {
                 radius: 10
                 border.color: colorHelper.getBorderColor(color)
                 border.width: 1
-                opacity: !showZoneOverlay ? 0 : (zoneSelector.expanded) ? 0 : (highlightedZone == zoneIndex ? 0.6 : 1)
-                scale: highlightedZone == zoneIndex ? 1.1 : 1
+                opacity: !showZoneOverlay ? 0 : (zoneSelector.expanded) ? 0 : (active ? 0.6 : 1)
+                scale: active ? 1.1 : 1
                 visible: config.enableZoneOverlay
 
                 // position
@@ -83,7 +86,7 @@ Item {
                     anchors.centerIn: parent
                     width: parent.width - 20
                     height: parent.height - 20
-                    hovering: (highlightedZone == zoneIndex)
+                    hovering: (active)
                 }
             }
 
@@ -92,7 +95,7 @@ Item {
                 id: zoneBorder
                 anchors.fill: parent
                 color: "transparent"
-                border.color: (highlightedZone == zoneIndex) ? modelData.color || colorHelper.accentColor : "transparent"
+                border.color: (active) ? modelData.color || colorHelper.accentColor : "transparent"
                 border.width: 3
                 radius: 8
             }
