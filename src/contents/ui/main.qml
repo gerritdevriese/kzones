@@ -181,7 +181,7 @@ PlasmaCore.Dialog {
             if (client.frameGeometry.x == zoneX && client.frameGeometry.y == zoneY && client.frameGeometry.width == zoneWidth && client.frameGeometry.height == zoneHeight) {
                 // zone found, set it and exit the loop
                 client.zone = i;
-                client.zone = currentLayout;
+                client.layout = currentLayout;
                 break;
             }
         }
@@ -225,7 +225,8 @@ PlasmaCore.Dialog {
 
         // move client to zone
         if (zone != -1) {
-            const zoneItem = zones.repeater.itemAt(zone);
+            const currentZones = repeaterLayout.itemAt(currentLayout)
+            const zoneItem = currentZones.repeater.itemAt(zone);
             const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
             const newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
             log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry));
@@ -554,6 +555,10 @@ PlasmaCore.Dialog {
                     }
                 }
                 hide();
+            }  else if (resizing) {
+                matchZone(client);
+                log("Resizing end: Matched client " + client.resourceClass.toString() + " to layout.zone " + client.layout + " " + client.zone );
+                saveClientProperties(client, client.zone);
             }
             moving = false;
             moved = false;
@@ -563,6 +568,24 @@ PlasmaCore.Dialog {
         // fix from https://github.com/gerritdevriese/kzones/pull/25
         function onFullScreenChanged() {
             log("Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + client.fullScreen + ")");
+            if(client.fullScreen == true) {
+                log("onFullscreenChanged: Client zone: " + client.zone + " layout: " + client.layout);
+                if (client.zone != -1 && client.layout != -1) {
+                    //check if fullscreen is enabled for layout or for zone
+                    const layout = config.layouts[client.layout];
+                    const zone = layout.zones[client.zone];
+                    log("Layout.fullscreen: " + layout.fullscreen + " Zone.fullscreen: " + zone.fullscreen);
+                    if(layout.fullscreen == true || zone.fullscreen == true) {
+                        const currentZones = repeaterLayout.itemAt(client.layout)
+                        const zoneItem = currentZones.repeater.itemAt(client.zone);
+                        const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
+                        const newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
+                        log("Fullscreen client " + client.resourceClass.toString() + " to zone " + client.zone + " with geometry " + JSON.stringify(newGeometry));
+                        client.setMaximize(false, false);
+                        client.frameGeometry = newGeometry;
+                    }
+                }
+            }
             mainDialog.hide();
         }
 
@@ -672,6 +695,7 @@ PlasmaCore.Dialog {
 
     Item {
         id: mainItem
+        property alias repeaterLayout: repeaterLayout
 
         // main polling timer
         Timer {
@@ -688,9 +712,10 @@ PlasmaCore.Dialog {
                 let hoveringZone = -1;
 
                 // zone overlay
+                const currentZones = repeaterLayout.itemAt(currentLayout)
                 if (config.enableZoneOverlay && showZoneOverlay && !zoneSelector.expanded) {
-                    zones.repeater.model.forEach((zone, zoneIndex) => {
-                        if (isHovering(zones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget])) {
+                    currentZones.repeater.model.forEach((zone, zoneIndex) => {
+                        if (isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget])) {
                             hoveringZone = zoneIndex;
                         }
                     });
@@ -721,15 +746,25 @@ PlasmaCore.Dialog {
                 if (config.enableEdgeSnapping) {
                     const triggerDistance = (config.edgeSnappingTriggerDistance + 1) * 10;
                     if (Workspace.cursorPos.x <= clientArea.x + triggerDistance || Workspace.cursorPos.x >= clientArea.x + clientArea.width - triggerDistance || Workspace.cursorPos.y <= clientArea.y + triggerDistance || Workspace.cursorPos.y >= clientArea.y + clientArea.height - triggerDistance) {
-                        zones.repeater.model.forEach((zone, zoneIndex) => {
-                            const zoneItem = zones.repeater.itemAt(zoneIndex);
+                        const padding = config.layouts[currentLayout].padding || 0;
+                        const halfPadding = padding/2;
+                        currentZones.repeater.model.forEach((zone, zoneIndex) => {
+                            const zoneItem = currentZones.repeater.itemAt(zoneIndex);
                             const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
-                            const zoneGeometry = {
-                                x: itemGlobal.x,
-                                y: itemGlobal.y,
-                                width: zoneItem.width,
-                                height: zoneItem.height
-                            };
+                            let zoneGeometry = {
+                                x: itemGlobal.x - padding/2,
+                                y: itemGlobal.y - padding/2,
+                                width: zoneItem.width + padding,
+                                height: zoneItem.height + padding
+                             };
+                            if(zoneGeometry.x <= halfPadding ) { zoneGeometry.x = 0; zoneGeometry.width += padding; }   //adjust most left edge
+                            if(zoneGeometry.y <= halfPadding ) { zoneGeometry.y = 0; zoneGeometry.height += padding; }  //adjust most top edge
+                            if(zoneGeometry.x + zoneGeometry.width >= clientArea.width - halfPadding ) {                //adjust most right edge
+                                  zoneGeometry.width += halfPadding;
+                            }
+                            if(zoneGeometry.y + zoneGeometry.height >= clientArea.height - halfPadding ) {              //adjust most bottom edge
+                                zoneGeometry.height += halfPadding;
+                            }
                             if (isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry)) {
                                 hoveringZone = zoneIndex;
                             }
@@ -792,12 +827,19 @@ PlasmaCore.Dialog {
                 config: mainDialog.config
             }
 
-            Components.Zones {
-                id: zones
-                config: mainDialog.config
-                currentLayout: mainDialog.currentLayout
-                highlightedZone: mainDialog.highlightedZone
-             }
+            Repeater {
+                id: repeaterLayout
+                model: config.layouts
+
+                Components.Zones {
+                    id: zones
+                    config: mainDialog.config
+                    currentLayout: mainDialog.currentLayout
+                    highlightedZone: mainDialog.highlightedZone
+                    layoutIndex: index
+                    visible: index == mainDialog.currentLayout
+                }
+            }
 
             Components.Selector {
                 id: zoneSelector

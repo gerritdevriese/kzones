@@ -53,6 +53,14 @@ restart-kwin:
 		echo "Unknown session type"; \
 	fi
 
+debug-logs: # Show kwin logs
+	@if [ "${XDG_SESSION_TYPE}" = "x11" ]; then \
+	    journalctl -f -t kwin_x11; \
+	else \
+	    journalctl -f -t kwin_wayland; \
+	fi
+
+
 start-session:
 	@echo "Starting nested Wayland session..."
 	@sh -c '\
