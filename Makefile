@@ -53,11 +53,11 @@ restart-kwin:
 		echo "Unknown session type"; \
 	fi
 
-debug-logs: # Show kwin logs
+logs:
 	@if [ "${XDG_SESSION_TYPE}" = "x11" ]; then \
 	    journalctl -f -t kwin_x11; \
 	else \
-	    journalctl -f -t kwin_wayland; \
+	    journalctl --user -u plasma-kwin_wayland -f QT_CATEGORY=js QT_CATEGORY=qml QT_CATEGORY=kwin_scripting; \
 	fi
 
 
@@ -85,6 +85,3 @@ unload:
 	bin/unload.sh "$(SCRIPT_NAME)-test"
 
 reload: unload load
-
-logs:
-	journalctl --user -u plasma-kwin_wayland -f QT_CATEGORY=js QT_CATEGORY=qml QT_CATEGORY=kwin_scripting
