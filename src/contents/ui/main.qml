@@ -31,10 +31,12 @@ PlasmaCore.Dialog {
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
     property var errors: []
 
-    location: PlasmaCore.Types.Floating
+    title: "KZones Overlay"
+    location: PlasmaCore.Types.Desktop
     type: PlasmaCore.Dialog.OnScreenDisplay
     backgroundHints: PlasmaCore.Types.NoBackground
-    flags: Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.Popup
+    flags: Qt.BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.Popup
+    hideOnWindowDeactivate: true
     visible: false
     outputOnly: true
     opacity: 1
@@ -106,8 +108,11 @@ PlasmaCore.Dialog {
 
     function show() {
         // show OSD
+        console.log("KZones: Show");
         mainDialog.shown = true;
         mainDialog.visible = true;
+        mainDialog.setWidth(Workspace.virtualScreenSize.width);
+        mainDialog.setHeight(Workspace.virtualScreenSize.height);
         refreshClientArea();
     }
 
