@@ -50,6 +50,7 @@ body:
           - Release v0.9
           - Release v0.8
           - Release v0.7
+          - Older than v0.7
       validations:
         required: true
     - type: textarea
