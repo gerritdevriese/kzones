@@ -141,6 +141,7 @@ You can define your own layouts by modifying the JSON in the **Layouts** tab in 
     {
         "name": "Layout 1",
         "padding": 0,
+        "stickyLayout": true,
         "zones": [
             {
                 "x": 0,
@@ -270,6 +271,7 @@ Each **layout** object needs the following keys:
 
 - `name`: The name of the layout, shown when cycling between layouts
 - `padding`: The amount of space between the window and the zone in pixels
+- `stickyLayout`: The default Layout used when overlays and edge snapping should always use the same layout (optional)
 - `zones`: An array containing all zone objects for this layout
 
 Each **zone** object can contain the following keys:

@@ -315,7 +315,14 @@
              <string>Fade windows while moving</string>
             </property>
            </widget>
-          </item>
+       </item>
+       <item>
+           <widget class="QCheckBox" name="kcfg_resetToDefaultLayout">
+               <property name="text">
+                   <string>Always use the same Layout for edge snapping and Zone Overlays.</string>
+               </property>
+           </widget>
+       </item>
          </layout>
         </widget>
        </item>

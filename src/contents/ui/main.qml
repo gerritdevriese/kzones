@@ -82,6 +82,8 @@ PlasmaCore.Dialog {
             showOsdMessages: KWin.readConfig("showOsdMessages", true),
             // fade windows while moving
             fadeWindowsWhileMoving: KWin.readConfig("fadeWindowsWhileMoving", false),
+            // reset layout after each move
+            resetToDefaultLayout: KWin.readConfig("resetToDefaultLayout", false),
             // auto snap all windows
             autoSnapAllNew: KWin.readConfig("autoSnapAllNew", false),
             // layouts
@@ -568,6 +570,16 @@ PlasmaCore.Dialog {
             moving = false;
             moved = false;
             resizing = false;
+
+            // When the user sets a "static" layout, we need to reset it after moving since the zone selector (rightfully) changes it.
+            if (config.resetToDefaultLayout) {
+                for (let i = 0; i < config.layouts.length; i++) {
+                    if(config.layouts[i].stickyLayout) {
+                        setCurrentLayout(i);
+                        return;
+                    }
+                }
+            }
         }
 
         // fix from https://github.com/gerritdevriese/kzones/pull/25
