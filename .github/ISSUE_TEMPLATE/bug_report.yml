@@ -39,11 +39,24 @@ body:
       attributes:
           label: Screenshots
           description: If possible, include screenshots (or a video) to help explain the issue.
+    - type: dropdown
+      id: kzones_version
+      attributes:
+        label: KZones Version
+        description: You can find this in the about section of KZones in the KWin Script Settings window.
+        options:
+          - Development build
+          - Release v0.9.1
+          - Release v0.9
+          - Release v0.8
+          - Release v0.7
+      validations:
+        required: true
     - type: textarea
       id: system_info
       attributes:
           label: System Information
-          description: Include your system information (KZones version, Plasma version, hardware specs, etc.).
+          description: Include your system information (Plasma version, hardware specs, etc.).
     - type: textarea
       id: logs
       attributes:
