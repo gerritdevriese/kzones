@@ -168,6 +168,11 @@
                 <string>My cursor is anywhere in the zone</string>
                </property>
               </item>
+              <item>
+               <property name="text">
+                <string>My cursor is closest to the zone center</string>
+               </property>
+              </item>
              </widget>
             </item>
             <item row="2" column="0">
@@ -408,6 +413,78 @@
                 &quot;y&quot;: 0,
                 &quot;height&quot;: 50,
                 &quot;width&quot;: 50
+            }
+        ]
+    },
+    {
+        &quot;name&quot;: &quot;Ultra Wide Overlapped Grid&quot;,
+        &quot;padding&quot;: 0,
+        &quot;zones&quot;: [
+            {
+                &quot;x&quot;: 0,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 25
+            },
+            {
+                &quot;x&quot;: 25,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 50
+            },
+            {
+                &quot;x&quot;: 75,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 25
+            },
+            {
+                &quot;x&quot;: 0,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 50
+            },
+            {
+                &quot;x&quot;: 50,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 50
+            },
+            {
+                &quot;x&quot;: 25,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 25
+            },
+            {
+                &quot;x&quot;: 50,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 100,
+                &quot;width&quot;: 25
+            },
+            {
+                &quot;x&quot;: 0,
+                &quot;y&quot;: 50,
+                &quot;height&quot;: 50,
+                &quot;width&quot;: 25
+            },
+            {
+                &quot;x&quot;: 0,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 50,
+                &quot;width&quot;: 25
+            },
+            {
+                &quot;x&quot;: 75,
+                &quot;y&quot;: 50,
+                &quot;height&quot;: 50,
+                &quot;width&quot;: 25
+            },
+            {
+                &quot;x&quot;: 75,
+                &quot;y&quot;: 0,
+                &quot;height&quot;: 50,
+                &quot;width&quot;: 25
             }
         ]
     }
