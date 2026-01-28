@@ -466,8 +466,6 @@ PlasmaCore.Dialog {
 
     function getDefaultScreenLayout(activeScreen) {
         for (let i = 0; i < config.layouts.length; i++) {
-            console.log(config.layouts[i].monitor)
-            console.log(activeScreen)
             if (config.layouts[i].monitor == activeScreen.name) {
                 return i;
             }
