@@ -464,11 +464,22 @@ PlasmaCore.Dialog {
         return targetZoneIndex;
     }
 
+    function getDefaultScreenLayout(activeScreen) {
+        for (let i = 0; i < config.layouts.length; i++) {
+            console.log(config.layouts[i].monitor)
+            console.log(activeScreen)
+            if (config.layouts[i].monitor == activeScreen.name) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
     function getCurrentLayout() {
         if (config.trackLayoutPerScreen) {
             const screenLayout = screenLayouts[Workspace.activeScreen.name]
             if (!screenLayout) {
-                screenLayouts[Workspace.activeScreen.name] = 0
+                screenLayouts[Workspace.activeScreen.name] = getDefaultScreenLayout(activeScreen);
             }
             return screenLayouts[Workspace.activeScreen.name];
         } else {
