@@ -29,6 +29,7 @@ PlasmaCore.Dialog {
     property var activeScreen: null
     property var config: ({})
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
+    property bool useClosestZoneCenter: config.zoneOverlayHighlightTarget == 2
     property var errors: []
 
     title: "KZones Overlay"
@@ -144,6 +145,31 @@ PlasmaCore.Dialog {
             width: item.width * item.scale,
             height: item.height * item.scale
         });
+    }
+
+    function findClosestZone(zones, cursorPos, clientArea) {
+        let closestZone = -1;
+        let closestDistance = Infinity;
+        
+        for (let zoneIndex = 0; zoneIndex < zones.length; zoneIndex++) {
+            const zone = zones[zoneIndex];
+            const zoneCenter = {
+                x: (zone.x + zone.width / 2) / 100 * clientArea.width + clientArea.x,
+                y: (zone.y + zone.height / 2) / 100 * clientArea.height + clientArea.y
+            };
+            
+            const distance = Math.sqrt(
+                Math.pow(cursorPos.x - zoneCenter.x, 2) + 
+                Math.pow(cursorPos.y - zoneCenter.y, 2)
+            );
+            
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestZone = zoneIndex;
+            }
+        }
+        
+        return closestZone;
     }
 
     function checkFilter(client) {
@@ -720,11 +746,16 @@ PlasmaCore.Dialog {
                 // zone overlay
                 const currentZones = repeaterLayout.itemAt(currentLayout)
                 if (config.enableZoneOverlay && showZoneOverlay && !zoneSelector.expanded) {
-                    currentZones.repeater.model.forEach((zone, zoneIndex) => {
-                        if (isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget])) {
-                            hoveringZone = zoneIndex;
-                        }
-                    });
+                    if (useClosestZoneCenter) {
+                        const zones = config.layouts[currentLayout].zones;
+                        hoveringZone = findClosestZone(zones, Workspace.cursorPos, clientArea);
+                    } else {
+                        currentZones.repeater.model.forEach((zone, zoneIndex) => {
+                            if (isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget])) {
+                                hoveringZone = zoneIndex;
+                            }
+                        });
+                    }
                 }
 
                 // zone selector
@@ -754,27 +785,33 @@ PlasmaCore.Dialog {
                     if (Workspace.cursorPos.x <= clientArea.x + triggerDistance || Workspace.cursorPos.x >= clientArea.x + clientArea.width - triggerDistance || Workspace.cursorPos.y <= clientArea.y + triggerDistance || Workspace.cursorPos.y >= clientArea.y + clientArea.height - triggerDistance) {
                         const padding = config.layouts[currentLayout].padding || 0;
                         const halfPadding = padding/2;
-                        currentZones.repeater.model.forEach((zone, zoneIndex) => {
-                            const zoneItem = currentZones.repeater.itemAt(zoneIndex);
-                            const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
-                            let zoneGeometry = {
-                                x: itemGlobal.x - padding/2,
-                                y: itemGlobal.y - padding/2,
-                                width: zoneItem.width + padding,
-                                height: zoneItem.height + padding
-                             };
-                            if(zoneGeometry.x <= halfPadding ) { zoneGeometry.x = 0; zoneGeometry.width += padding; }   //adjust most left edge
-                            if(zoneGeometry.y <= halfPadding ) { zoneGeometry.y = 0; zoneGeometry.height += padding; }  //adjust most top edge
-                            if(zoneGeometry.x + zoneGeometry.width >= clientArea.width - halfPadding ) {                //adjust most right edge
-                                  zoneGeometry.width += halfPadding;
-                            }
-                            if(zoneGeometry.y + zoneGeometry.height >= clientArea.height - halfPadding ) {              //adjust most bottom edge
-                                zoneGeometry.height += halfPadding;
-                            }
-                            if (isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry)) {
-                                hoveringZone = zoneIndex;
-                            }
-                        });
+                        
+                        if (useClosestZoneCenter) {
+                            const zones = config.layouts[currentLayout].zones;
+                            hoveringZone = findClosestZone(zones, Workspace.cursorPos, clientArea);
+                        } else {
+                            currentZones.repeater.model.forEach((zone, zoneIndex) => {
+                                const zoneItem = currentZones.repeater.itemAt(zoneIndex);
+                                const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
+                                let zoneGeometry = {
+                                    x: itemGlobal.x - padding/2,
+                                    y: itemGlobal.y - padding/2,
+                                    width: zoneItem.width + padding,
+                                    height: zoneItem.height + padding
+                                 };
+                                if(zoneGeometry.x <= halfPadding ) { zoneGeometry.x = 0; zoneGeometry.width += padding; }   //adjust most left edge
+                                if(zoneGeometry.y <= halfPadding ) { zoneGeometry.y = 0; zoneGeometry.height += padding; }  //adjust most top edge
+                                if(zoneGeometry.x + zoneGeometry.width >= clientArea.width - halfPadding ) {                //adjust most right edge
+                                      zoneGeometry.width += halfPadding;
+                                }
+                                if(zoneGeometry.y + zoneGeometry.height >= clientArea.height - halfPadding ) {              //adjust most bottom edge
+                                    zoneGeometry.height += halfPadding;
+                                }
+                                if (isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry)) {
+                                    hoveringZone = zoneIndex;
+                                }
+                            });
+                        }
                     }
                 }
 
