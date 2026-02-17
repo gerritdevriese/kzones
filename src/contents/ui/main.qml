@@ -108,7 +108,6 @@ PlasmaCore.Dialog {
 
     function show() {
         // show OSD
-        console.log("KZones: Show");
         mainDialog.shown = true;
         mainDialog.visible = true;
         mainDialog.setWidth(Workspace.virtualScreenSize.width);
@@ -701,6 +700,8 @@ PlasmaCore.Dialog {
     Item {
         id: mainItem
         property alias repeaterLayout: repeaterLayout
+        width: mainDialog.width
+        height: mainDialog.height
 
         // main polling timer
         Timer {
