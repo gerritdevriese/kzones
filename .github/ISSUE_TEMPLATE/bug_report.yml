@@ -46,6 +46,7 @@ body:
         description: You can find this in the about section of KZones in the KWin Script Settings window.
         options:
           - Development build
+          - Release v0.9.2
           - Release v0.9.1
           - Release v0.9
           - Release v0.8
