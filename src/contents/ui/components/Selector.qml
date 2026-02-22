@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-
 import "../components" as Components
 
 Item {
@@ -9,28 +8,15 @@ Item {
     property var config
     property int currentLayout
     property int highlightedZone
-
     property bool expanded: false
     property bool near: false
     property bool animating: false
-
     property alias repeater: repeater
 
     visible: false
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.top: parent.top
     anchors.topMargin: expanded ? 0 : (near ? -height + 30 : -height)
-
-    Behavior on anchors.topMargin {
-        NumberAnimation {
-            duration: 150
-            onRunningChanged: {
-                if (!running) selector.visible = true;
-                selector.animating = running;
-            }
-        }
-    }
-
     width: background.width + 30
     height: background.height + 40
 
@@ -66,8 +52,11 @@ Item {
                     height: 100 - 30
                     hovering: (currentLayout == index)
                 }
+
             }
+
         }
+
     }
 
     Components.Shadow {
@@ -78,4 +67,18 @@ Item {
     Components.ColorHelper {
         id: colorHelper
     }
+
+    Behavior on anchors.topMargin {
+        NumberAnimation {
+            duration: 150
+            onRunningChanged: {
+                if (!running)
+                    selector.visible = true;
+
+                selector.animating = running;
+            }
+        }
+
+    }
+
 }

@@ -1,709 +1,784 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>KWin::KZonesConfigForm</class>
- <widget class="QWidget" name="KWin::KZonesConfigForm">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>600</width>
-    <height>800</height>
-   </rect>
-  </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QTabWidget" name="tabWidget">
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <widget class="QWidget" name="tab_general">
-      <attribute name="icon">
-       <iconset theme="systemsettings">
-        <normaloff>../../../../../../../../.designer/backup</normaloff>../../../../../../../../.designer/backup</iconset>
-      </attribute>
-      <attribute name="title">
-       <string>General</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <item>
-        <widget class="QGroupBox" name="kcfg_enableZoneSelector">
-         <property name="title">
-          <string>Enable Zone Selector</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_14">
-          <item>
-           <widget class="QLabel" name="label_zoneSelectorExplanation">
-            <property name="text">
-             <string>The zone selector is a small widget that appears when you drag a window to the top of the screen. It allows you to snap the window to a zone regardless of the current layout.</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QFormLayout" name="formLayout_zoneSelector">
-            <item row="0" column="1">
-             <widget class="QComboBox" name="kcfg_zoneSelectorTriggerDistance">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="currentText">
-               <string>Close</string>
-              </property>
-              <property name="currentIndex">
-               <number>0</number>
-              </property>
-              <item>
-               <property name="text">
-                <string>Close</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Medium</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Far</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_zoneSelectorTriggerDistance">
-              <property name="text">
-               <string>Trigger distance </string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="kcfg_enableZoneOverlay">
-         <property name="title">
-          <string>Enable Zone Overlay</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_13">
-          <item>
-           <widget class="QLabel" name="label_zoneOverlayExplanation">
-            <property name="text">
-             <string>The zone overlay is a fullscreen overlay that appears when you move a window. It shows all zones from the current layout and the window will snap to the zone you drop it on.</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QFormLayout" name="formLayout_zoneOverlay">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_zoneOverlayShowWhen">
-              <property name="text">
-               <string>Show overlay when</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="kcfg_zoneOverlayShowWhen">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <item>
-               <property name="text">
-                <string>I start moving a window</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>I press the toggle overlay shortcut</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_zoneOverlayHighlightTarget">
-              <property name="text">
-               <string>Highlight zone when</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QComboBox" name="kcfg_zoneOverlayHighlightTarget">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <item>
-               <property name="text">
-                <string>My cursor is above the zone indicator</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>My cursor is anywhere in the zone</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_zoneOverlayIndicatorDisplay">
-              <property name="text">
-               <string>Indicator Display</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QComboBox" name="kcfg_zoneOverlayIndicatorDisplay">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <item>
-               <property name="text">
-                <string>All zones</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Only target zone</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="kcfg_enableEdgeSnapping">
-         <property name="title">
-          <string>Enable Edge Snapping</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_13">
-          <item>
-           <widget class="QLabel" name="label_edgeSnappingExplanation">
-            <property name="text">
-             <string>Edge Snapping allows you to snap windows to zones by dragging them to the edge of the screen. Make sure to disable the default edge snapping functionality before enabling this.</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QFormLayout" name="formLayout_edgeSnapping">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_edgeSnappingTriggerDistance">
-              <property name="text">
-               <string>Trigger distance</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="kcfg_edgeSnappingTriggerDistance">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <item>
-               <property name="text">
-                <string>Close</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Medium</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Far</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_snappingBehaviour">
-         <property name="title">
-          <string>Behaviour</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_11">
-          <item>
-           <widget class="QCheckBox" name="kcfg_rememberWindowGeometries">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Remember and restore window geometries</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="kcfg_trackLayoutPerScreen">
-            <property name="text">
-             <string>Track active layout per screen</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="kcfg_autoSnapAllNew">
-            <property name="text">
-             <string>Automatically snap all new windows</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="kcfg_showOsdMessages">
-            <property name="text">
-             <string>Display OSD messages</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="kcfg_fadeWindowsWhileMoving">
-            <property name="text">
-             <string>Fade windows while moving</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_general">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-      <zorder>kcfg_enableEdgeSnapping</zorder>
-      <zorder>verticalSpacer_general</zorder>
-      <zorder>groupBox_snappingBehaviour</zorder>
-      <zorder>kcfg_enableZoneSelector</zorder>
-      <zorder>kcfg_enableZoneOverlay</zorder>
-     </widget>
-     <widget class="QWidget" name="tab_layouts">
-      <attribute name="icon">
-       <iconset theme="preferences-desktop-virtual">
-        <normaloff>../../../../../../../../.designer/backup</normaloff>../../../../../../../../.designer/backup</iconset>
-      </attribute>
-      <attribute name="title">
-       <string>Layouts</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <widget class="QGroupBox" name="groupBox_layouts">
-         <property name="title">
-          <string>Layouts</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_6">
-          <item>
-           <widget class="QPlainTextEdit" name="kcfg_layoutsJson">
-            <property name="plainText">
-             <string>[
-    {
-        &quot;name&quot;: &quot;Priority Grid&quot;,
-        &quot;padding&quot;: 0,
-        &quot;zones&quot;: [
-            {
-                &quot;x&quot;: 0,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 100,
-                &quot;width&quot;: 25
-            },
-            {
-                &quot;x&quot;: 25,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 100,
-                &quot;width&quot;: 50
-            },
-            {
-                &quot;x&quot;: 75,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 100,
-                &quot;width&quot;: 25
-            }
-        ]
-    },
-    {
-        &quot;name&quot;: &quot;Quadrant Grid&quot;,
-        &quot;zones&quot;: [
-            {
-                &quot;x&quot;: 0,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 50,
-                &quot;width&quot;: 50
-            },
-            {
-                &quot;x&quot;: 0,
-                &quot;y&quot;: 50,
-                &quot;height&quot;: 50,
-                &quot;width&quot;: 50
-            },
-            {
-                &quot;x&quot;: 50,
-                &quot;y&quot;: 50,
-                &quot;height&quot;: 50,
-                &quot;width&quot;: 50
-            },
-            {
-                &quot;x&quot;: 50,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 50,
-                &quot;width&quot;: 50
-            }
-        ]
-    }
-]</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_filters">
-      <attribute name="icon">
-       <iconset theme="preferences-desktop-filter">
-        <normaloff>../../../../../../../../.designer/backup</normaloff>../../../../../../../../.designer/backup</iconset>
-      </attribute>
-      <attribute name="title">
-       <string>Filters</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_7">
-       <item>
-        <widget class="QGroupBox" name="groupBox_filtering">
-         <property name="title">
-          <string>Filtering</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_8">
-          <item>
-           <widget class="QLabel" name="label_filteringExplanation">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Choose a filter mode and enter the window classes you wish to include or exclude, seperated by a new line.</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QFormLayout" name="formLayout_filtering">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_filteringMode">
-              <property name="text">
-               <string>Mode</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="kcfg_filterMode">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <item>
-               <property name="text">
-                <string>Include</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Exclude</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_filteringFilter">
-              <property name="text">
-               <string>Filter</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QPlainTextEdit" name="kcfg_filterList">
-              <property name="toolTip">
-               <string>Enter window classes you wish to include/exclude (seperated by a new line)</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_shortcuts">
-      <attribute name="icon">
-       <iconset theme="configure-shortcuts">
-        <normaloff>../../../../../.designer/backup</normaloff>../../../../../.designer/backup</iconset>
-      </attribute>
-      <attribute name="title">
-       <string>Shortcuts</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_9">
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_shortcuts" stretch="0">
-         <item>
-          <widget class="QGroupBox" name="groupBox_shortcuts">
-           <property name="title">
-            <string>Shortcuts</string>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_12">
+    <class>KWin::KZonesConfigForm</class>
+    <widget class="QWidget" name="KWin::KZonesConfigForm">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>600</width>
+                <height>800</height>
+            </rect>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
             <item>
-             <widget class="QLabel" name="label_shortcutsExplanation">
-              <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To set up shortcuts for this script&lt;/p&gt;&lt;p&gt;Go to System Settings / Shortcuts and search for &amp;quot;KZones&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
+                <widget class="QTabWidget" name="tabWidget">
+                    <property name="currentIndex">
+                        <number>0</number>
+                    </property>
+                    <widget class="QWidget" name="tab_general">
+                        <attribute name="icon">
+                            <iconset theme="systemsettings">
+                                <normaloff>../../../../../../../../.designer/backup</normaloff>
+                                ../../../../../../../../.designer/backup</iconset>
+                        </attribute>
+                        <attribute name="title">
+                            <string>General</string>
+                        </attribute>
+                        <layout class="QVBoxLayout" name="verticalLayout_4">
+                            <item>
+                                <widget class="QGroupBox" name="kcfg_enableZoneSelector">
+                                    <property name="title">
+                                        <string>Enable Zone Selector</string>
+                                    </property>
+                                    <property name="alignment">
+                                        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                                    </property>
+                                    <property name="checkable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_14">
+                                        <item>
+                                            <widget class="QLabel"
+                                                name="label_zoneSelectorExplanation">
+                                                <property name="text">
+                                                    <string>The zone selector is a small widget that
+                                                        appears when you drag a window to the top of
+                                                        the screen. It allows you to snap the window
+                                                        to a zone regardless of the current layout.</string>
+                                                </property>
+                                                <property name="wordWrap">
+                                                    <bool>true</bool>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <layout class="QFormLayout"
+                                                name="formLayout_zoneSelector">
+                                                <item row="0" column="1">
+                                                    <widget class="QComboBox"
+                                                        name="kcfg_zoneSelectorTriggerDistance">
+                                                        <property name="sizePolicy">
+                                                            <sizepolicy hsizetype="Expanding"
+                                                                vsizetype="Fixed">
+                                                                <horstretch>0</horstretch>
+                                                                <verstretch>0</verstretch>
+                                                            </sizepolicy>
+                                                        </property>
+                                                        <property name="currentText">
+                                                            <string>Close</string>
+                                                        </property>
+                                                        <property name="currentIndex">
+                                                            <number>0</number>
+                                                        </property>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>Close</string>
+                                                            </property>
+                                                        </item>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>Medium</string>
+                                                            </property>
+                                                        </item>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>Far</string>
+                                                            </property>
+                                                        </item>
+                                                    </widget>
+                                                </item>
+                                                <item row="0" column="0">
+                                                    <widget class="QLabel"
+                                                        name="label_zoneSelectorTriggerDistance">
+                                                        <property name="text">
+                                                            <string>Trigger distance </string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QGroupBox" name="kcfg_enableZoneOverlay">
+                                    <property name="title">
+                                        <string>Enable Zone Overlay</string>
+                                    </property>
+                                    <property name="checkable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="checked">
+                                        <bool>true</bool>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_13">
+                                        <item>
+                                            <widget class="QLabel"
+                                                name="label_zoneOverlayExplanation">
+                                                <property name="text">
+                                                    <string>The zone overlay is a fullscreen overlay
+                                                        that appears when you move a window. It
+                                                        shows all zones from the current layout and
+                                                        the window will snap to the zone you drop it
+                                                        on.</string>
+                                                </property>
+                                                <property name="wordWrap">
+                                                    <bool>true</bool>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <layout class="QFormLayout"
+                                                name="formLayout_zoneOverlay">
+                                                <item row="0" column="0">
+                                                    <widget class="QLabel"
+                                                        name="label_zoneOverlayShowWhen">
+                                                        <property name="text">
+                                                            <string>Show overlay when</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="0" column="1">
+                                                    <widget class="QComboBox"
+                                                        name="kcfg_zoneOverlayShowWhen">
+                                                        <property name="sizePolicy">
+                                                            <sizepolicy hsizetype="Expanding"
+                                                                vsizetype="Fixed">
+                                                                <horstretch>0</horstretch>
+                                                                <verstretch>0</verstretch>
+                                                            </sizepolicy>
+                                                        </property>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>I start moving a window</string>
+                                                            </property>
+                                                        </item>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>I press the toggle overlay
+                                                                    shortcut</string>
+                                                            </property>
+                                                        </item>
+                                                    </widget>
+                                                </item>
+                                                <item row="1" column="0">
+                                                    <widget class="QLabel"
+                                                        name="label_zoneOverlayHighlightTarget">
+                                                        <property name="text">
+                                                            <string>Highlight zone when</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="1" column="1">
+                                                    <widget class="QComboBox"
+                                                        name="kcfg_zoneOverlayHighlightTarget">
+                                                        <property name="sizePolicy">
+                                                            <sizepolicy hsizetype="Expanding"
+                                                                vsizetype="Fixed">
+                                                                <horstretch>0</horstretch>
+                                                                <verstretch>0</verstretch>
+                                                            </sizepolicy>
+                                                        </property>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>My cursor is above the zone
+                                                                    indicator</string>
+                                                            </property>
+                                                        </item>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>My cursor is anywhere in the
+                                                                    zone</string>
+                                                            </property>
+                                                        </item>
+                                                    </widget>
+                                                </item>
+                                                <item row="2" column="0">
+                                                    <widget class="QLabel"
+                                                        name="label_zoneOverlayIndicatorDisplay">
+                                                        <property name="text">
+                                                            <string>Indicator Display</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="2" column="1">
+                                                    <widget class="QComboBox"
+                                                        name="kcfg_zoneOverlayIndicatorDisplay">
+                                                        <property name="sizePolicy">
+                                                            <sizepolicy hsizetype="Expanding"
+                                                                vsizetype="Fixed">
+                                                                <horstretch>0</horstretch>
+                                                                <verstretch>0</verstretch>
+                                                            </sizepolicy>
+                                                        </property>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>All zones</string>
+                                                            </property>
+                                                        </item>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>Only target zone</string>
+                                                            </property>
+                                                        </item>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QGroupBox" name="kcfg_enableEdgeSnapping">
+                                    <property name="title">
+                                        <string>Enable Edge Snapping</string>
+                                    </property>
+                                    <property name="checkable">
+                                        <bool>true</bool>
+                                    </property>
+                                    <property name="checked">
+                                        <bool>true</bool>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_13">
+                                        <item>
+                                            <widget class="QLabel"
+                                                name="label_edgeSnappingExplanation">
+                                                <property name="text">
+                                                    <string>Edge Snapping allows you to snap windows
+                                                        to zones by dragging them to the edge of the
+                                                        screen. Make sure to disable the default
+                                                        edge snapping functionality before enabling
+                                                        this.</string>
+                                                </property>
+                                                <property name="wordWrap">
+                                                    <bool>true</bool>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <layout class="QFormLayout"
+                                                name="formLayout_edgeSnapping">
+                                                <item row="0" column="0">
+                                                    <widget class="QLabel"
+                                                        name="label_edgeSnappingTriggerDistance">
+                                                        <property name="text">
+                                                            <string>Trigger distance</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="0" column="1">
+                                                    <widget class="QComboBox"
+                                                        name="kcfg_edgeSnappingTriggerDistance">
+                                                        <property name="sizePolicy">
+                                                            <sizepolicy hsizetype="Expanding"
+                                                                vsizetype="Fixed">
+                                                                <horstretch>0</horstretch>
+                                                                <verstretch>0</verstretch>
+                                                            </sizepolicy>
+                                                        </property>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>Close</string>
+                                                            </property>
+                                                        </item>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>Medium</string>
+                                                            </property>
+                                                        </item>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>Far</string>
+                                                            </property>
+                                                        </item>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QGroupBox" name="groupBox_snappingBehaviour">
+                                    <property name="title">
+                                        <string>Behaviour</string>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_11">
+                                        <item>
+                                            <widget class="QCheckBox"
+                                                name="kcfg_rememberWindowGeometries">
+                                                <property name="sizePolicy">
+                                                    <sizepolicy hsizetype="Minimum"
+                                                        vsizetype="Minimum">
+                                                        <horstretch>0</horstretch>
+                                                        <verstretch>0</verstretch>
+                                                    </sizepolicy>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Remember and restore window geometries</string>
+                                                </property>
+                                                <property name="checked">
+                                                    <bool>true</bool>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QCheckBox"
+                                                name="kcfg_trackLayoutPerScreen">
+                                                <property name="text">
+                                                    <string>Track active layout per screen</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QCheckBox" name="kcfg_autoSnapAllNew">
+                                                <property name="text">
+                                                    <string>Automatically snap all new windows</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QCheckBox" name="kcfg_showOsdMessages">
+                                                <property name="text">
+                                                    <string>Display OSD messages</string>
+                                                </property>
+                                                <property name="checked">
+                                                    <bool>true</bool>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QCheckBox"
+                                                name="kcfg_fadeWindowsWhileMoving">
+                                                <property name="text">
+                                                    <string>Fade windows while moving</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <item>
+                                <spacer name="verticalSpacer_general">
+                                    <property name="orientation">
+                                        <enum>Qt::Vertical</enum>
+                                    </property>
+                                    <property name="sizeHint" stdset="0">
+                                        <size>
+                                            <width>0</width>
+                                            <height>0</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                            </item>
+                        </layout>
+                        <zorder>kcfg_enableEdgeSnapping</zorder>
+                        <zorder>verticalSpacer_general</zorder>
+                        <zorder>groupBox_snappingBehaviour</zorder>
+                        <zorder>kcfg_enableZoneSelector</zorder>
+                        <zorder>kcfg_enableZoneOverlay</zorder>
+                    </widget>
+                    <widget class="QWidget" name="tab_layouts">
+                        <attribute name="icon">
+                            <iconset theme="preferences-desktop-virtual">
+                                <normaloff>../../../../../../../../.designer/backup</normaloff>
+                                ../../../../../../../../.designer/backup</iconset>
+                        </attribute>
+                        <attribute name="title">
+                            <string>Layouts</string>
+                        </attribute>
+                        <layout class="QVBoxLayout" name="verticalLayout_2">
+                            <item>
+                                <widget class="QGroupBox" name="groupBox_layouts">
+                                    <property name="title">
+                                        <string>Layouts</string>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_6">
+                                        <item>
+                                            <widget class="QPlainTextEdit" name="kcfg_layoutsJson">
+                                                <property name="plainText">
+                                                    <string>[
+                                                        {
+                                                        &quot;name&quot;: &quot;Priority Grid&quot;,
+                                                        &quot;padding&quot;: 0,
+                                                        &quot;zones&quot;: [
+                                                        {
+                                                        &quot;x&quot;: 0,
+                                                        &quot;y&quot;: 0,
+                                                        &quot;height&quot;: 100,
+                                                        &quot;width&quot;: 25
+                                                        },
+                                                        {
+                                                        &quot;x&quot;: 25,
+                                                        &quot;y&quot;: 0,
+                                                        &quot;height&quot;: 100,
+                                                        &quot;width&quot;: 50
+                                                        },
+                                                        {
+                                                        &quot;x&quot;: 75,
+                                                        &quot;y&quot;: 0,
+                                                        &quot;height&quot;: 100,
+                                                        &quot;width&quot;: 25
+                                                        }
+                                                        ]
+                                                        },
+                                                        {
+                                                        &quot;name&quot;: &quot;Quadrant Grid&quot;,
+                                                        &quot;zones&quot;: [
+                                                        {
+                                                        &quot;x&quot;: 0,
+                                                        &quot;y&quot;: 0,
+                                                        &quot;height&quot;: 50,
+                                                        &quot;width&quot;: 50
+                                                        },
+                                                        {
+                                                        &quot;x&quot;: 0,
+                                                        &quot;y&quot;: 50,
+                                                        &quot;height&quot;: 50,
+                                                        &quot;width&quot;: 50
+                                                        },
+                                                        {
+                                                        &quot;x&quot;: 50,
+                                                        &quot;y&quot;: 50,
+                                                        &quot;height&quot;: 50,
+                                                        &quot;width&quot;: 50
+                                                        },
+                                                        {
+                                                        &quot;x&quot;: 50,
+                                                        &quot;y&quot;: 0,
+                                                        &quot;height&quot;: 50,
+                                                        &quot;width&quot;: 50
+                                                        }
+                                                        ]
+                                                        }
+                                                        ]</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                        </layout>
+                    </widget>
+                    <widget class="QWidget" name="tab_filters">
+                        <attribute name="icon">
+                            <iconset theme="preferences-desktop-filter">
+                                <normaloff>../../../../../../../../.designer/backup</normaloff>
+                                ../../../../../../../../.designer/backup</iconset>
+                        </attribute>
+                        <attribute name="title">
+                            <string>Filters</string>
+                        </attribute>
+                        <layout class="QVBoxLayout" name="verticalLayout_7">
+                            <item>
+                                <widget class="QGroupBox" name="groupBox_filtering">
+                                    <property name="title">
+                                        <string>Filtering</string>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_8">
+                                        <item>
+                                            <widget class="QLabel" name="label_filteringExplanation">
+                                                <property name="sizePolicy">
+                                                    <sizepolicy hsizetype="Preferred"
+                                                        vsizetype="Fixed">
+                                                        <horstretch>0</horstretch>
+                                                        <verstretch>0</verstretch>
+                                                    </sizepolicy>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Choose a filter mode and enter the
+                                                        window classes you wish to include or
+                                                        exclude, seperated by a new line.</string>
+                                                </property>
+                                                <property name="wordWrap">
+                                                    <bool>true</bool>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <layout class="QFormLayout" name="formLayout_filtering">
+                                                <item row="0" column="0">
+                                                    <widget class="QLabel"
+                                                        name="label_filteringMode">
+                                                        <property name="text">
+                                                            <string>Mode</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="0" column="1">
+                                                    <widget class="QComboBox" name="kcfg_filterMode">
+                                                        <property name="sizePolicy">
+                                                            <sizepolicy hsizetype="Expanding"
+                                                                vsizetype="Fixed">
+                                                                <horstretch>0</horstretch>
+                                                                <verstretch>0</verstretch>
+                                                            </sizepolicy>
+                                                        </property>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>Include</string>
+                                                            </property>
+                                                        </item>
+                                                        <item>
+                                                            <property name="text">
+                                                                <string>Exclude</string>
+                                                            </property>
+                                                        </item>
+                                                    </widget>
+                                                </item>
+                                                <item row="1" column="0">
+                                                    <widget class="QLabel"
+                                                        name="label_filteringFilter">
+                                                        <property name="text">
+                                                            <string>Filter</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="1" column="1">
+                                                    <widget class="QPlainTextEdit"
+                                                        name="kcfg_filterList">
+                                                        <property name="toolTip">
+                                                            <string>Enter window classes you wish to
+                                                                include/exclude (seperated by a new
+                                                                line)</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                        </layout>
+                    </widget>
+                    <widget class="QWidget" name="tab_shortcuts">
+                        <attribute name="icon">
+                            <iconset theme="configure-shortcuts">
+                                <normaloff>../../../../../.designer/backup</normaloff>
+                                ../../../../../.designer/backup</iconset>
+                        </attribute>
+                        <attribute name="title">
+                            <string>Shortcuts</string>
+                        </attribute>
+                        <layout class="QVBoxLayout" name="verticalLayout_9">
+                            <item>
+                                <layout class="QVBoxLayout" name="verticalLayout_shortcuts"
+                                    stretch="0">
+                                    <item>
+                                        <widget class="QGroupBox" name="groupBox_shortcuts">
+                                            <property name="title">
+                                                <string>Shortcuts</string>
+                                            </property>
+                                            <layout class="QVBoxLayout" name="verticalLayout_12">
+                                                <item>
+                                                    <widget class="QLabel"
+                                                        name="label_shortcutsExplanation">
+                                                        <property name="text">
+                                                            <string>
+                                                                &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To
+                                                                set up shortcuts for this
+                                                                script&lt;/p&gt;&lt;p&gt;Go to
+                                                                System Settings / Shortcuts and
+                                                                search for
+                                                                &amp;quot;KZones&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                                                        </property>
+                                                        <property name="alignment">
+                                                            <set>Qt::AlignCenter</set>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </widget>
+                                    </item>
+                                </layout>
+                            </item>
+                        </layout>
+                    </widget>
+                    <widget class="QWidget" name="tab_advanced">
+                        <attribute name="icon">
+                            <iconset theme="applications-development">
+                                <normaloff>../../../../../../../../.designer/backup</normaloff>
+                                ../../../../../../../../.designer/backup</iconset>
+                        </attribute>
+                        <attribute name="title">
+                            <string>Advanced</string>
+                        </attribute>
+                        <layout class="QVBoxLayout" name="verticalLayout_9">
+                            <item>
+                                <layout class="QVBoxLayout" name="verticalLayout_advanced"
+                                    stretch="0,0">
+                                    <item>
+                                        <widget class="QGroupBox" name="groupBox_performance">
+                                            <property name="title">
+                                                <string>Performance</string>
+                                            </property>
+                                            <property name="flat">
+                                                <bool>false</bool>
+                                            </property>
+                                            <layout class="QVBoxLayout" name="verticalLayout_16">
+                                                <item>
+                                                    <layout class="QFormLayout"
+                                                        name="formLayout_performance">
+                                                        <item row="0" column="0">
+                                                            <widget class="QLabel"
+                                                                name="label_pollingRate">
+                                                                <property name="toolTip">
+                                                                    <string>Speed of which the zone
+                                                                        checking is done</string>
+                                                                </property>
+                                                                <property name="text">
+                                                                    <string>Polling rate</string>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                        <item row="0" column="1">
+                                                            <widget class="QSpinBox"
+                                                                name="kcfg_pollingRate">
+                                                                <property name="sizePolicy">
+                                                                    <sizepolicy
+                                                                        hsizetype="Expanding"
+                                                                        vsizetype="Fixed">
+                                                                        <horstretch>0</horstretch>
+                                                                        <verstretch>0</verstretch>
+                                                                    </sizepolicy>
+                                                                </property>
+                                                                <property name="toolTip">
+                                                                    <string>Speed of which the zone
+                                                                        checking is done</string>
+                                                                </property>
+                                                                <property name="suffix">
+                                                                    <string> ms</string>
+                                                                </property>
+                                                                <property name="minimum">
+                                                                    <number>10</number>
+                                                                </property>
+                                                                <property name="maximum">
+                                                                    <number>1000</number>
+                                                                </property>
+                                                                <property name="singleStep">
+                                                                    <number>10</number>
+                                                                </property>
+                                                                <property name="value">
+                                                                    <number>100</number>
+                                                                </property>
+                                                            </widget>
+                                                        </item>
+                                                    </layout>
+                                                </item>
+                                            </layout>
+                                        </widget>
+                                    </item>
+                                    <item>
+                                        <widget class="QGroupBox" name="groupBox_debug">
+                                            <property name="title">
+                                                <string>Debugging</string>
+                                            </property>
+                                            <layout class="QVBoxLayout" name="verticalLayout_17">
+                                                <item>
+                                                    <widget class="QCheckBox"
+                                                        name="kcfg_enableDebugLogging">
+                                                        <property name="sizePolicy">
+                                                            <sizepolicy hsizetype="Minimum"
+                                                                vsizetype="Minimum">
+                                                                <horstretch>0</horstretch>
+                                                                <verstretch>0</verstretch>
+                                                            </sizepolicy>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>Enable logging</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item>
+                                                    <widget class="QCheckBox"
+                                                        name="kcfg_enableDebugOverlay">
+                                                        <property name="sizePolicy">
+                                                            <sizepolicy hsizetype="Minimum"
+                                                                vsizetype="Minimum">
+                                                                <horstretch>0</horstretch>
+                                                                <verstretch>0</verstretch>
+                                                            </sizepolicy>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string>Enable debug overlay</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </widget>
+                                    </item>
+                                </layout>
+                            </item>
+                            <item>
+                                <spacer name="verticalSpacer_advanced">
+                                    <property name="orientation">
+                                        <enum>Qt::Vertical</enum>
+                                    </property>
+                                    <property name="sizeHint" stdset="0">
+                                        <size>
+                                            <width>20</width>
+                                            <height>40</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                            </item>
+                        </layout>
+                    </widget>
+                </widget>
             </item>
-           </layout>
-          </widget>
-         </item>
+            <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_main">
+                    <item>
+                        <widget class="QLabel" name="label_mainBottomLeft">
+                            <property name="toolTip">
+                                <string>https://github.com/gerritdevriese/kzones</string>
+                            </property>
+                            <property name="text">
+                                <string>&lt;a
+                                    href=&quot;https://github.com/gerritdevriese/kzones&quot;&gt;Github
+                                    page&lt;/a&gt;</string>
+                            </property>
+                            <property name="margin">
+                                <number>8</number>
+                            </property>
+                            <property name="openExternalLinks">
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QLabel" name="label_mainBottomRight">
+                            <property name="font">
+                                <font>
+                                    <weight>50</weight>
+                                    <italic>false</italic>
+                                    <bold>false</bold>
+                                    <underline>false</underline>
+                                    <strikeout>false</strikeout>
+                                </font>
+                            </property>
+                            <property name="toolTip">
+                                <string />
+                            </property>
+                            <property name="text">
+                                <string>Please reload the script after making changes to apply them</string>
+                            </property>
+                            <property name="scaledContents">
+                                <bool>false</bool>
+                            </property>
+                            <property name="alignment">
+                                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                            </property>
+                            <property name="margin">
+                                <number>8</number>
+                            </property>
+                        </widget>
+                    </item>
+                </layout>
+            </item>
         </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_advanced">
-      <attribute name="icon">
-       <iconset theme="applications-development">
-        <normaloff>../../../../../../../../.designer/backup</normaloff>../../../../../../../../.designer/backup</iconset>
-      </attribute>
-      <attribute name="title">
-       <string>Advanced</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_9">
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_advanced" stretch="0,0">
-         <item>
-          <widget class="QGroupBox" name="groupBox_performance">
-           <property name="title">
-            <string>Performance</string>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_16">
-            <item>
-             <layout class="QFormLayout" name="formLayout_performance">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_pollingRate">
-                <property name="toolTip">
-                 <string>Speed of which the zone checking is done</string>
-                </property>
-                <property name="text">
-                 <string>Polling rate</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QSpinBox" name="kcfg_pollingRate">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="toolTip">
-                 <string>Speed of which the zone checking is done</string>
-                </property>
-                <property name="suffix">
-                 <string> ms</string>
-                </property>
-                <property name="minimum">
-                 <number>10</number>
-                </property>
-                <property name="maximum">
-                 <number>1000</number>
-                </property>
-                <property name="singleStep">
-                 <number>10</number>
-                </property>
-                <property name="value">
-                 <number>100</number>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="groupBox_debug">
-           <property name="title">
-            <string>Debugging</string>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_17">
-            <item>
-             <widget class="QCheckBox" name="kcfg_enableDebugLogging">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Enable logging</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="kcfg_enableDebugOverlay">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Enable debug overlay</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_advanced">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
     </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_main">
-     <item>
-      <widget class="QLabel" name="label_mainBottomLeft">
-       <property name="toolTip">
-        <string>https://github.com/gerritdevriese/kzones</string>
-       </property>
-       <property name="text">
-        <string>&lt;a href=&quot;https://github.com/gerritdevriese/kzones&quot;&gt;Github page&lt;/a&gt;</string>
-       </property>
-       <property name="margin">
-        <number>8</number>
-       </property>
-       <property name="openExternalLinks">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_mainBottomRight">
-       <property name="font">
-        <font>
-         <weight>50</weight>
-         <italic>false</italic>
-         <bold>false</bold>
-         <underline>false</underline>
-         <strikeout>false</strikeout>
-        </font>
-       </property>
-       <property name="toolTip">
-        <string/>
-       </property>
-       <property name="text">
-        <string>Please reload the script after making changes to apply them</string>
-       </property>
-       <property name="scaledContents">
-        <bool>false</bool>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-       <property name="margin">
-        <number>8</number>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-  </layout>
- </widget>
- <resources/>
- <connections/>
+    <resources />
+    <connections />
 </ui>
