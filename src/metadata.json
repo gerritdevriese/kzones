@@ -1,4 +1,5 @@
 {
+    "KPackageStructure": "KWin/Script",
     "KPlugin": {
         "Authors": [
             {
@@ -19,11 +20,10 @@
         "Website": "https://github.com/gerritdevriese/kzones"
     },
     "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
+    "X-KDE-PluginKeyword": "kzones",
     "X-Plasma-API": "declarativescript",
+    "X-Plasma-API-Minimum-Version": "6.0",
     "X-Plasma-APIX": "javascript",
     "X-Plasma-MainScript": "ui/main.qml",
-    "X-Plasma-MainScriptX": "code/main.js",
-    "X-Plasma-API-Minimum-Version": "6.0",
-    "KPackageStructure": "KWin/Script",
-    "X-KDE-PluginKeyword": "kzones"
+    "X-Plasma-MainScriptX": "code/main.js"
 }
