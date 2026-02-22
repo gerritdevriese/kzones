@@ -4,6 +4,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kwin
 import "js/core.mjs" as Core
+import "js/utils.mjs" as Utils
 import "components" as Components
 
 Item {
@@ -22,32 +23,11 @@ Item {
     property var activeScreen: null
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
 
-    function log(message) {
-        if (!config.enableDebugLogging)
-            return ;
-
-        console.log("KZones: " + message);
-    }
-
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
         clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop);
         displaySize = Workspace.virtualScreenSize;
         currentLayout = getCurrentLayout();
-    }
-
-    function isPointInside(x, y, geometry) {
-        return x >= geometry.x && x <= geometry.x + geometry.width && y >= geometry.y && y <= geometry.y + geometry.height;
-    }
-
-    function isHovering(item) {
-        const itemGlobal = item.mapToGlobal(Qt.point(0, 0));
-        return isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, {
-            "x": itemGlobal.x,
-            "y": itemGlobal.y,
-            "width": item.width * item.scale,
-            "height": item.height * item.scale
-        });
     }
 
     function matchZone(client) {
@@ -102,7 +82,7 @@ Item {
         if (!checkFilter(client))
             return ;
 
-        log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
+        Utils.log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
         refreshClientArea();
         saveClientProperties(client, zone);
         // move client to zone
@@ -111,14 +91,14 @@ Item {
             const zoneItem = currentZones.repeater.itemAt(zone);
             const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
             const newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
-            log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry));
+            Utils.log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry));
             client.setMaximize(false, false);
             client.frameGeometry = newGeometry;
         }
     }
 
     function saveClientProperties(client, zone) {
-        log("Saving geometry for client " + client.resourceClass.toString());
+        Utils.log("Saving geometry for client " + client.resourceClass.toString());
         // save current geometry
         if (config.rememberWindowGeometries) {
             const geometry = {
@@ -144,7 +124,7 @@ Item {
         if (!checkFilter(client))
             return null;
 
-        log("Moving client " + client.resourceClass.toString() + " to closest zone");
+        Utils.log("Moving client " + client.resourceClass.toString() + " to closest zone");
         refreshClientArea();
         const centerPointOfClient = {
             "x": client.frameGeometry.x + (client.frameGeometry.width / 2),
@@ -235,7 +215,7 @@ Item {
     }
 
     function moveAllClientsToClosestZone() {
-        log("Moving all clients to closest zone");
+        Utils.log("Moving all clients to closest zone");
         let count = 0;
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             const client = Workspace.stackingOrder[i];
@@ -244,7 +224,7 @@ Item {
 
             moveClientToClosestZone(client) && count++;
         }
-        log("Moved " + count + " clients to closest zone");
+        Utils.log("Moved " + count + " clients to closest zone");
         return count;
     }
 
@@ -252,7 +232,7 @@ Item {
         if (!checkFilter(client))
             return null;
 
-        log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
+        Utils.log("Moving client " + client.resourceClass.toString() + " to neighbour " + direction);
         refreshClientArea();
         const zones = config.layouts[currentLayout].zones;
         if (client.zone === -1 || client.layout !== currentLayout) {
@@ -367,7 +347,7 @@ Item {
 
     function connectSignals(client) {
         function onInteractiveMoveResizeStarted() {
-            log("Interactive move/resize started for client " + client.resourceClass.toString());
+            Utils.log("Interactive move/resize started for client " + client.resourceClass.toString());
             if (client.resizeable && checkFilter(client)) {
                 if (client.move && checkFilter(client)) {
                     cachedClientArea = clientArea;
@@ -394,7 +374,7 @@ Item {
                     moving = true;
                     moved = false;
                     resizing = false;
-                    log("Move start " + client.resourceClass.toString());
+                    Utils.log("Move start " + client.resourceClass.toString());
                     mainDialog.show();
                 }
                 if (client.resize) {
@@ -414,7 +394,7 @@ Item {
         }
 
         function onInteractiveMoveResizeFinished() {
-            log("Interactive move/resize finished for client " + client.resourceClass.toString());
+            Utils.log("Interactive move/resize finished for client " + client.resourceClass.toString());
             if (config.fadeWindowsWhileMoving) {
                 for (let i = 0; i < Workspace.stackingOrder.length; i++) {
                     const client = Workspace.stackingOrder[i];
@@ -422,7 +402,7 @@ Item {
                 }
             }
             if (moving) {
-                log("Move end " + client.resourceClass.toString());
+                Utils.log("Move end " + client.resourceClass.toString());
                 if (moved) {
                     if (mainDialog.shown)
                         moveClientToZone(client, highlightedZone);
@@ -432,7 +412,7 @@ Item {
                 mainDialog.hide();
             } else if (resizing) {
                 matchZone(client);
-                log("Resizing end: Matched client " + client.resourceClass.toString() + " to layout.zone " + client.layout + " " + client.zone);
+                Utils.log("Resizing end: Matched client " + client.resourceClass.toString() + " to layout.zone " + client.layout + " " + client.zone);
                 saveClientProperties(client, client.zone);
             }
             moving = false;
@@ -442,20 +422,20 @@ Item {
 
         // fix from https://github.com/gerritdevriese/kzones/pull/25
         function onFullScreenChanged() {
-            log("Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + client.fullScreen + ")");
+            Utils.log("Client fullscreen: " + client.resourceClass.toString() + " (fullscreen " + client.fullScreen + ")");
             if (client.fullScreen == true) {
-                log("onFullscreenChanged: Client zone: " + client.zone + " layout: " + client.layout);
+                Utils.log("onFullscreenChanged: Client zone: " + client.zone + " layout: " + client.layout);
                 if (client.zone != -1 && client.layout != -1) {
                     //check if fullscreen is enabled for layout or for zone
                     const layout = config.layouts[client.layout];
                     const zone = layout.zones[client.zone];
-                    log("Layout.fullscreen: " + layout.fullscreen + " Zone.fullscreen: " + zone.fullscreen);
+                    Utils.log("Layout.fullscreen: " + layout.fullscreen + " Zone.fullscreen: " + zone.fullscreen);
                     if (layout.fullscreen == true || zone.fullscreen == true) {
                         const currentZones = repeaterLayout.itemAt(client.layout);
                         const zoneItem = currentZones.repeater.itemAt(client.zone);
                         const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
                         const newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
-                        log("Fullscreen client " + client.resourceClass.toString() + " to zone " + client.zone + " with geometry " + JSON.stringify(newGeometry));
+                        Utils.log("Fullscreen client " + client.resourceClass.toString() + " to zone " + client.zone + " with geometry " + JSON.stringify(newGeometry));
                         client.setMaximize(false, false);
                         client.frameGeometry = newGeometry;
                     }
@@ -467,7 +447,7 @@ Item {
         if (!checkFilter(client))
             return ;
 
-        log("Connecting signals for client " + client.resourceClass.toString());
+        Utils.log("Connecting signals for client " + client.resourceClass.toString());
         client.onInteractiveMoveResizeStarted.connect(onInteractiveMoveResizeStarted);
         client.onInteractiveMoveResizeStepped.connect(onInteractiveMoveResizeStepped);
         client.onInteractiveMoveResizeFinished.connect(onInteractiveMoveResizeFinished);
@@ -475,7 +455,7 @@ Item {
     }
 
     Component.onCompleted: {
-        console.log("Loading script (" + Qt.resolvedUrl("./main.qml") + ")");
+        Utils.log("Loading script (" + Qt.resolvedUrl("./main.qml") + ")");
         Core.init(KWin, Workspace);
         Core.registerQMLComponent("root", root);
         Core.loadConfig();
@@ -544,7 +524,7 @@ Item {
                     const currentZones = repeaterLayout.itemAt(currentLayout);
                     if (config.enableZoneOverlay && showZoneOverlay && !zoneSelector.expanded)
                         currentZones.repeater.model.forEach((zone, zoneIndex) => {
-                        if (isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget]))
+                        if (Utils.isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget]))
                             hoveringZone = zoneIndex;
 
                     });
@@ -556,7 +536,7 @@ Item {
                                 const layoutItem = zoneSelector.repeater.itemAt(layoutIndex);
                                 layout.zones.forEach((zone, zoneIndex) => {
                                     const zoneItem = layoutItem.children[zoneIndex];
-                                    if (isHovering(zoneItem)) {
+                                    if (Utils.isHovering(zoneItem)) {
                                         hoveringZone = zoneIndex;
                                         setCurrentLayout(layoutIndex);
                                     }
@@ -564,7 +544,7 @@ Item {
                             });
                         }
                         // set zoneSelector expansion state
-                        zoneSelector.expanded = isHovering(zoneSelector) && (Workspace.cursorPos.y - clientArea.y) >= 0;
+                        zoneSelector.expanded = Utils.isHovering(zoneSelector) && (Workspace.cursorPos.y - clientArea.y) >= 0;
                         // set zoneSelector near state
                         const triggerDistance = config.zoneSelectorTriggerDistance * 50 + 25;
                         zoneSelector.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelector.y + zoneSelector.height + triggerDistance;
@@ -603,7 +583,7 @@ Item {
                                     zoneGeometry.height += halfPadding;
 
                                 // check if cursor is inside the zone geometry
-                                if (isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry))
+                                if (Utils.isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry))
                                     hoveringZone = zoneIndex;
 
                             });
@@ -611,7 +591,7 @@ Item {
                     }
                     // if hovering zone changed from the last frame
                     if (hoveringZone != highlightedZone) {
-                        log("Highlighting zone " + hoveringZone + " in layout " + currentLayout);
+                        Utils.log("Highlighting zone " + hoveringZone + " in layout " + currentLayout);
                         highlightedZone = hoveringZone;
                     }
                 }
@@ -795,7 +775,7 @@ Item {
     // options connection
     Connections {
         function onConfigChanged() {
-            log("Config changed");
+            Utils.log("Config changed");
             mainDialog.loadConfig();
         }
 
