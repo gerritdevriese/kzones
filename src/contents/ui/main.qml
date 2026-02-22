@@ -5,11 +5,11 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import "components" as Components
 
-PlasmaCore.Dialog {
-    id: mainDialog
+Item {
+    id: root
 
-    // properties
-    property bool shown: false
+    property var config: new Object()
+    property var errors: []
     property bool moving: false
     property bool moved: false
     property bool resizing: false
@@ -20,9 +20,7 @@ PlasmaCore.Dialog {
     property var screenLayouts: new Object()
     property int highlightedZone: -1
     property var activeScreen: null
-    property var config: new Object()
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
-    property var errors: []
 
     function loadConfig() {
         const defaultLayouts = '[{"name":"Priority Grid","padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]';
@@ -65,23 +63,6 @@ PlasmaCore.Dialog {
         console.log("KZones: " + message);
     }
 
-    function show() {
-        mainDialog.shown = true;
-        mainDialog.visible = true;
-        mainDialog.setWidth(Workspace.virtualScreenSize.width);
-        mainDialog.setHeight(Workspace.virtualScreenSize.height);
-        refreshClientArea();
-    }
-
-    function hide() {
-        mainDialog.shown = false;
-        mainDialog.visible = false;
-        zoneSelector.expanded = false;
-        zoneSelector.near = false;
-        highlightedZone = -1;
-        showZoneOverlay = config.zoneOverlayShowWhen == 0;
-    }
-
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
         clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop);
@@ -101,33 +82,6 @@ PlasmaCore.Dialog {
             "width": item.width * item.scale,
             "height": item.height * item.scale
         });
-    }
-
-    function checkFilter(client) {
-        // filter out abnormal windows like docks, panels, etc...
-        if (!client)
-            return false;
-
-        if (!client.normalWindow)
-            return false;
-
-        if (client.popupWindow)
-            return false;
-
-        if (client.skipTaskbar)
-            return false;
-
-        // read filter from config and check if the client's resource class matches the filter
-        const filter = config.filterList.split(/\r?\n/);
-        if (config.filterList.length > 0) {
-            if (config.filterMode == 0)
-                return filter.includes(client.resourceClass.toString());
-
-            if (config.filterMode == 1)
-                return !filter.includes(client.resourceClass.toString());
-
-        }
-        return true;
     }
 
     function matchZone(client) {
@@ -418,6 +372,33 @@ PlasmaCore.Dialog {
         currentLayout = layout;
     }
 
+    function checkFilter(client) {
+        // filter out abnormal windows like docks, panels, etc...
+        if (!client)
+            return false;
+
+        if (!client.normalWindow)
+            return false;
+
+        if (client.popupWindow)
+            return false;
+
+        if (client.skipTaskbar)
+            return false;
+
+        // read filter from config and check if the client's resource class matches the filter
+        const filter = config.filterList.split(/\r?\n/);
+        if (config.filterList.length > 0) {
+            if (config.filterMode == 0)
+                return filter.includes(client.resourceClass.toString());
+
+            if (config.filterMode == 1)
+                return !filter.includes(client.resourceClass.toString());
+
+        }
+        return true;
+    }
+
     function connectSignals(client) {
         function onInteractiveMoveResizeStarted() {
             log("Interactive move/resize started for client " + client.resourceClass.toString());
@@ -477,12 +458,12 @@ PlasmaCore.Dialog {
             if (moving) {
                 log("Move end " + client.resourceClass.toString());
                 if (moved) {
-                    if (shown)
+                    if (mainDialog.shown)
                         moveClientToZone(client, highlightedZone);
                     else
                         saveClientProperties(client, -1);
                 }
-                hide();
+                mainDialog.hide();
             } else if (resizing) {
                 matchZone(client);
                 log("Resizing end: Matched client " + client.resourceClass.toString() + " to layout.zone " + client.layout + " " + client.zone);
@@ -527,20 +508,9 @@ PlasmaCore.Dialog {
         client.onFullScreenChanged.connect(onFullScreenChanged);
     }
 
-    title: "KZones Overlay"
-    location: PlasmaCore.Types.Desktop
-    type: PlasmaCore.Dialog.OnScreenDisplay
-    backgroundHints: PlasmaCore.Types.NoBackground
-    flags: Qt.BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.Popup
-    hideOnWindowDeactivate: true
-    visible: false
-    outputOnly: true
-    opacity: 1
-    width: displaySize.width
-    height: displaySize.height
     Component.onCompleted: {
         refreshClientArea();
-        mainDialog.loadConfig();
+        loadConfig();
         // match all clients to zones and connect signals
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             matchZone(Workspace.stackingOrder[i]);
@@ -548,8 +518,197 @@ PlasmaCore.Dialog {
         }
     }
 
-    Components.ColorHelper {
-        id: colorHelper
+    PlasmaCore.Dialog {
+        id: mainDialog
+
+        property bool shown: false
+
+        function show() {
+            mainDialog.shown = true;
+            mainDialog.visible = true;
+            mainDialog.setWidth(Workspace.virtualScreenSize.width);
+            mainDialog.setHeight(Workspace.virtualScreenSize.height);
+            refreshClientArea();
+        }
+
+        function hide() {
+            mainDialog.shown = false;
+            mainDialog.visible = false;
+            zoneSelector.expanded = false;
+            zoneSelector.near = false;
+            highlightedZone = -1;
+            showZoneOverlay = config.zoneOverlayShowWhen == 0;
+        }
+
+        title: "KZones Overlay"
+        location: PlasmaCore.Types.Desktop
+        type: PlasmaCore.Dialog.OnScreenDisplay
+        backgroundHints: PlasmaCore.Types.NoBackground
+        flags: Qt.BypassWindowManagerHint | Qt.FramelessWindowHint | Qt.Popup
+        hideOnWindowDeactivate: true
+        visible: false
+        outputOnly: true
+        opacity: 1
+        width: displaySize.width
+        height: displaySize.height
+
+        Item {
+            id: mainItem
+
+            property alias repeaterLayout: repeaterLayout
+
+            width: mainDialog.width
+            height: mainDialog.height
+
+            // main polling timer
+            Timer {
+                id: timer
+
+                triggeredOnStart: true
+                interval: config.pollingRate
+                running: mainDialog.shown && moving
+                repeat: true
+                onTriggered: {
+                    refreshClientArea();
+                    let hoveringZone = -1;
+                    // zone overlay
+                    const currentZones = repeaterLayout.itemAt(currentLayout);
+                    if (config.enableZoneOverlay && showZoneOverlay && !zoneSelector.expanded)
+                        currentZones.repeater.model.forEach((zone, zoneIndex) => {
+                        if (isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget]))
+                            hoveringZone = zoneIndex;
+
+                    });
+
+                    // zone selector
+                    if (config.enableZoneSelector) {
+                        if (!zoneSelector.animating && zoneSelector.expanded) {
+                            zoneSelector.repeater.model.forEach((layout, layoutIndex) => {
+                                const layoutItem = zoneSelector.repeater.itemAt(layoutIndex);
+                                layout.zones.forEach((zone, zoneIndex) => {
+                                    const zoneItem = layoutItem.children[zoneIndex];
+                                    if (isHovering(zoneItem)) {
+                                        hoveringZone = zoneIndex;
+                                        setCurrentLayout(layoutIndex);
+                                    }
+                                });
+                            });
+                        }
+                        // set zoneSelector expansion state
+                        zoneSelector.expanded = isHovering(zoneSelector) && (Workspace.cursorPos.y - clientArea.y) >= 0;
+                        // set zoneSelector near state
+                        const triggerDistance = config.zoneSelectorTriggerDistance * 50 + 25;
+                        zoneSelector.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelector.y + zoneSelector.height + triggerDistance;
+                    }
+                    // edge snapping
+                    if (config.enableEdgeSnapping) {
+                        const triggerDistance = (config.edgeSnappingTriggerDistance + 1) * 10;
+                        if (Workspace.cursorPos.x <= clientArea.x + triggerDistance || Workspace.cursorPos.x >= clientArea.x + clientArea.width - triggerDistance || Workspace.cursorPos.y <= clientArea.y + triggerDistance || Workspace.cursorPos.y >= clientArea.y + clientArea.height - triggerDistance) {
+                            const padding = config.layouts[currentLayout].padding || 0;
+                            const halfPadding = padding / 2;
+                            currentZones.repeater.model.forEach((zone, zoneIndex) => {
+                                const zoneItem = currentZones.repeater.itemAt(zoneIndex);
+                                const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
+                                let zoneGeometry = {
+                                    "x": itemGlobal.x - padding / 2,
+                                    "y": itemGlobal.y - padding / 2,
+                                    "width": zoneItem.width + padding,
+                                    "height": zoneItem.height + padding
+                                };
+                                //adjust most left edge
+                                if (zoneGeometry.x <= halfPadding) {
+                                    zoneGeometry.x = 0;
+                                    zoneGeometry.width += padding;
+                                }
+                                //adjust most top edge
+                                if (zoneGeometry.y <= halfPadding) {
+                                    zoneGeometry.y = 0;
+                                    zoneGeometry.height += padding;
+                                }
+                                //adjust most right edge
+                                if (zoneGeometry.x + zoneGeometry.width >= clientArea.width - halfPadding)
+                                    zoneGeometry.width += halfPadding;
+
+                                //adjust most bottom edge
+                                if (zoneGeometry.y + zoneGeometry.height >= clientArea.height - halfPadding)
+                                    zoneGeometry.height += halfPadding;
+
+                                // check if cursor is inside the zone geometry
+                                if (isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry))
+                                    hoveringZone = zoneIndex;
+
+                            });
+                        }
+                    }
+                    // if hovering zone changed from the last frame
+                    if (hoveringZone != highlightedZone) {
+                        log("Highlighting zone " + hoveringZone + " in layout " + currentLayout);
+                        highlightedZone = hoveringZone;
+                    }
+                }
+            }
+
+            Item {
+                x: clientArea.x || 0
+                y: clientArea.y || 0
+                width: clientArea.width || 0
+                height: clientArea.height || 0
+                clip: true
+
+                Components.Debug {
+                    info: ({
+                        "activeWindow": {
+                            "caption": Workspace.activeWindow && Workspace.activeWindow.caption,
+                            "resourceClass": Workspace.activeWindow && Workspace.activeWindow.resourceClass && Workspace.activeWindow.resourceClass.toString(),
+                            "frameGeometry": {
+                                "x": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.x,
+                                "y": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.y,
+                                "width": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.width,
+                                "height": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.height
+                            },
+                            "zone": Workspace.activeWindow && Workspace.activeWindow.zone
+                        },
+                        "highlightedZone": highlightedZone,
+                        "moving": moving,
+                        "resizing": resizing,
+                        "oldGeometry": Workspace.activeWindow && Workspace.activeWindow.oldGeometry,
+                        "activeScreen": activeScreen && activeScreen.name,
+                        "currentLayout": currentLayout,
+                        "screenLayouts": screenLayouts
+                    })
+                    errors: root.errors
+                    config: root.config
+                }
+
+                Repeater {
+                    id: repeaterLayout
+
+                    model: config.layouts
+
+                    Components.Zones {
+                        id: zones
+
+                        config: root.config
+                        currentLayout: root.currentLayout
+                        highlightedZone: root.highlightedZone
+                        layoutIndex: index
+                        visible: index == root.currentLayout
+                    }
+
+                }
+
+                Components.Selector {
+                    id: zoneSelector
+
+                    config: root.config
+                    currentLayout: root.currentLayout
+                    highlightedZone: root.highlightedZone
+                }
+
+            }
+
+        }
+
     }
 
     Components.Shortcuts {
@@ -625,227 +784,70 @@ PlasmaCore.Dialog {
         }
     }
 
-    Item {
-        id: mainItem
+    DBusCall {
+        id: osdDbus
 
-        property alias repeaterLayout: repeaterLayout
+        function exec(text, icon = "preferences-desktop-virtual") {
+            if (!config.showOsdMessages)
+                return ;
 
-        width: mainDialog.width
-        height: mainDialog.height
-
-        // main polling timer
-        Timer {
-            id: timer
-
-            triggeredOnStart: true
-            interval: config.pollingRate
-            running: shown && moving
-            repeat: true
-            onTriggered: {
-                refreshClientArea();
-                let hoveringZone = -1;
-                // zone overlay
-                const currentZones = repeaterLayout.itemAt(currentLayout);
-                if (config.enableZoneOverlay && showZoneOverlay && !zoneSelector.expanded)
-                    currentZones.repeater.model.forEach((zone, zoneIndex) => {
-                    if (isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget]))
-                        hoveringZone = zoneIndex;
-
-                });
-
-                // zone selector
-                if (config.enableZoneSelector) {
-                    if (!zoneSelector.animating && zoneSelector.expanded) {
-                        zoneSelector.repeater.model.forEach((layout, layoutIndex) => {
-                            const layoutItem = zoneSelector.repeater.itemAt(layoutIndex);
-                            layout.zones.forEach((zone, zoneIndex) => {
-                                const zoneItem = layoutItem.children[zoneIndex];
-                                if (isHovering(zoneItem)) {
-                                    hoveringZone = zoneIndex;
-                                    setCurrentLayout(layoutIndex);
-                                }
-                            });
-                        });
-                    }
-                    // set zoneSelector expansion state
-                    zoneSelector.expanded = isHovering(zoneSelector) && (Workspace.cursorPos.y - clientArea.y) >= 0;
-                    // set zoneSelector near state
-                    const triggerDistance = config.zoneSelectorTriggerDistance * 50 + 25;
-                    zoneSelector.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelector.y + zoneSelector.height + triggerDistance;
-                }
-                // edge snapping
-                if (config.enableEdgeSnapping) {
-                    const triggerDistance = (config.edgeSnappingTriggerDistance + 1) * 10;
-                    if (Workspace.cursorPos.x <= clientArea.x + triggerDistance || Workspace.cursorPos.x >= clientArea.x + clientArea.width - triggerDistance || Workspace.cursorPos.y <= clientArea.y + triggerDistance || Workspace.cursorPos.y >= clientArea.y + clientArea.height - triggerDistance) {
-                        const padding = config.layouts[currentLayout].padding || 0;
-                        const halfPadding = padding / 2;
-                        currentZones.repeater.model.forEach((zone, zoneIndex) => {
-                            const zoneItem = currentZones.repeater.itemAt(zoneIndex);
-                            const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
-                            let zoneGeometry = {
-                                "x": itemGlobal.x - padding / 2,
-                                "y": itemGlobal.y - padding / 2,
-                                "width": zoneItem.width + padding,
-                                "height": zoneItem.height + padding
-                            };
-                            //adjust most left edge
-                            if (zoneGeometry.x <= halfPadding) {
-                                zoneGeometry.x = 0;
-                                zoneGeometry.width += padding;
-                            }
-                            //adjust most top edge
-                            if (zoneGeometry.y <= halfPadding) {
-                                zoneGeometry.y = 0;
-                                zoneGeometry.height += padding;
-                            }
-                            //adjust most right edge
-                            if (zoneGeometry.x + zoneGeometry.width >= clientArea.width - halfPadding)
-                                zoneGeometry.width += halfPadding;
-
-                            //adjust most bottom edge
-                            if (zoneGeometry.y + zoneGeometry.height >= clientArea.height - halfPadding)
-                                zoneGeometry.height += halfPadding;
-
-                            // check if cursor is inside the zone geometry
-                            if (isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry))
-                                hoveringZone = zoneIndex;
-
-                        });
-                    }
-                }
-                // if hovering zone changed from the last frame
-                if (hoveringZone != highlightedZone) {
-                    log("Highlighting zone " + hoveringZone + " in layout " + currentLayout);
-                    highlightedZone = hoveringZone;
-                }
-            }
+            this.arguments = [icon, text];
+            this.call();
         }
 
-        DBusCall {
-            id: osdDbus
+        service: "org.kde.plasmashell"
+        path: "/org/kde/osdService"
+        method: "showText"
+    }
 
-            function exec(text, icon = "preferences-desktop-virtual") {
-                if (!config.showOsdMessages)
+    // workspace connection
+    Connections {
+        function onWindowAdded(client) {
+            connectSignals(client);
+            // check if client is in a zone application list
+            config.layouts[currentLayout].zones.forEach((zone, zoneIndex) => {
+                if (zone.applications && zone.applications.includes(client.resourceClass.toString())) {
+                    moveClientToZone(client, zoneIndex);
                     return ;
-
-                this.arguments = [icon, text];
-                this.call();
-            }
-
-            service: "org.kde.plasmashell"
-            path: "/org/kde/osdService"
-            method: "showText"
-        }
-
-        Item {
-            x: clientArea.x || 0
-            y: clientArea.y || 0
-            width: clientArea.width || 0
-            height: clientArea.height || 0
-            clip: true
-
-            Components.Debug {
-                info: ({
-                    "activeWindow": {
-                        "caption": Workspace.activeWindow && Workspace.activeWindow.caption,
-                        "resourceClass": Workspace.activeWindow && Workspace.activeWindow.resourceClass && Workspace.activeWindow.resourceClass.toString(),
-                        "frameGeometry": {
-                            "x": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.x,
-                            "y": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.y,
-                            "width": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.width,
-                            "height": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.height
-                        },
-                        "zone": Workspace.activeWindow && Workspace.activeWindow.zone
-                    },
-                    "highlightedZone": highlightedZone,
-                    "moving": moving,
-                    "resizing": resizing,
-                    "oldGeometry": Workspace.activeWindow && Workspace.activeWindow.oldGeometry,
-                    "activeScreen": activeScreen && activeScreen.name,
-                    "currentLayout": currentLayout,
-                    "screenLayouts": screenLayouts
-                })
-                errors: mainDialog.errors
-                config: mainDialog.config
-            }
-
-            Repeater {
-                id: repeaterLayout
-
-                model: config.layouts
-
-                Components.Zones {
-                    id: zones
-
-                    config: mainDialog.config
-                    currentLayout: mainDialog.currentLayout
-                    highlightedZone: mainDialog.highlightedZone
-                    layoutIndex: index
-                    visible: index == mainDialog.currentLayout
                 }
+            });
+            // auto snap to closest zone
+            if (config.autoSnapAllNew && checkFilter(client))
+                moveClientToClosestZone(client);
 
-            }
-
-            Components.Selector {
-                id: zoneSelector
-
-                config: mainDialog.config
-                currentLayout: mainDialog.currentLayout
-                highlightedZone: mainDialog.highlightedZone
-            }
+            // check if new window spawns in a zone
+            if (client.zone == undefined || client.zone == -1)
+                matchZone(client);
 
         }
 
-        // workspace connection
-        Connections {
-            function onWindowAdded(client) {
-                connectSignals(client);
-                // check if client is in a zone application list
-                config.layouts[currentLayout].zones.forEach((zone, zoneIndex) => {
-                    if (zone.applications && zone.applications.includes(client.resourceClass.toString())) {
-                        moveClientToZone(client, zoneIndex);
-                        return ;
-                    }
-                });
-                // auto snap to closest zone
-                if (config.autoSnapAllNew && checkFilter(client))
-                    moveClientToClosestZone(client);
+        target: Workspace
+    }
 
-                // check if new window spawns in a zone
-                if (client.zone == undefined || client.zone == -1)
-                    matchZone(client);
-
-            }
-
-            target: Workspace
+    // options connection
+    Connections {
+        function onConfigChanged() {
+            log("Config changed");
+            mainDialog.loadConfig();
         }
 
-        // options connection
-        Connections {
-            function onConfigChanged() {
-                log("Config changed");
-                mainDialog.loadConfig();
-            }
+        //! not working at the moment
+        target: Options
+    }
 
-            //! not working at the moment
-            target: Options
-        }
+    // reusable timer
+    Timer {
+        id: delay
 
-        // reusable timer
-        Timer {
-            id: delay
-
-            function setTimeout(callback, timeout) {
-                delay.interval = timeout;
-                delay.repeat = false;
-                delay.triggered.connect(callback);
-                delay.triggered.connect(function release() {
-                    delay.triggered.disconnect(callback);
-                    delay.triggered.disconnect(release);
-                });
-                delay.start();
-            }
-
+        function setTimeout(callback, timeout) {
+            delay.interval = timeout;
+            delay.repeat = false;
+            delay.triggered.connect(callback);
+            delay.triggered.connect(function release() {
+                delay.triggered.disconnect(callback);
+                delay.triggered.disconnect(release);
+            });
+            delay.start();
         }
 
     }
