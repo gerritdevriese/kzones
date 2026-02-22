@@ -9,7 +9,7 @@ SESSION_APPLICATIONS := # dolphin konsole kate
 
 .NOTPARALLEL: all
 
-.PHONY: all test build install uninstall clean enable disable start-session
+.PHONY: all test build install uninstall clean enable disable start-session help
 
 all: install clean
 
@@ -85,3 +85,20 @@ unload:
 	bin/unload.sh "$(SCRIPT_NAME)-test"
 
 reload: unload load
+
+help:
+	@echo "Makefile commands:"
+	@echo "  all            - Build and install the script (default)"
+	@echo "  test           - Build, install, and start a nested session"
+	@echo "  build          - Package the script into a .kwinscript file"
+	@echo "  install        - Install the script"
+	@echo "  uninstall      - Uninstall the script"
+	@echo "  clean          - Remove the packaged .kwinscript file"
+	@echo "  enable         - Enable the script in KWin"
+	@echo "  disable        - Disable the script in KWin"
+	@echo "  restart-kwin   - Restart KWin to apply changes"
+	@echo "  logs           - View KWin logs for debugging"
+	@echo "  start-session  - Start a nested Wayland session for testing"
+	@echo "  load           - Load the script for testing"
+	@echo "  unload         - Unload the test script"
+	@echo "  reload         - Reload the test script"
