@@ -404,7 +404,7 @@ Item {
             if (moving) {
                 Utils.log("Move end " + client.resourceClass.toString());
                 if (moved) {
-                    if (mainDialog.shown)
+                    if (mainDialog.visible)
                         moveClientToZone(client, highlightedZone);
                     else
                         saveClientProperties(client, -1);
@@ -470,10 +470,7 @@ Item {
     PlasmaCore.Dialog {
         id: mainDialog
 
-        property bool shown: false
-
         function show() {
-            mainDialog.shown = true;
             mainDialog.visible = true;
             mainDialog.setWidth(Workspace.virtualScreenSize.width);
             mainDialog.setHeight(Workspace.virtualScreenSize.height);
@@ -481,7 +478,6 @@ Item {
         }
 
         function hide() {
-            mainDialog.shown = false;
             mainDialog.visible = false;
             zoneSelector.expanded = false;
             zoneSelector.near = false;
@@ -515,7 +511,7 @@ Item {
 
                 triggeredOnStart: true
                 interval: config.pollingRate
-                running: mainDialog.shown && moving
+                running: mainDialog.visible
                 repeat: true
                 onTriggered: {
                     refreshClientArea();
