@@ -14,7 +14,9 @@
                 "y": 0,
                 "height": 100,
                 "width": 50,
-                "applications": ["firefox"]
+                "applications": [
+                    "firefox"
+                ]
             },
             {
                 "x": 75,

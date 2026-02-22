@@ -3,10 +3,8 @@ import QtQuick
 import QtQuick.Layouts
 
 ColumnLayout {
-    property var config: {
-    }
-    property var info: {
-    }
+    property var config: new Object()
+    property var info: new Object()
     property var errors: []
 
     z: 100

@@ -6,11 +6,6 @@ import org.kde.plasma.core as PlasmaCore
 import "components" as Components
 
 PlasmaCore.Dialog {
-    // api documentation
-    // https://api.kde.org/frameworks/plasma-framework/html/classPlasmaQuick_1_1Dialog.html
-    // https://api.kde.org/frameworks/plasma-framework/html/classPlasma_1_1Types.html
-    // https://develop.kde.org/docs/getting-started/kirigami/style-colors/
-
     id: mainDialog
 
     // properties
@@ -18,19 +13,14 @@ PlasmaCore.Dialog {
     property bool moving: false
     property bool moved: false
     property bool resizing: false
-    property var clientArea: ({
-    })
-    property var cachedClientArea: ({
-    })
-    property var displaySize: ({
-    })
+    property var clientArea: new Object()
+    property var cachedClientArea: new Object()
+    property var displaySize: new Object()
     property int currentLayout: 0
-    property var screenLayouts: ({
-    })
+    property var screenLayouts: new Object()
     property int highlightedZone: -1
     property var activeScreen: null
-    property var config: ({
-    })
+    property var config: new Object()
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
     property var errors: []
 
@@ -76,7 +66,6 @@ PlasmaCore.Dialog {
     }
 
     function show() {
-        // show OSD
         mainDialog.shown = true;
         mainDialog.visible = true;
         mainDialog.setWidth(Workspace.virtualScreenSize.width);
@@ -85,7 +74,6 @@ PlasmaCore.Dialog {
     }
 
     function hide() {
-        // hide OSD
         mainDialog.shown = false;
         mainDialog.visible = false;
         zoneSelector.expanded = false;
@@ -116,6 +104,7 @@ PlasmaCore.Dialog {
     }
 
     function checkFilter(client) {
+        // filter out abnormal windows like docks, panels, etc...
         if (!client)
             return false;
 
@@ -128,6 +117,7 @@ PlasmaCore.Dialog {
         if (client.skipTaskbar)
             return false;
 
+        // read filter from config and check if the client's resource class matches the filter
         const filter = config.filterList.split(/\r?\n/);
         if (config.filterList.length > 0) {
             if (config.filterMode == 0)
@@ -189,7 +179,6 @@ PlasmaCore.Dialog {
     }
 
     function moveClientToZone(client, zone) {
-        // block abnormal windows from being moved (like plasmashell, docks, etc...)
         if (!checkFilter(client))
             return ;
 
@@ -550,7 +539,6 @@ PlasmaCore.Dialog {
     width: displaySize.width
     height: displaySize.height
     Component.onCompleted: {
-        // refresh client area
         refreshClientArea();
         mainDialog.loadConfig();
         // match all clients to zones and connect signals
@@ -700,20 +688,25 @@ PlasmaCore.Dialog {
                                 "width": zoneItem.width + padding,
                                 "height": zoneItem.height + padding
                             };
+                            //adjust most left edge
                             if (zoneGeometry.x <= halfPadding) {
                                 zoneGeometry.x = 0;
                                 zoneGeometry.width += padding;
-                            } //adjust most left edge
+                            }
+                            //adjust most top edge
                             if (zoneGeometry.y <= halfPadding) {
                                 zoneGeometry.y = 0;
                                 zoneGeometry.height += padding;
-                            } //adjust most top edge
+                            }
+                            //adjust most right edge
                             if (zoneGeometry.x + zoneGeometry.width >= clientArea.width - halfPadding)
                                 zoneGeometry.width += halfPadding;
 
+                            //adjust most bottom edge
                             if (zoneGeometry.y + zoneGeometry.height >= clientArea.height - halfPadding)
                                 zoneGeometry.height += halfPadding;
 
+                            // check if cursor is inside the zone geometry
                             if (isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry))
                                 hoveringZone = zoneIndex;
 
@@ -755,12 +748,12 @@ PlasmaCore.Dialog {
                 info: ({
                     "activeWindow": {
                         "caption": Workspace.activeWindow && Workspace.activeWindow.caption,
-                        "resourceClass": (Workspace.activeWindow && Workspace.activeWindow.resourceClass && Workspace.activeWindow.resourceClass.toString()),
+                        "resourceClass": Workspace.activeWindow && Workspace.activeWindow.resourceClass && Workspace.activeWindow.resourceClass.toString(),
                         "frameGeometry": {
-                            "x": (Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.x),
-                            "y": (Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.y),
-                            "width": (Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.width),
-                            "height": (Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.height)
+                            "x": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.x,
+                            "y": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.y,
+                            "width": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.width,
+                            "height": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.height
                         },
                         "zone": Workspace.activeWindow && Workspace.activeWindow.zone
                     },
