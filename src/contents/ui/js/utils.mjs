@@ -5,6 +5,11 @@ export function log(message, level = "info") {
   console.log(`[${level}] KZones: ${message}`);
 }
 
+export function osd(text, icon = "preferences-desktop-virtual") {
+  if (!config.showOsdMessages) return;
+  QML.dbusCall.exec("org.kde.plasmashell", "/org/kde/osdService", "showText", [icon, text]);
+}
+
 export function isPointInside(x, y, geometry) {
   return x >= geometry.x && x <= geometry.x + geometry.width && y >= geometry.y && y <= geometry.y + geometry.height;
 }

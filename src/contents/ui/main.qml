@@ -663,12 +663,12 @@ Item {
         onCycleLayouts: {
             setCurrentLayout((currentLayout + 1) % config.layouts.length);
             highlightedZone = -1;
-            osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
+            Utils.osd(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
         }
         onCycleLayoutsReversed: {
             setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
             highlightedZone = -1;
-            osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
+            Utils.osd(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
         }
         onMoveActiveWindowToNextZone: {
             const client = Workspace.activeWindow;
@@ -688,11 +688,11 @@ Item {
         }
         onToggleZoneOverlay: {
             if (!config.enableZoneOverlay)
-                osdDbus.exec("Zone overlay is disabled");
+                Utils.osd("Zone overlay is disabled");
             else if (moving)
                 showZoneOverlay = !showZoneOverlay;
             else
-                osdDbus.exec("The overlay can only be shown while moving a window");
+                Utils.osd("The overlay can only be shown while moving a window");
         }
         onSwitchToNextWindowInCurrentZone: {
             switchWindowInZone(Workspace.activeWindow.zone, Workspace.activeWindow.layout);
@@ -707,9 +707,9 @@ Item {
             if (layout <= config.layouts.length - 1) {
                 setCurrentLayout(layout);
                 highlightedZone = -1;
-                osdDbus.exec(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
+                Utils.osd(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
             } else {
-                osdDbus.exec(`Layout ${layout + 1} does not exist`);
+                Utils.osd(`Layout ${layout + 1} does not exist`);
             }
         }
         onMoveActiveWindowUp: {
@@ -733,19 +733,19 @@ Item {
     }
 
     DBusCall {
-        id: osdDbus
+        id: dbusCall
 
-        function exec(text, icon = "preferences-desktop-virtual") {
-            if (!config.showOsdMessages)
-                return ;
-
-            this.arguments = [icon, text];
+        function exec(service, path, method, arguments = []) {
+            this.service = service;
+            this.path = path;
+            this.method = method;
+            this.arguments = arguments;
             this.call();
         }
 
-        service: "org.kde.plasmashell"
-        path: "/org/kde/osdService"
-        method: "showText"
+        Component.onCompleted: {
+            Core.registerQMLComponent("dbusCall", dbusCall);
+        }
     }
 
     // workspace connection
