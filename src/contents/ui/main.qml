@@ -1,15 +1,15 @@
 import QtQuick
 import QtQuick.Layouts
-import org.kde.kwin
-import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.kwin
+import "js/core.mjs" as Core
 import "components" as Components
 
 Item {
     id: root
 
     property var config: new Object()
-    property var errors: []
     property bool moving: false
     property bool moved: false
     property bool resizing: false
@@ -21,40 +21,6 @@ Item {
     property int highlightedZone: -1
     property var activeScreen: null
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
-
-    function loadConfig() {
-        const defaultLayouts = '[{"name":"Priority Grid","padding":0,"zones":[{"x":0,"y":0,"height":100,"width":25},{"x":25,"y":0,"height":100,"width":50},{"x":75,"y":0,"height":100,"width":25}]},{"name":"Quadrant Grid","zones":[{"x":0,"y":0,"height":50,"width":50},{"x":0,"y":50,"height":50,"width":50},{"x":50,"y":50,"height":50,"width":50},{"x":50,"y":0,"height":50,"width":50}]}]';
-        let layouts;
-        try {
-            layouts = JSON.parse(KWin.readConfig("layoutsJson", defaultLayouts));
-        } catch (e) {
-            errors = errors.concat(`Could not load layouts from configuration, using default layouts.\nError: ${e.message}`);
-            layouts = JSON.parse(defaultLayouts);
-        }
-        // load values from configuration
-        config = {
-            "enableZoneSelector": KWin.readConfig("enableZoneSelector", true),
-            "zoneSelectorTriggerDistance": KWin.readConfig("zoneSelectorTriggerDistance", 1),
-            "enableZoneOverlay": KWin.readConfig("enableZoneOverlay", true),
-            "zoneOverlayShowWhen": KWin.readConfig("zoneOverlayShowWhen", 0),
-            "zoneOverlayHighlightTarget": KWin.readConfig("zoneOverlayHighlightTarget", 0),
-            "zoneOverlayIndicatorDisplay": KWin.readConfig("zoneOverlayIndicatorDisplay", 0),
-            "enableEdgeSnapping": KWin.readConfig("enableEdgeSnapping", false),
-            "edgeSnappingTriggerDistance": KWin.readConfig("edgeSnappingTriggerDistance", 1),
-            "rememberWindowGeometries": KWin.readConfig("rememberWindowGeometries", true),
-            "trackLayoutPerScreen": KWin.readConfig("trackLayoutPerScreen", false),
-            "showOsdMessages": KWin.readConfig("showOsdMessages", true),
-            "fadeWindowsWhileMoving": KWin.readConfig("fadeWindowsWhileMoving", false),
-            "autoSnapAllNew": KWin.readConfig("autoSnapAllNew", false),
-            "layouts": layouts,
-            "filterMode": KWin.readConfig("filterMode", 0),
-            "filterList": KWin.readConfig("filterList", ""),
-            "pollingRate": KWin.readConfig("pollingRate", 100),
-            "enableDebugLogging": KWin.readConfig("enableDebugLogging", false),
-            "enableDebugOverlay": KWin.readConfig("enableDebugOverlay", false)
-        };
-        log("Config loaded: " + JSON.stringify(config));
-    }
 
     function log(message) {
         if (!config.enableDebugLogging)
@@ -509,8 +475,11 @@ Item {
     }
 
     Component.onCompleted: {
+        console.log("Loading script (" + Qt.resolvedUrl("./main.qml") + ")");
+        Core.init(KWin, Workspace);
+        Core.registerQMLComponent("root", root);
+        Core.loadConfig();
         refreshClientArea();
-        loadConfig();
         // match all clients to zones and connect signals
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             matchZone(Workspace.stackingOrder[i]);
@@ -676,7 +645,6 @@ Item {
                         "currentLayout": currentLayout,
                         "screenLayouts": screenLayouts
                     })
-                    errors: root.errors
                     config: root.config
                 }
 
