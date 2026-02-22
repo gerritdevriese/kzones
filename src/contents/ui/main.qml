@@ -465,6 +465,7 @@ Item {
             matchZone(Workspace.stackingOrder[i]);
             connectSignals(Workspace.stackingOrder[i]);
         }
+        Utils.log("Everything loaded successfully");
     }
 
     PlasmaCore.Dialog {
@@ -768,32 +769,13 @@ Item {
         target: Workspace
     }
 
-    // options connection
     Connections {
+        //! still not working, hopefully it will at some point 😐
         function onConfigChanged() {
-            Utils.log("Config changed");
-            mainDialog.loadConfig();
+            Core.loadConfig();
         }
 
-        //! not working at the moment
         target: Options
-    }
-
-    // reusable timer
-    Timer {
-        id: delay
-
-        function setTimeout(callback, timeout) {
-            delay.interval = timeout;
-            delay.repeat = false;
-            delay.triggered.connect(callback);
-            delay.triggered.connect(function release() {
-                delay.triggered.disconnect(callback);
-                delay.triggered.disconnect(release);
-            });
-            delay.start();
-        }
-
     }
 
 }

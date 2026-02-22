@@ -4,22 +4,22 @@ export let QML = {};
 export let config = {};
 
 export function init(kwin, workspace) {
-  console.log("Loading APIs...");
+  console.log("KZones: Loading APIs...");
   KWin = kwin || null;
   Workspace = workspace || null;
 }
 
 export function registerQMLComponent(name, component) {
-  console.log("Registering QML component:", name);
+  console.log("KZones: Registering QML component:", name);
   try {
     QML[name] = component;
   } catch (error) {
-    console.error("Error registering QML component:", error);
+    console.error("KZones: Error registering QML component:", error);
   }
 }
 
 export function loadConfig() {
-  console.log("Loading config...");
+  console.log("KZones: Loading config...");
 
   const defaultLayouts = [
     {
@@ -72,5 +72,5 @@ export function loadConfig() {
 
   QML.root.config = config;
 
-  console.log("Config loaded:", JSON.stringify(config));
+  console.log("KZones: Config loaded:", JSON.stringify(config));
 }
