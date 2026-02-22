@@ -11,7 +11,7 @@
         "EnabledByDefault": false,
         "Icon": "preferences-desktop-virtual",
         "Id": "kzones",
-        "License": "GPL-3.0+",
+        "License": "GPL-3.0",
         "Name": "KZones",
         "ServiceTypes": [
             "KWin/Script"
