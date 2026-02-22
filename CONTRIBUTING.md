@@ -14,5 +14,11 @@ qmlformat -i path/to/file.qml
 
 ### API Documentation
 
-- [Kirigami Style Colors](https://develop.kde.org/docs/getting-started/kirigami/style-colors/)
-- [KWin Scripting API](https://develop.kde.org/docs/plasma/kwin/api/)
+- [KDE Frameworks API reference](https://api.kde.org/)
+- [Kirigami style colors](https://develop.kde.org/docs/getting-started/kirigami/style-colors/)
+- [KWin scripting API](https://develop.kde.org/docs/plasma/kwin/api/)
+
+### Examples and source code
+
+- [Example KWin scripts](https://invent.kde.org/plasma/kwin/-/tree/master/src/plugins)
+- [KWin scripting API source code](https://invent.kde.org/plasma/kwin/-/tree/master/src/scripting)
