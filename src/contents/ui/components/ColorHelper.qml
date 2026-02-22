@@ -29,6 +29,15 @@ Item {
         return Kirigami.Theme.textColor;
     }
 
+    function getShadowColor() {
+        if (theme === "light")
+            return Qt.rgba(0, 0, 0, 0.2);
+
+        if (theme === "dark")
+            return Qt.rgba(0, 0, 0, 0.3);
+
+    }
+
     function getBorderColor(color) {
         if (theme === "light")
             return Kirigami.ColorUtils.tintWithAlpha(color, "black", 0.15);
