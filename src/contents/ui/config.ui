@@ -293,6 +293,13 @@
                       </widget>
                     </item>
                     <item>
+                      <widget class="QCheckBox" name="kcfg_trackLayoutPerDesktop">
+                        <property name="text">
+                          <string>Track active layout per virtual desktop</string>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
                       <widget class="QCheckBox" name="kcfg_autoSnapAllNew">
                         <property name="text">
                           <string>Automatically snap all new windows</string>
