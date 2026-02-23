@@ -34,7 +34,7 @@ Item {
             return Qt.rgba(0, 0, 0, 0.2);
 
         if (theme === "dark")
-            return Qt.rgba(0, 0, 0, 0.3);
+            return Qt.rgba(0, 0, 0, 0.4);
 
     }
 
