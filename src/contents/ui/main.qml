@@ -3,8 +3,8 @@ import QtQuick.Layouts
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kwin
-import "js/core.mjs" as Core
-import "js/utils.mjs" as Utils
+import "modules/core.mjs" as Core
+import "modules/utils.mjs" as Utils
 import "components" as Components
 
 Item {
@@ -301,33 +301,45 @@ Item {
 
     function getLayoutKey() {
         const parts = [];
-        if (config.trackLayoutPerScreen) parts.push(Workspace.activeScreen.name);
-        if (config.trackLayoutPerDesktop) parts.push(Workspace.currentDesktop.id);
+        if (config.trackLayoutPerScreen)
+            parts.push(Workspace.activeScreen.name);
+
+        if (config.trackLayoutPerDesktop)
+            parts.push(Workspace.currentDesktop.id);
+
         return parts.join(':');
     }
 
     function getCurrentLayout() {
         if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
             const key = getLayoutKey();
-            if (!screenLayouts[key]) screenLayouts[key] = 0;
+            if (!screenLayouts[key])
+                screenLayouts[key] = 0;
+
             return screenLayouts[key];
         }
         return currentLayout;
     }
 
     function setCurrentLayout(layout) {
-        if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
+        if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop)
             screenLayouts[getLayoutKey()] = layout;
-        }
+
         currentLayout = layout;
     }
 
     function osdLayoutName() {
         const name = config.layouts[currentLayout].name;
         const parts = [];
-        if (config.trackLayoutPerScreen) parts.push(Workspace.activeScreen.name);
-        if (config.trackLayoutPerDesktop) parts.push(Workspace.currentDesktop.name);
-        if (parts.length > 0) return `${name} (${parts.join(' / ')})`;
+        if (config.trackLayoutPerScreen)
+            parts.push(Workspace.activeScreen.name);
+
+        if (config.trackLayoutPerDesktop)
+            parts.push(Workspace.currentDesktop.name);
+
+        if (parts.length > 0)
+            return `${name} (${parts.join(' / ')})`;
+
         return name;
     }
 
@@ -761,9 +773,9 @@ Item {
     // workspace connection
     Connections {
         function onCurrentDesktopChanged() {
-            if (config.trackLayoutPerDesktop) {
+            if (config.trackLayoutPerDesktop)
                 currentLayout = getCurrentLayout();
-            }
+
         }
 
         function onWindowAdded(client) {
