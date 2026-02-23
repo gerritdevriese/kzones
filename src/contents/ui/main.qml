@@ -299,23 +299,36 @@ Item {
         return targetZoneIndex;
     }
 
-    function getCurrentLayout() {
-        if (config.trackLayoutPerScreen) {
-            const screenLayout = screenLayouts[Workspace.activeScreen.name];
-            if (!screenLayout)
-                screenLayouts[Workspace.activeScreen.name] = 0;
+    function getLayoutKey() {
+        const parts = [];
+        if (config.trackLayoutPerScreen) parts.push(Workspace.activeScreen.name);
+        if (config.trackLayoutPerDesktop) parts.push(Workspace.currentDesktop.id);
+        return parts.join(':');
+    }
 
-            return screenLayouts[Workspace.activeScreen.name];
-        } else {
-            return currentLayout;
+    function getCurrentLayout() {
+        if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
+            const key = getLayoutKey();
+            if (!screenLayouts[key]) screenLayouts[key] = 0;
+            return screenLayouts[key];
         }
+        return currentLayout;
     }
 
     function setCurrentLayout(layout) {
-        if (config.trackLayoutPerScreen)
-            screenLayouts[Workspace.activeScreen.name] = layout;
-
+        if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
+            screenLayouts[getLayoutKey()] = layout;
+        }
         currentLayout = layout;
+    }
+
+    function osdLayoutName() {
+        const name = config.layouts[currentLayout].name;
+        const parts = [];
+        if (config.trackLayoutPerScreen) parts.push(Workspace.activeScreen.name);
+        if (config.trackLayoutPerDesktop) parts.push(Workspace.currentDesktop.name);
+        if (parts.length > 0) return `${name} (${parts.join(' / ')})`;
+        return name;
     }
 
     function checkFilter(client) {
@@ -660,12 +673,12 @@ Item {
         onCycleLayouts: {
             setCurrentLayout((currentLayout + 1) % config.layouts.length);
             highlightedZone = -1;
-            Utils.osd(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
+            Utils.osd(osdLayoutName());
         }
         onCycleLayoutsReversed: {
             setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
             highlightedZone = -1;
-            Utils.osd(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
+            Utils.osd(osdLayoutName());
         }
         onMoveActiveWindowToNextZone: {
             const client = Workspace.activeWindow;
@@ -704,7 +717,7 @@ Item {
             if (layout <= config.layouts.length - 1) {
                 setCurrentLayout(layout);
                 highlightedZone = -1;
-                Utils.osd(config.trackLayoutPerScreen ? `${config.layouts[currentLayout].name} (${Workspace.activeScreen.name})` : config.layouts[currentLayout].name);
+                Utils.osd(osdLayoutName());
             } else {
                 Utils.osd(`Layout ${layout + 1} does not exist`);
             }
@@ -747,6 +760,12 @@ Item {
 
     // workspace connection
     Connections {
+        function onCurrentDesktopChanged() {
+            if (config.trackLayoutPerDesktop) {
+                currentLayout = getCurrentLayout();
+            }
+        }
+
         function onWindowAdded(client) {
             connectSignals(client);
             // check if client is in a zone application list
