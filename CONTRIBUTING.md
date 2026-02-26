@@ -23,6 +23,14 @@ qmlformat -i path/to/file.qml
 - [Example KWin scripts](https://invent.kde.org/plasma/kwin/-/tree/master/src/plugins)
 - [KWin scripting API source code](https://invent.kde.org/plasma/kwin/-/tree/master/src/scripting)
 
+## KWin debugging
+
+Script configurations are saved inside: `~/.config/kwinrc`
+
+Live script code is stored here: `~/.local/share/kwin/scripts`
+
+Run nested kwin: `dbus-run-session startplasma-wayland`
+
 ## Tips
 
 - You can edit the configuration UI (`src/contents/ui/config.ui`) using [Qt Widgets Designer](https://doc.qt.io/qt-6/qtdesigner-manual.html), which is part of the Qt development tools.
