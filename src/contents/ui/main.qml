@@ -3,8 +3,8 @@ import QtQuick.Layouts
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kwin
-import "modules/core.mjs" as Core
-import "modules/utils.mjs" as Utils
+import "../code/core.mjs" as Core
+import "../code/utils.mjs" as Utils
 import "components" as Components
 
 Item {
