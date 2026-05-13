@@ -271,6 +271,7 @@ Each **layout** object needs the following keys:
 - `name`: The name of the layout, shown when cycling between layouts
 - `padding`: The amount of space between the window and the zone in pixels
 - `zones`: An array containing all zone objects for this layout
+- `screens`: An optional array of monitor connector names (e.g. `["DP-1", "HDMI-A-1"]`) restricting this layout to those monitors. Omit or leave empty to show the layout on every monitor. To discover connector names, bind the **KZones: Show detected monitors** shortcut in `System Settings / Shortcuts` and press it, or run `kscreen-doctor -o`. When any layout sets `screens`, per-screen tracking of the active layout is enabled automatically.
 
 Each **zone** object can contain the following keys:
 
@@ -323,6 +324,7 @@ List of all available shortcuts:
 | Move active window right                           | <kbd>Meta</kbd> + <kbd>Right</kbd>                                  |
 | Snap all windows                                   | <kbd>Meta</kbd> + <kbd>Space</kbd>                                  |
 | Snap active window                                 | <kbd>Meta</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>               |
+| Show detected monitors (OSD)                       | *(unbound — set in System Settings → Shortcuts)*                   |
 
 *To change the default bindings, go to `System Settings / Shortcuts` and search for KZones*
 

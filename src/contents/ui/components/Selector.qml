@@ -8,6 +8,9 @@ Item {
     property var config
     property int currentLayout
     property int highlightedZone
+    // [{ layout, index }, ...] — the layouts to display for the active screen.
+    // `index` is the position in the unfiltered config.layouts.
+    property var availableLayouts: []
     property bool expanded: false
     property bool near: false
     property bool animating: false
@@ -43,14 +46,14 @@ Item {
             Repeater {
                 id: repeater
 
-                model: config.layouts
+                model: availableLayouts
 
                 Components.Indicator {
-                    zones: modelData.zones
-                    activeZone: (currentLayout == index) ? highlightedZone : -1
+                    zones: modelData.layout.zones
+                    activeZone: (currentLayout === modelData.index) ? highlightedZone : -1
                     width: 160 - 30
                     height: 100 - 30
-                    hovering: (currentLayout == index)
+                    hovering: (currentLayout === modelData.index)
                 }
 
             }
