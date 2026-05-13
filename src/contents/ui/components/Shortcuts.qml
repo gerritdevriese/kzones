@@ -17,6 +17,7 @@ Item {
     signal moveActiveWindowRight()
     signal snapActiveWindow()
     signal snapAllWindows()
+    signal showDetectedMonitors()
 
     ShortcutHandler {
         name: "KZones: Cycle layouts"
@@ -166,6 +167,16 @@ Item {
         sequence: "Meta+Space"
         onActivated: {
             snapAllWindows();
+        }
+    }
+
+    ShortcutHandler {
+        name: "KZones: Show detected monitors"
+        text: "KZones: Show detected monitors"
+        // No default binding — bind in System Settings → Shortcuts.
+        sequence: ""
+        onActivated: {
+            showDetectedMonitors();
         }
     }
 

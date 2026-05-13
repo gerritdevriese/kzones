@@ -1,11 +1,11 @@
-import QtQuick
-import QtQuick.Layouts
-import org.kde.plasma.core as PlasmaCore
-import org.kde.plasma.components as PlasmaComponents
-import org.kde.kwin
 import "../code/core.mjs" as Core
 import "../code/utils.mjs" as Utils
+import QtQuick
+import QtQuick.Layouts
 import "components" as Components
+import org.kde.kwin
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.plasma.core as PlasmaCore
 
 Item {
     id: root
@@ -21,13 +21,33 @@ Item {
     property var screenLayouts: new Object()
     property int highlightedZone: -1
     property var activeScreen: null
+    // [{ layout, index }, ...] — layouts visible on activeScreen. `index` is
+    // the position in the unfiltered config.layouts so existing references
+    // (client.layout, repeaterLayout.itemAt(...), etc.) stay valid.
+    property var availableLayouts: []
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
 
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
         clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop);
         displaySize = Workspace.virtualScreenSize;
+        refreshAvailableLayouts();
         currentLayout = getCurrentLayout();
+    }
+
+    function refreshAvailableLayouts() {
+        availableLayouts = Core.getLayoutsForScreen(Core.getScreenId(activeScreen));
+    }
+
+    function firstAvailableIndex() {
+        return availableLayouts.length > 0 ? availableLayouts[0].index : 0;
+    }
+
+    function isLayoutAvailable(idx) {
+        for (let i = 0; i < availableLayouts.length; i++) if (availableLayouts[i].index === idx) {
+            return true;
+        }
+        return false;
     }
 
     function matchZone(client) {
@@ -313,15 +333,21 @@ Item {
     function getCurrentLayout() {
         if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
             const key = getLayoutKey();
-            if (!screenLayouts[key])
-                screenLayouts[key] = 0;
+            if (screenLayouts[key] === undefined || !isLayoutAvailable(screenLayouts[key]))
+                screenLayouts[key] = firstAvailableIndex();
 
             return screenLayouts[key];
         }
+        if (!isLayoutAvailable(currentLayout))
+            return firstAvailableIndex();
+
         return currentLayout;
     }
 
     function setCurrentLayout(layout) {
+        if (!isLayoutAvailable(layout))
+            return ;
+
         if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop)
             screenLayouts[getLayoutKey()] = layout;
 
@@ -554,13 +580,13 @@ Item {
                     // zone selector
                     if (config.enableZoneSelector) {
                         if (!zoneSelector.animating && zoneSelector.expanded) {
-                            zoneSelector.repeater.model.forEach((layout, layoutIndex) => {
-                                const layoutItem = zoneSelector.repeater.itemAt(layoutIndex);
-                                layout.zones.forEach((zone, zoneIndex) => {
+                            zoneSelector.repeater.model.forEach((entry, repeaterIndex) => {
+                                const layoutItem = zoneSelector.repeater.itemAt(repeaterIndex);
+                                entry.layout.zones.forEach((zone, zoneIndex) => {
                                     const zoneItem = layoutItem.children[zoneIndex];
                                     if (Utils.isHovering(zoneItem)) {
                                         hoveringZone = zoneIndex;
-                                        setCurrentLayout(layoutIndex);
+                                        setCurrentLayout(entry.index);
                                     }
                                 });
                             });
@@ -645,7 +671,10 @@ Item {
                         "oldGeometry": Workspace.activeWindow && Workspace.activeWindow.oldGeometry,
                         "activeScreen": activeScreen && activeScreen.name,
                         "currentLayout": currentLayout,
-                        "screenLayouts": screenLayouts
+                        "screenLayouts": screenLayouts,
+                        "availableLayouts": availableLayouts.map((e) => {
+                            return e.index + ":" + e.layout.name;
+                        })
                     })
                     config: root.config
                 }
@@ -662,7 +691,7 @@ Item {
                         currentLayout: root.currentLayout
                         highlightedZone: root.highlightedZone
                         layoutIndex: index
-                        visible: index == root.currentLayout
+                        visible: index === root.currentLayout && root.isLayoutAvailable(index)
                     }
 
                 }
@@ -673,6 +702,7 @@ Item {
                     config: root.config
                     currentLayout: root.currentLayout
                     highlightedZone: root.highlightedZone
+                    availableLayouts: root.availableLayouts
                 }
 
             }
@@ -683,12 +713,26 @@ Item {
 
     Components.Shortcuts {
         onCycleLayouts: {
-            setCurrentLayout((currentLayout + 1) % config.layouts.length);
+            if (availableLayouts.length === 0)
+                return ;
+
+            const pos = availableLayouts.findIndex((e) => {
+                return e.index === currentLayout;
+            });
+            const next = availableLayouts[(pos + 1) % availableLayouts.length].index;
+            setCurrentLayout(next);
             highlightedZone = -1;
             Utils.osd(osdLayoutName());
         }
         onCycleLayoutsReversed: {
-            setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
+            if (availableLayouts.length === 0)
+                return ;
+
+            const pos = availableLayouts.findIndex((e) => {
+                return e.index === currentLayout;
+            });
+            const prev = availableLayouts[(pos - 1 + availableLayouts.length) % availableLayouts.length].index;
+            setCurrentLayout(prev);
             highlightedZone = -1;
             Utils.osd(osdLayoutName());
         }
@@ -726,12 +770,13 @@ Item {
             moveClientToZone(Workspace.activeWindow, zone);
         }
         onActivateLayout: {
-            if (layout <= config.layouts.length - 1) {
-                setCurrentLayout(layout);
+            if (layout >= 0 && layout < availableLayouts.length) {
+                setCurrentLayout(availableLayouts[layout].index);
                 highlightedZone = -1;
                 Utils.osd(osdLayoutName());
             } else {
-                Utils.osd(`Layout ${layout + 1} does not exist`);
+                const screenName = activeScreen && activeScreen.name ? activeScreen.name : "this screen";
+                Utils.osd(`Layout ${layout + 1} does not exist on ${screenName}`);
             }
         }
         onMoveActiveWindowUp: {
@@ -751,6 +796,17 @@ Item {
         }
         onSnapAllWindows: {
             moveAllClientsToClosestZone();
+        }
+        onShowDetectedMonitors: {
+            const screens = Core.getDetectedScreens();
+            if (screens.length === 0) {
+                Utils.osd("KZones: no monitors detected");
+                return ;
+            }
+            const summary = screens.map((s) => {
+                return `${s.name} (${s.width}x${s.height})`;
+            }).join("   ");
+            Utils.osd("Monitors: " + summary);
         }
     }
 
@@ -776,6 +832,14 @@ Item {
             if (config.trackLayoutPerDesktop)
                 currentLayout = getCurrentLayout();
 
+        }
+
+        function onActiveScreenChanged() {
+            refreshClientArea();
+        }
+
+        function onScreensChanged() {
+            refreshClientArea();
         }
 
         function onWindowAdded(client) {
