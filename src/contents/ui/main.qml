@@ -1,11 +1,11 @@
-import QtQuick
-import QtQuick.Layouts
-import org.kde.plasma.core as PlasmaCore
-import org.kde.plasma.components as PlasmaComponents
-import org.kde.kwin
 import "../code/core.mjs" as Core
 import "../code/utils.mjs" as Utils
+import QtQuick
+import QtQuick.Layouts
 import "components" as Components
+import org.kde.kwin
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.plasma.core as PlasmaCore
 
 Item {
     id: root
@@ -44,9 +44,9 @@ Item {
     }
 
     function isLayoutAvailable(idx) {
-        for (let i = 0; i < availableLayouts.length; i++)
-            if (availableLayouts[i].index === idx)
-                return true;
+        for (let i = 0; i < availableLayouts.length; i++) if (availableLayouts[i].index === idx) {
+            return true;
+        }
         return false;
     }
 
@@ -672,7 +672,9 @@ Item {
                         "activeScreen": activeScreen && activeScreen.name,
                         "currentLayout": currentLayout,
                         "screenLayouts": screenLayouts,
-                        "availableLayouts": availableLayouts.map(e => e.index + ":" + e.layout.name)
+                        "availableLayouts": availableLayouts.map((e) => {
+                            return e.index + ":" + e.layout.name;
+                        })
                     })
                     config: root.config
                 }
@@ -714,7 +716,9 @@ Item {
             if (availableLayouts.length === 0)
                 return ;
 
-            const pos = availableLayouts.findIndex(e => e.index === currentLayout);
+            const pos = availableLayouts.findIndex((e) => {
+                return e.index === currentLayout;
+            });
             const next = availableLayouts[(pos + 1) % availableLayouts.length].index;
             setCurrentLayout(next);
             highlightedZone = -1;
@@ -724,7 +728,9 @@ Item {
             if (availableLayouts.length === 0)
                 return ;
 
-            const pos = availableLayouts.findIndex(e => e.index === currentLayout);
+            const pos = availableLayouts.findIndex((e) => {
+                return e.index === currentLayout;
+            });
             const prev = availableLayouts[(pos - 1 + availableLayouts.length) % availableLayouts.length].index;
             setCurrentLayout(prev);
             highlightedZone = -1;
@@ -797,7 +803,9 @@ Item {
                 Utils.osd("KZones: no monitors detected");
                 return ;
             }
-            const summary = screens.map(s => `${s.name} (${s.width}x${s.height})`).join("   ");
+            const summary = screens.map((s) => {
+                return `${s.name} (${s.width}x${s.height})`;
+            }).join("   ");
             Utils.osd("Monitors: " + summary);
         }
     }
