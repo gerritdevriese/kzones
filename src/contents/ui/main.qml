@@ -1,11 +1,15 @@
+import "../code/core.mjs" as Core
+import "../code/meta-arrow/fullscreen-state.mjs" as FSState
+import "../code/meta-arrow/geometry.mjs" as MetaGeom
+import "../code/meta-arrow/snap-executor.mjs" as SnapExecutor
+import "../code/meta-arrow/snap-planner.mjs" as SnapPlanner
+import "../code/utils.mjs" as Utils
 import QtQuick
 import QtQuick.Layouts
-import org.kde.plasma.core as PlasmaCore
-import org.kde.plasma.components as PlasmaComponents
-import org.kde.kwin
-import "../code/core.mjs" as Core
-import "../code/utils.mjs" as Utils
 import "components" as Components
+import org.kde.kwin
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.plasma.core as PlasmaCore
 
 Item {
     id: root
@@ -26,6 +30,7 @@ Item {
     // (client.layout, repeaterLayout.itemAt(...), etc.) stay valid.
     property var availableLayouts: []
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
+    property var lastActiveWindow: null
 
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
@@ -44,9 +49,9 @@ Item {
     }
 
     function isLayoutAvailable(idx) {
-        for (let i = 0; i < availableLayouts.length; i++)
-            if (availableLayouts[i].index === idx)
-                return true;
+        for (let i = 0; i < availableLayouts.length; i++) if (availableLayouts[i].index === idx) {
+            return true;
+        }
         return false;
     }
 
@@ -319,6 +324,143 @@ Item {
         return targetZoneIndex;
     }
 
+    function rawScreensList() {
+        const out = [];
+        try {
+            if (Array.isArray(Workspace.screens))
+                return Workspace.screens.slice();
+
+            if (Workspace.screens && typeof Workspace.screens.length === "number") {
+                for (let i = 0; i < Workspace.screens.length; i++) out.push(Workspace.screens[i])
+                return out;
+            }
+            if (typeof Workspace.numScreens === "number" && typeof Workspace.screenAt === "function") {
+                for (let i = 0; i < Workspace.numScreens; i++) out.push(Workspace.screenAt(i))
+                return out;
+            }
+        } catch (e) {
+            Utils.log("rawScreensList enumeration failed: " + e);
+        }
+        return out;
+    }
+
+    function getClientAreaForScreen(screenName) {
+        const screens = rawScreensList();
+        for (let i = 0; i < screens.length; i++) {
+            const s = screens[i];
+            if (s && String(s.name) === String(screenName)) {
+                const ca = Workspace.clientArea(KWin.FullScreenArea, s, Workspace.currentDesktop);
+                return {
+                    "x": ca.x,
+                    "y": ca.y,
+                    "width": ca.width,
+                    "height": ca.height
+                };
+            }
+        }
+        return null;
+    }
+
+    function getScreenForClient(client) {
+        if (!client)
+            return null;
+
+        const screens = rawScreensList();
+        const cx = client.frameGeometry.x + client.frameGeometry.width / 2;
+        const cy = client.frameGeometry.y + client.frameGeometry.height / 2;
+        for (let i = 0; i < screens.length; i++) {
+            const s = screens[i];
+            if (!s || !s.geometry)
+                continue;
+
+            const g = s.geometry;
+            if (cx >= g.x && cx <= g.x + g.width && cy >= g.y && cy <= g.y + g.height)
+                return s;
+
+        }
+        return Workspace.activeScreen;
+    }
+
+    function smartSnapMetaArrow(client, direction) {
+        if (!checkFilter(client))
+            return ;
+
+        const screen = getScreenForClient(client);
+        const screenName = (screen && screen.name) ? String(screen.name) : "";
+        const clientAreaForSrc = getClientAreaForScreen(screenName);
+        if (!clientAreaForSrc) {
+            Utils.log("smartSnapMetaArrow: no client area for " + screenName);
+            return ;
+        }
+        const screensList = rawScreensList();
+        const sourcePct = MetaGeom.clientToSourcePct(client, clientAreaForSrc);
+        const action = SnapPlanner.planSnap({
+            "client": client,
+            "source": sourcePct,
+            "clientArea": clientAreaForSrc,
+            "dir": direction,
+            "screens": screensList,
+            "currentScreen": screen,
+            "layouts": config.layouts
+        });
+        Utils.log("smartSnapMetaArrow: dir=" + direction + " action=" + JSON.stringify(action));
+        SnapExecutor.executeSnap(action, client, {
+            "getClientAreaForScreen": getClientAreaForScreen,
+            "getLayoutPadding": function(layoutIndex) {
+                if (layoutIndex == null || layoutIndex < 0 || !config.layouts[layoutIndex])
+                    return 0;
+
+                return config.layouts[layoutIndex].padding || 0;
+            },
+            "getZoneRef": function(layoutIndex, zoneIndex) {
+                if (layoutIndex == null || layoutIndex < 0)
+                    return null;
+
+                const l = config.layouts[layoutIndex];
+                if (!l || !l.zones || !l.zones[zoneIndex])
+                    return null;
+
+                const z = l.zones[zoneIndex];
+                return {
+                    "x": +z.x,
+                    "y": +z.y,
+                    "w": +z.width,
+                    "h": +z.height,
+                    "sourceLayoutIndex": layoutIndex,
+                    "sourceZoneIndex": zoneIndex,
+                    "padding": l.padding || 0
+                };
+            },
+            "setMaximize": function(c, h, v) {
+                c.setMaximize(h, v);
+            },
+            "setFrameGeometry": function(c, r) {
+                c.frameGeometry = Qt.rect(r.x, r.y, r.width, r.height);
+            },
+            "saveClientProperties": function(c, layoutIndex, zoneIndex) {
+                if (config.rememberWindowGeometries && zoneIndex !== -1) {
+                    if (c.zone === -1 || c.zone === undefined)
+                        c.oldGeometry = {
+                            "x": c.frameGeometry.x,
+                            "y": c.frameGeometry.y,
+                            "width": c.frameGeometry.width,
+                            "height": c.frameGeometry.height
+                        };
+
+                }
+                c.zone = zoneIndex;
+                c.layout = (layoutIndex !== -1) ? layoutIndex : c.layout;
+                c.desktop = Workspace.currentDesktop;
+                c.activity = Workspace.currentActivity;
+            },
+            "log": Utils.log
+        });
+    }
+
+    function clearMetaArrowMemory(client) {
+        FSState.clearMemory(client);
+    }
+
     function getLayoutKey() {
         const parts = [];
         if (config.trackLayoutPerScreen)
@@ -495,6 +637,22 @@ Item {
             mainDialog.hide();
         }
 
+        function onFrameGeometryChanged() {
+            // If the user has dragged / resized the window so it's no longer
+            // fullscreen-sized, the meta+down pre-FS memory is stale.
+            if (client.preFS) {
+                const screen = getScreenForClient(client);
+                const ca = screen ? getClientAreaForScreen(String(screen.name)) : null;
+                if (ca && !MetaGeom.isFullscreenSized(client, ca))
+                    clearMetaArrowMemory(client);
+
+            }
+        }
+
+        function onMinimizedChanged() {
+            clearMetaArrowMemory(client);
+        }
+
         if (!checkFilter(client))
             return ;
 
@@ -503,6 +661,12 @@ Item {
         client.onInteractiveMoveResizeStepped.connect(onInteractiveMoveResizeStepped);
         client.onInteractiveMoveResizeFinished.connect(onInteractiveMoveResizeFinished);
         client.onFullScreenChanged.connect(onFullScreenChanged);
+        if (client.frameGeometryChanged)
+            client.frameGeometryChanged.connect(onFrameGeometryChanged);
+
+        if (client.minimizedChanged)
+            client.minimizedChanged.connect(onMinimizedChanged);
+
     }
 
     Component.onCompleted: {
@@ -672,7 +836,9 @@ Item {
                         "activeScreen": activeScreen && activeScreen.name,
                         "currentLayout": currentLayout,
                         "screenLayouts": screenLayouts,
-                        "availableLayouts": availableLayouts.map(e => e.index + ":" + e.layout.name)
+                        "availableLayouts": availableLayouts.map((e) => {
+                            return e.index + ":" + e.layout.name;
+                        })
                     })
                     config: root.config
                 }
@@ -711,20 +877,26 @@ Item {
 
     Components.Shortcuts {
         onCycleLayouts: {
+            clearMetaArrowMemory(Workspace.activeWindow);
             if (availableLayouts.length === 0)
                 return ;
 
-            const pos = availableLayouts.findIndex(e => e.index === currentLayout);
+            const pos = availableLayouts.findIndex((e) => {
+                return e.index === currentLayout;
+            });
             const next = availableLayouts[(pos + 1) % availableLayouts.length].index;
             setCurrentLayout(next);
             highlightedZone = -1;
             Utils.osd(osdLayoutName());
         }
         onCycleLayoutsReversed: {
+            clearMetaArrowMemory(Workspace.activeWindow);
             if (availableLayouts.length === 0)
                 return ;
 
-            const pos = availableLayouts.findIndex(e => e.index === currentLayout);
+            const pos = availableLayouts.findIndex((e) => {
+                return e.index === currentLayout;
+            });
             const prev = availableLayouts[(pos - 1 + availableLayouts.length) % availableLayouts.length].index;
             setCurrentLayout(prev);
             highlightedZone = -1;
@@ -732,6 +904,7 @@ Item {
         }
         onMoveActiveWindowToNextZone: {
             const client = Workspace.activeWindow;
+            clearMetaArrowMemory(client);
             if (client.zone == -1)
                 moveClientToClosestZone(client);
 
@@ -740,6 +913,7 @@ Item {
         }
         onMoveActiveWindowToPreviousZone: {
             const client = Workspace.activeWindow;
+            clearMetaArrowMemory(client);
             if (client.zone == -1)
                 moveClientToClosestZone(client);
 
@@ -761,9 +935,11 @@ Item {
             switchWindowInZone(Workspace.activeWindow.zone, Workspace.activeWindow.layout, true);
         }
         onMoveActiveWindowToZone: {
+            clearMetaArrowMemory(Workspace.activeWindow);
             moveClientToZone(Workspace.activeWindow, zone);
         }
         onActivateLayout: {
+            clearMetaArrowMemory(Workspace.activeWindow);
             if (layout >= 0 && layout < availableLayouts.length) {
                 setCurrentLayout(availableLayouts[layout].index);
                 highlightedZone = -1;
@@ -774,21 +950,35 @@ Item {
             }
         }
         onMoveActiveWindowUp: {
-            moveClientToNeighbour(Workspace.activeWindow, "up");
+            if (config.useLegacyMetaArrow)
+                moveClientToNeighbour(Workspace.activeWindow, "up");
+            else
+                smartSnapMetaArrow(Workspace.activeWindow, "up");
         }
         onMoveActiveWindowDown: {
-            moveClientToNeighbour(Workspace.activeWindow, "down");
+            if (config.useLegacyMetaArrow)
+                moveClientToNeighbour(Workspace.activeWindow, "down");
+            else
+                smartSnapMetaArrow(Workspace.activeWindow, "down");
         }
         onMoveActiveWindowLeft: {
-            moveClientToNeighbour(Workspace.activeWindow, "left");
+            if (config.useLegacyMetaArrow)
+                moveClientToNeighbour(Workspace.activeWindow, "left");
+            else
+                smartSnapMetaArrow(Workspace.activeWindow, "left");
         }
         onMoveActiveWindowRight: {
-            moveClientToNeighbour(Workspace.activeWindow, "right");
+            if (config.useLegacyMetaArrow)
+                moveClientToNeighbour(Workspace.activeWindow, "right");
+            else
+                smartSnapMetaArrow(Workspace.activeWindow, "right");
         }
         onSnapActiveWindow: {
+            clearMetaArrowMemory(Workspace.activeWindow);
             moveClientToClosestZone(Workspace.activeWindow);
         }
         onSnapAllWindows: {
+            for (let i = 0; i < Workspace.stackingOrder.length; i++) clearMetaArrowMemory(Workspace.stackingOrder[i])
             moveAllClientsToClosestZone();
         }
         onShowDetectedMonitors: {
@@ -797,7 +987,9 @@ Item {
                 Utils.osd("KZones: no monitors detected");
                 return ;
             }
-            const summary = screens.map(s => `${s.name} (${s.width}x${s.height})`).join("   ");
+            const summary = screens.map((s) => {
+                return `${s.name} (${s.width}x${s.height})`;
+            }).join("   ");
             Utils.osd("Monitors: " + summary);
         }
     }
@@ -832,6 +1024,13 @@ Item {
 
         function onScreensChanged() {
             refreshClientArea();
+        }
+
+        function onWindowActivated(client) {
+            if (lastActiveWindow && lastActiveWindow !== client)
+                clearMetaArrowMemory(lastActiveWindow);
+
+            lastActiveWindow = client;
         }
 
         function onWindowAdded(client) {

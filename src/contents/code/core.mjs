@@ -133,6 +133,7 @@ export function loadConfig() {
   config.edgeSnappingTriggerDistance = KWin.readConfig("edgeSnappingTriggerDistance", 1);
   config.rememberWindowGeometries = KWin.readConfig("rememberWindowGeometries", true);
   config.trackLayoutPerScreen = KWin.readConfig("trackLayoutPerScreen", false) || anyScopedLayout;
+  config.useLegacyMetaArrow = KWin.readConfig("useLegacyMetaArrow", false);
   config.trackLayoutPerDesktop = KWin.readConfig("trackLayoutPerDesktop", false);
   config.showOsdMessages = KWin.readConfig("showOsdMessages", true);
   config.fadeWindowsWhileMoving = KWin.readConfig("fadeWindowsWhileMoving", false);
