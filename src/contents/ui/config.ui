@@ -372,9 +372,15 @@
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_6">
                     <item>
-                      <widget class="QLabel" name="label_layoutsScreensExplanation">
+                      <widget class="QLabel" name="label_layoutsDocsLink">
                         <property name="text">
-                          <string>Add an optional &quot;screens&quot; array (e.g. [&quot;DP-1&quot;, &quot;HDMI-A-1&quot;]) to a layout to restrict it to specific monitors. Omit or leave empty to show on every monitor. Bind the &quot;Show detected monitors&quot; shortcut in System Settings → Shortcuts to discover connector names.</string>
+                          <string>Define your layouts as a JSON array. See the &lt;a href=&quot;https://github.com/gerritdevriese/kzones#layouts&quot;&gt;Layouts documentation&lt;/a&gt; for the schema, examples, and per-screen options.</string>
+                        </property>
+                        <property name="textFormat">
+                          <enum>Qt::TextFormat::RichText</enum>
+                        </property>
+                        <property name="openExternalLinks">
+                          <bool>true</bool>
                         </property>
                         <property name="wordWrap">
                           <bool>true</bool>

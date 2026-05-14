@@ -1,4 +1,4 @@
-import { isWidthPreserveDirection, eq, centerX, centerY } from "./geometry.mjs";
+import { isWidthPreserveDirection, eq, centerX, centerY, touchesEdge } from "./geometry.mjs";
 import { buildZonePool, findEntryMatchingSource } from "./zone-pool.mjs";
 import { axisPreserveFilter, perpendicularPreserveFilter, centerInDirectionFilter } from "./direction-rules.mjs";
 import { pickMinCost } from "./cost.mjs";
@@ -105,11 +105,30 @@ function planMonitorJump({ source, dir, currentScreen, screens, layouts }) {
 
 // Floating / off-grid: no axis-preserve constraint — pick whichever zone in
 // the direction of travel sits closest in shape AND position.
+//
+// If strict "centre strictly in dir" gives nothing (e.g. source's clipped
+// rect on this monitor already sits past every candidate's centre), fall
+// back to the direction-edge tiles before jumping monitors. This keeps a
+// window with a 1% sliver on the next monitor from teleporting all the way
+// there — we'd rather snap it to the leftmost / topmost tile that still
+// makes sense.
 function planFloating({ source, dir, pool, currentScreenName, screens, currentScreen, layouts }) {
   const candidates = centerInDirectionFilter(pool, source, dir);
   if (candidates.length > 0) {
     const pick = pickMinCost(candidates, source);
     if (pick) return actionZone(pick, currentScreenName);
+  }
+  // Fullscreen-sized sources skip the edge-fallback — they came from a
+  // "window fills the monitor" state and the user almost certainly wants
+  // the cross-monitor jump that follows, not a side-snap to a tile on the
+  // same monitor.
+  const sourceCoversMonitor = eq(source.w, 100) && eq(source.h, 100);
+  if (!sourceCoversMonitor) {
+    const edgeTouching = pool.filter(z => touchesEdge(z, dir));
+    if (edgeTouching.length > 0) {
+      const pick = pickMinCost(edgeTouching, source);
+      if (pick) return actionZone(pick, currentScreenName);
+    }
   }
   const jump = planMonitorJump({ source, dir, currentScreen, screens, layouts });
   return jump || actionNoop("no candidate, no monitor in direction");
@@ -122,10 +141,11 @@ function planFloating({ source, dir, pool, currentScreenName, screens, currentSc
 //
 // Vertical strips (h=100 thirds) have no width-matching neighbour above or
 // below themselves. For Meta+Up/Down we relax the axis-preserve constraint
-// so a tall left-third can land on top-left ¼ instead of bouncing into a
-// monitor jump. Horizontal motion stays strict — at the right edge of a
-// monitor we *do* want to jump out, not jitter sideways into a slightly
-// narrower neighbour.
+// so a tall left-third can land on top-left ¼ — but only if the candidate's
+// perpendicular centre still lies inside the source's perpendicular bounds.
+// Without that, middle-third pressing Up would jitter sideways into a corner
+// tile; with it, the middle column falls through to fullscreen and the side
+// columns reach the corners directly above them.
 function planSnapped({ source, dir, pool, currentScreenName, screens, currentScreen, layouts }) {
   const axisPreserved = axisPreserveFilter(pool, source, dir);
   let candidates = centerInDirectionFilter(axisPreserved, source, dir);
@@ -134,12 +154,29 @@ function planSnapped({ source, dir, pool, currentScreenName, screens, currentScr
 
   if (dir === "up" || dir === "down") {
     const relaxed = centerInDirectionFilter(pool, source, dir);
-    pick = pickMinCost(relaxed, source);
+    const overlapping = perpendicularCenterWithinSource(relaxed, source, dir);
+    pick = pickMinCost(overlapping, source);
     if (pick) return actionZone(pick, currentScreenName);
   }
 
   if (dir === "up") return actionFullscreen(currentScreenName);
   return planMonitorJump({ source, dir, currentScreen, screens, layouts }) || actionNoop("no candidate, no monitor");
+}
+
+function perpendicularCenterWithinSource(zones, source, dir) {
+  const out = [];
+  const isVertical = (dir === "up" || dir === "down");
+  for (let i = 0; i < zones.length; i++) {
+    const c = zones[i];
+    if (isVertical) {
+      const cx = centerX(c);
+      if (cx >= source.x && cx <= source.x + source.w) out.push(c);
+    } else {
+      const cy = centerY(c);
+      if (cy >= source.y && cy <= source.y + source.h) out.push(c);
+    }
+  }
+  return out;
 }
 
 function planFromFullscreen({ source, dir, pool, currentScreenName, currentScreen, screens, layouts }) {
@@ -175,8 +212,13 @@ export function planSnap({ client, source, clientArea, dir, screens, currentScre
     return planFromFullscreen({ source, dir, pool, currentScreenName, currentScreen, screens, layouts });
   }
 
+  // Geometry is the source of truth — a window whose frameGeometry matches a
+  // pool entry within tolerance is treated as snapped regardless of what
+  // client.zone says. KWin can drop / reset client.zone in legitimate cases
+  // (fullscreen, focus loss, etc.) and we don't want those to demote the
+  // window back to floating-source rules and cause unexpected corner jumps.
   const inCycle = findEntryMatchingSource(pool, source);
-  const isSnapped = client && client.zone !== undefined && client.zone !== null && client.zone !== -1 && inCycle;
+  const isSnapped = !!inCycle;
 
   if (isSnapped) {
     return planSnapped({ source, dir, pool, currentScreenName, currentScreen, screens, layouts });

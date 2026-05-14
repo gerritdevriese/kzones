@@ -361,23 +361,49 @@ Item {
         return null;
     }
 
-    function getScreenForClient(client) {
+    function getScreenForClient(client, direction) {
         if (!client)
             return null;
 
         const screens = rawScreensList();
-        const cx = client.frameGeometry.x + client.frameGeometry.width / 2;
-        const cy = client.frameGeometry.y + client.frameGeometry.height / 2;
+        const g = client.frameGeometry;
+        // Pick screen with the largest overlap area against the window's rect.
+        // Ignores a tiny sliver bleeding onto an adjacent monitor.
+        let best = null;
+        let bestOverlap = -1;
+        const overlaps = [];
         for (let i = 0; i < screens.length; i++) {
             const s = screens[i];
-            if (!s || !s.geometry)
+            if (!s || !s.geometry) {
+                overlaps.push({ name: s ? String(s.name || "?") : "null", overlap: -1 });
                 continue;
-
-            const g = s.geometry;
-            if (cx >= g.x && cx <= g.x + g.width && cy >= g.y && cy <= g.y + g.height)
-                return s;
-
+            }
+            const sg = s.geometry;
+            const ox = Math.max(0, Math.min(g.x + g.width,  sg.x + sg.width)  - Math.max(g.x, sg.x));
+            const oy = Math.max(0, Math.min(g.y + g.height, sg.y + sg.height) - Math.max(g.y, sg.y));
+            const overlap = ox * oy;
+            overlaps.push({ name: String(s.name || "?"), overlap: overlap, geom: { x: sg.x, y: sg.y, w: sg.width, h: sg.height } });
+            if (overlap > bestOverlap) {
+                best = s;
+                bestOverlap = overlap;
+            }
         }
+        // Tie-break by direction of travel only when there's a non-`best`
+        // screen with the SAME overlap as best.
+        if (direction && best) {
+            const bg = best.geometry;
+            for (let i = 0; i < screens.length; i++) {
+                const cand = screens[i];
+                if (!cand || cand === best || !cand.geometry) continue;
+                if (overlaps[i].overlap !== bestOverlap || bestOverlap <= 0) continue;
+                const cg = cand.geometry;
+                if (direction === "left"  && cg.x + cg.width  <= bg.x + 1) return cand;
+                if (direction === "right" && cg.x >= bg.x + bg.width - 1)   return cand;
+                if (direction === "up"    && cg.y + cg.height <= bg.y + 1)  return cand;
+                if (direction === "down"  && cg.y >= bg.y + bg.height - 1)  return cand;
+            }
+        }
+        if (best) return best;
         return Workspace.activeScreen;
     }
 
@@ -385,7 +411,7 @@ Item {
         if (!checkFilter(client))
             return ;
 
-        const screen = getScreenForClient(client);
+        const screen = getScreenForClient(client, direction);
         const screenName = (screen && screen.name) ? String(screen.name) : "";
         const clientAreaForSrc = getClientAreaForScreen(screenName);
         if (!clientAreaForSrc) {
@@ -403,7 +429,7 @@ Item {
             "currentScreen": screen,
             "layouts": config.layouts
         });
-        Utils.log("smartSnapMetaArrow: dir=" + direction + " action=" + JSON.stringify(action));
+        Utils.log("smartSnapMetaArrow: dir=" + direction + " mem=" + JSON.stringify(MoveMemory.getMoveMemory(client) || null) + " action=" + JSON.stringify(action));
         SnapExecutor.executeSnap(action, client, {
             "getClientAreaForScreen": getClientAreaForScreen,
             "getLayoutPadding": function(layoutIndex) {
@@ -637,12 +663,10 @@ Item {
             mainDialog.hide();
         }
 
-        function onFrameGeometryChanged() {
-            // If the user dragged / resized the window so it no longer
-            // matches what we last snapped to, the undo memory is stale.
-            if (client.metaMemory && MoveMemory.memoryDriftedFromSnap(client))
-                clearMetaArrowMemory(client);
-
+        function onInteractiveMoveResizeStartedClearMemory() {
+            // User started dragging / resizing — the undo memory becomes
+            // stale the moment they move off our snapped rect. Clear up front.
+            clearMetaArrowMemory(client);
         }
 
         function onMinimizedChanged() {
@@ -654,12 +678,10 @@ Item {
 
         Utils.log("Connecting signals for client " + client.resourceClass.toString());
         client.onInteractiveMoveResizeStarted.connect(onInteractiveMoveResizeStarted);
+        client.onInteractiveMoveResizeStarted.connect(onInteractiveMoveResizeStartedClearMemory);
         client.onInteractiveMoveResizeStepped.connect(onInteractiveMoveResizeStepped);
         client.onInteractiveMoveResizeFinished.connect(onInteractiveMoveResizeFinished);
         client.onFullScreenChanged.connect(onFullScreenChanged);
-        if (client.frameGeometryChanged)
-            client.frameGeometryChanged.connect(onFrameGeometryChanged);
-
         if (client.minimizedChanged)
             client.minimizedChanged.connect(onMinimizedChanged);
 

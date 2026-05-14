@@ -262,6 +262,85 @@ You can define your own layouts by modifying the JSON in the **Layouts** tab in 
 
 </details>
 
+<details>
+  <summary>Multi-monitor (Smart Hotkeys friendly)</summary>
+
+Per-screen layouts using the `screens` field. With **Smart Hotkeys** enabled the four `Meta + Arrow` shortcuts pool zones across every layout assigned to the current monitor, so you can keep one layout per shape and let directional snapping pick the right zone.
+
+```json
+[
+    {
+        "name": "Portrait - Vertical Thirds",
+        "screens": ["DP-2"],
+        "padding": 0,
+        "zones": [
+            { "x": 0, "y": 0,  "width": 100, "height": 33 },
+            { "x": 0, "y": 33, "width": 100, "height": 34 },
+            { "x": 0, "y": 67, "width": 100, "height": 33 }
+        ]
+    },
+    {
+        "name": "Portrait - Halves",
+        "screens": ["DP-2"],
+        "padding": 0,
+        "zones": [
+            { "x": 0, "y": 0,  "width": 100, "height": 50 },
+            { "x": 0, "y": 50, "width": 100, "height": 50 }
+        ]
+    },
+    {
+        "name": "Portrait - Top 2/3 Bottom 1/3",
+        "screens": ["DP-2"],
+        "padding": 0,
+        "zones": [
+            { "x": 0, "y": 0,  "width": 100, "height": 67 },
+            { "x": 0, "y": 67, "width": 100, "height": 33 }
+        ]
+    },
+    {
+        "name": "Portrait - Top 1/3 Bottom 2/3",
+        "screens": ["DP-2"],
+        "padding": 0,
+        "zones": [
+            { "x": 0, "y": 0,  "width": 100, "height": 33 },
+            { "x": 0, "y": 33, "width": 100, "height": 67 }
+        ]
+    },
+    {
+        "name": "Landscape - Halves",
+        "screens": ["HDMI-A-2"],
+        "padding": 0,
+        "zones": [
+            { "x": 0,  "y": 0, "width": 50, "height": 100 },
+            { "x": 50, "y": 0, "width": 50, "height": 100 }
+        ]
+    },
+    {
+        "name": "Landscape - Quarters",
+        "screens": ["HDMI-A-2"],
+        "padding": 0,
+        "zones": [
+            { "x": 0,  "y": 0,  "width": 50, "height": 50 },
+            { "x": 50, "y": 0,  "width": 50, "height": 50 },
+            { "x": 0,  "y": 50, "width": 50, "height": 50 },
+            { "x": 50, "y": 50, "width": 50, "height": 50 }
+        ]
+    },
+    {
+        "name": "Landscape - Horizontal Thirds",
+        "screens": ["HDMI-A-2"],
+        "padding": 0,
+        "zones": [
+            { "x": 0,  "y": 0, "width": 33, "height": 100 },
+            { "x": 33, "y": 0, "width": 34, "height": 100 },
+            { "x": 67, "y": 0, "width": 33, "height": 100 }
+        ]
+    }
+]
+```
+
+</details>
+
 #### Explanation
 
 The main array can contain as many layouts as you want:
@@ -272,6 +351,7 @@ Each **layout** object needs the following keys:
 - `padding`: The amount of space between the window and the zone in pixels
 - `zones`: An array containing all zone objects for this layout
 - `screens`: An optional array of monitor connector names (e.g. `["DP-1", "HDMI-A-1"]`) restricting this layout to those monitors. Omit or leave empty to show the layout on every monitor. To discover connector names, bind the **KZones: Show detected monitors** shortcut in `System Settings / Shortcuts` and press it, or run `kscreen-doctor -o`. When any layout sets `screens`, per-screen tracking of the active layout is enabled automatically.
+- `skipSmartHotkeys`: Optional boolean. When `true`, every zone in this layout is excluded from the **Smart Hotkeys** (`Meta + Arrow`) zone pool. The layout still appears in the overlay and accepts drag-snap normally.
 
 Each **zone** object can contain the following keys:
 
@@ -283,6 +363,7 @@ Each **zone** object can contain the following keys:
   - `margin`: an object containing the margin for the indicator
     - `top`, `right`, `bottom`, `left`: margin in pixels
 - `color`: a color name or hex value to tint the zone with (optional)
+- `skipSmartHotkeys`: Optional boolean. When `true`, this single zone is excluded from the **Smart Hotkeys** (`Meta + Arrow`) pool while remaining a normal drag-snap target.
 
 ### Filters
 

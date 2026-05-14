@@ -5,6 +5,7 @@
 
 import { planSnap } from "../src/contents/code/meta-arrow/snap-planner.mjs";
 import { clientToSourcePct } from "../src/contents/code/meta-arrow/geometry.mjs";
+import { captureMove } from "../src/contents/code/meta-arrow/move-memory.mjs";
 
 const layouts = [
   { name: "Portrait - Thirds", screens: ["DP-2"], padding: 0, zones: [
@@ -61,8 +62,11 @@ function mkClient(screen, pctRect, opts = {}) {
     frameGeometry: fg,
     zone: opts.zone != null ? opts.zone : -1,
     layout: opts.layout != null ? opts.layout : -1,
+    internalId: opts.internalId || ("test-" + Math.random().toString(36).slice(2)),
   };
-  if (opts.metaMemory) c.metaMemory = opts.metaMemory;
+  if (opts.metaMemory) {
+    captureMove(c, opts.metaMemory.prevGeometry, opts.metaMemory.direction, opts.metaMemory.snappedGeometry);
+  }
   return c;
 }
 
@@ -198,6 +202,49 @@ check("left-third -> Down -> BL (relaxed)",
 check("right-third -> Down -> BR (relaxed)",
   plan(mkClient(HDMI, {x:67,y:0,w:33,h:100}, {zone: 2, layout: 6}), HDMI, "down"),
   expectZone(5, 3, "HDMI-A-2"));
+
+// middle-third (HDMI) -> Meta+Up -> fullscreen. Relaxed pool would offer TL/TR
+// but their perpendicular centres (cx=25, cx=75) lie outside source x-range
+// [33, 67], so the relax step rejects them and we fall through to the Up
+// terminal.
+check("middle-third -> Up -> fullscreen (centred column)",
+  plan(mkClient(HDMI, {x:33,y:0,w:34,h:100}, {zone: 1, layout: 6}), HDMI, "up"),
+  expectFullscreen("HDMI-A-2"));
+
+// middle-third (HDMI) -> Meta+Down -> noop. No relax candidate inside source
+// x-range, no monitor below in fixture -> nothing should happen.
+check("middle-third -> Down -> noop (no relax overlap, no monitor)",
+  plan(mkClient(HDMI, {x:33,y:0,w:34,h:100}, {zone: 1, layout: 6}), HDMI, "down"),
+  expectNoop());
+
+// Floating window whose source on the current monitor sits past every
+// candidate's centre (e.g. window with 1% bleeding onto next monitor, the
+// rest hugging the current monitor's left edge). Strict centre-in-dir filter
+// is empty -> fall back to direction-edge tiles on the SAME monitor instead
+// of jumping over to the bled-onto monitor.
+check("source hugging HDMI left edge -> Left -> edge tile (no jump)",
+  plan(mkClient(HDMI, {x:0,y:30,w:10,h:60}), HDMI, "left"),
+  (a) => ({ ok: a.type === "zone" && a.screenName === "HDMI-A-2", want: "zone on HDMI-A-2" }));
+
+// skipSmartHotkeys: per-zone flag removes a zone from the Smart Hotkeys pool.
+// Layouts with skipSmartHotkeys at the layout level skip every zone. Accept
+// both real booleans and stringified "true" (user-authored JSON quirk).
+const skipLayouts = JSON.parse(JSON.stringify(layouts));
+skipLayouts[5].zones[1].skipSmartHotkeys = "true"; // TR on HDMI Quarters skipped
+function planWithLayouts(client, screen, dir, layoutOverride) {
+  const ca = clientArea(screen);
+  const source = clientToSourcePct(client, ca);
+  return planSnap({ client, source, clientArea: ca, dir, screens, currentScreen: screen, layouts: layoutOverride });
+}
+check("skipSmartHotkeys per-zone hides TR from Meta+Right",
+  planWithLayouts(mkClient(HDMI, {x:0,y:0,w:50,h:50}, {zone: 0, layout: 5}), HDMI, "right", skipLayouts),
+  (a) => ({ ok: a.type !== "zone" || !(a.layoutIndex === 5 && a.zoneIndex === 1), want: "anything except TR (layout 5 zone 1)" }));
+
+const skipLayouts2 = JSON.parse(JSON.stringify(layouts));
+skipLayouts2[5].skipSmartHotkeys = true; // whole Quarters layout hidden
+check("skipSmartHotkeys per-layout removes Quarters from pool",
+  planWithLayouts(mkClient(HDMI, {x:0,y:50,w:50,h:50}, {zone: 2, layout: 5}), HDMI, "up", skipLayouts2),
+  (a) => ({ ok: !(a.type === "zone" && a.layoutIndex === 5), want: "zone not from layout 5" }));
 
 // Floating centred on HDMI -> Meta+Up -> TL (least adjustment)
 check("Floating centred -> Up -> TL",
