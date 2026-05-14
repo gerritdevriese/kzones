@@ -1,6 +1,6 @@
+import "../components" as Components
 import QtQuick
 import QtQuick.Layouts
-import "../components" as Components
 
 Item {
     id: zones

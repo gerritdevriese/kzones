@@ -331,6 +331,13 @@ List of all available shortcuts:
 > [!NOTE]  
 > Not all shortcuts will be bound by default as they conflift with existing system bindings.
 
+### Smart Hotkeys
+
+When the **Smart Hotkeys** is enabled, the four `Meta + Arrow` shortcuts use a different snapping algorithm more in line with [Windows snapping](https://support.microsoft.com/en-us/windows/snap-your-windows-885a9b1e-a983-a3b1-16cd-c531795e6241). 
+
+This will look through all layouts bound to a specific monitor and navigate through them intelligently, instead of only using the active layout. It also supports fullscreen and cross-monitor snapping making it easy to snap windows into place.
+
+
 ## Tips and Tricks
 
 ### Animate window movements

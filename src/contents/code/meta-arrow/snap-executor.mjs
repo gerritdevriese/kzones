@@ -1,8 +1,12 @@
 import { applyPadding, fullScreenRect } from "./geometry.mjs";
-import { enterFullscreen, clearMemory } from "./fullscreen-state.mjs";
+import { captureMove, clearMemory } from "./move-memory.mjs";
 
 // Walks an action (possibly a nested jump) and applies it to the client.
-// `deps` provides everything QML/KWin-coupled so this module stays pure JS.
+// Records undo memory after every real move so the next opposite-direction
+// press can step back exactly to where the user came from.
+//
+// `direction` is the Meta+Arrow direction the user pressed; used to populate
+// memory.
 //
 // deps:
 //   getClientAreaForScreen(screenName) -> { x, y, width, height } | null
@@ -11,16 +15,38 @@ import { enterFullscreen, clearMemory } from "./fullscreen-state.mjs";
 //   setFrameGeometry(client, rect)
 //   saveClientProperties(client, layoutIndex, zoneIndex)
 //   log(msg)
-export function executeSnap(action, client, deps) {
+export function executeSnap(action, client, deps, direction) {
   if (!action || !client) return;
   if (action.type === "noop") {
     if (deps.log) deps.log("snap noop: " + (action.reason || ""));
     return;
   }
-  if (action.type === "zone") return applyZone(action, client, deps);
-  if (action.type === "fullscreen") return applyFullscreen(action, client, deps, true);
-  if (action.type === "restore") return applyRestore(action, client, deps);
-  if (action.type === "jump") return applyJump(action, client, deps);
+
+  const prevGeom = cloneGeom(client.frameGeometry);
+
+  if (action.type === "restore") {
+    deps.setMaximize(client, false, false);
+    deps.setFrameGeometry(client, action.prevGeometry);
+    captureMove(client, prevGeom, direction, action.prevGeometry);
+    // After restore, the zone/layout properties are likely stale (we don't
+    // know which tile this geometry corresponds to). Mark as floating; if
+    // user lands on a real tile next, the snap action will reset zone/layout.
+    deps.saveClientProperties(client, -1, -1);
+    return;
+  }
+
+  if (action.type === "zone") {
+    applyZone(action, client, deps);
+  } else if (action.type === "fullscreen") {
+    applyFullscreen(action, client, deps);
+  } else if (action.type === "jump") {
+    applyJump(action, client, deps);
+  } else {
+    return;
+  }
+
+  const newGeom = cloneGeom(client.frameGeometry);
+  captureMove(client, prevGeom, direction, newGeom);
 }
 
 function applyZone(action, client, deps) {
@@ -34,51 +60,20 @@ function applyZone(action, client, deps) {
   deps.setMaximize(client, false, false);
   deps.setFrameGeometry(client, rect);
   deps.saveClientProperties(client, action.layoutIndex, action.zoneIndex);
-  clearMemory(client);
 }
 
-function applyFullscreen(action, client, deps, rememberFromCurrent) {
+function applyFullscreen(action, client, deps) {
   const ca = deps.getClientAreaForScreen(action.screenName);
   if (!ca) return;
   const rect = fullScreenRect(ca);
-
-  // Capture the source zone *before* we replace geometry so meta+down can
-  // bring the window back to where the user came from.
-  let preZone = null;
-  if (rememberFromCurrent && client.zone !== undefined && client.zone !== null && client.zone !== -1 && deps.getZoneRef) {
-    preZone = deps.getZoneRef(client.layout, client.zone);
-  }
-
   deps.setMaximize(client, false, false);
   deps.setFrameGeometry(client, rect);
   deps.saveClientProperties(client, -1, -1);
-
-  enterFullscreen(client, preZone, "up", action.screenName);
-}
-
-function applyRestore(action, client, deps) {
-  const ref = action.zoneRef;
-  if (!ref) {
-    clearMemory(client);
-    return;
-  }
-  const ca = deps.getClientAreaForScreen(ref.sourceScreen || "");
-  if (!ca) {
-    clearMemory(client);
-    return;
-  }
-  const padding = (ref.padding != null) ? ref.padding : deps.getLayoutPadding(ref.sourceLayoutIndex);
-  const rect = applyPadding({ x: ref.x, y: ref.y, w: ref.w, h: ref.h }, padding, ca);
-  deps.setMaximize(client, false, false);
-  deps.setFrameGeometry(client, rect);
-  deps.saveClientProperties(client, ref.sourceLayoutIndex, ref.sourceZoneIndex);
-  clearMemory(client);
 }
 
 function applyJump(action, client, deps) {
   // The destination screen is identified entirely by the geometry we set on
-  // the client; KWin will move the window onto whichever screen owns that
-  // rect. We don't need a separate "sendToScreen" call.
+  // the client; KWin moves the window onto whichever screen owns that rect.
   const nextAct = action.nextAction;
   if (!nextAct) return;
   if (nextAct.type === "zone") {
@@ -86,7 +81,12 @@ function applyJump(action, client, deps) {
     return;
   }
   if (nextAct.type === "fullscreen") {
-    applyFullscreen(nextAct, client, deps, false);
+    applyFullscreen(nextAct, client, deps);
     return;
   }
+}
+
+function cloneGeom(g) {
+  if (!g) return null;
+  return { x: g.x, y: g.y, width: g.width, height: g.height };
 }

@@ -1,6 +1,6 @@
 import "../code/core.mjs" as Core
-import "../code/meta-arrow/fullscreen-state.mjs" as FSState
 import "../code/meta-arrow/geometry.mjs" as MetaGeom
+import "../code/meta-arrow/move-memory.mjs" as MoveMemory
 import "../code/meta-arrow/snap-executor.mjs" as SnapExecutor
 import "../code/meta-arrow/snap-planner.mjs" as SnapPlanner
 import "../code/utils.mjs" as Utils
@@ -441,11 +441,11 @@ Item {
                 if (config.rememberWindowGeometries && zoneIndex !== -1) {
                     if (c.zone === -1 || c.zone === undefined)
                         c.oldGeometry = {
-                            "x": c.frameGeometry.x,
-                            "y": c.frameGeometry.y,
-                            "width": c.frameGeometry.width,
-                            "height": c.frameGeometry.height
-                        };
+                        "x": c.frameGeometry.x,
+                        "y": c.frameGeometry.y,
+                        "width": c.frameGeometry.width,
+                        "height": c.frameGeometry.height
+                    };
 
                 }
                 c.zone = zoneIndex;
@@ -454,11 +454,11 @@ Item {
                 c.activity = Workspace.currentActivity;
             },
             "log": Utils.log
-        });
+        }, direction);
     }
 
     function clearMetaArrowMemory(client) {
-        FSState.clearMemory(client);
+        MoveMemory.clearMemory(client);
     }
 
     function getLayoutKey() {
@@ -638,15 +638,11 @@ Item {
         }
 
         function onFrameGeometryChanged() {
-            // If the user has dragged / resized the window so it's no longer
-            // fullscreen-sized, the meta+down pre-FS memory is stale.
-            if (client.preFS) {
-                const screen = getScreenForClient(client);
-                const ca = screen ? getClientAreaForScreen(String(screen.name)) : null;
-                if (ca && !MetaGeom.isFullscreenSized(client, ca))
-                    clearMetaArrowMemory(client);
+            // If the user dragged / resized the window so it no longer
+            // matches what we last snapped to, the undo memory is stale.
+            if (client.metaMemory && MoveMemory.memoryDriftedFromSnap(client))
+                clearMetaArrowMemory(client);
 
-            }
         }
 
         function onMinimizedChanged() {
@@ -950,28 +946,28 @@ Item {
             }
         }
         onMoveActiveWindowUp: {
-            if (config.useLegacyMetaArrow)
-                moveClientToNeighbour(Workspace.activeWindow, "up");
-            else
+            if (config.smartHotkeys)
                 smartSnapMetaArrow(Workspace.activeWindow, "up");
+            else
+                moveClientToNeighbour(Workspace.activeWindow, "up");
         }
         onMoveActiveWindowDown: {
-            if (config.useLegacyMetaArrow)
-                moveClientToNeighbour(Workspace.activeWindow, "down");
-            else
+            if (config.smartHotkeys)
                 smartSnapMetaArrow(Workspace.activeWindow, "down");
+            else
+                moveClientToNeighbour(Workspace.activeWindow, "down");
         }
         onMoveActiveWindowLeft: {
-            if (config.useLegacyMetaArrow)
-                moveClientToNeighbour(Workspace.activeWindow, "left");
-            else
+            if (config.smartHotkeys)
                 smartSnapMetaArrow(Workspace.activeWindow, "left");
+            else
+                moveClientToNeighbour(Workspace.activeWindow, "left");
         }
         onMoveActiveWindowRight: {
-            if (config.useLegacyMetaArrow)
-                moveClientToNeighbour(Workspace.activeWindow, "right");
-            else
+            if (config.smartHotkeys)
                 smartSnapMetaArrow(Workspace.activeWindow, "right");
+            else
+                moveClientToNeighbour(Workspace.activeWindow, "right");
         }
         onSnapActiveWindow: {
             clearMetaArrowMemory(Workspace.activeWindow);

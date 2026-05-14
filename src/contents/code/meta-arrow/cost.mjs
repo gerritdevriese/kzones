@@ -1,12 +1,19 @@
 import { centerX, centerY } from "./geometry.mjs";
 
+// Position weight = 3. Without it, a same-size lateral shift can beat a
+// "grow in direction of travel" move: e.g. TR -> Meta+Down should grow into
+// right-half, not lateral-jump to BR. Weighting position higher keeps the
+// chain "step toward target" rather than "snap to nearest tile of any
+// shape".
+const POSITION_WEIGHT = 3;
+
 export function adjustmentCost(zone, source) {
   if (!source) return 0;
   const dcx = centerX(zone) - centerX(source);
   const dcy = centerY(zone) - centerY(source);
   const positionCost = Math.sqrt(dcx * dcx + dcy * dcy);
   const sizeCost = Math.abs(zone.w - source.w) + Math.abs(zone.h - source.h);
-  return sizeCost + positionCost;
+  return sizeCost + POSITION_WEIGHT * positionCost;
 }
 
 function tiebreak(a, b) {

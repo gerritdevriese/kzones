@@ -5,7 +5,6 @@
 
 import { planSnap } from "../src/contents/code/meta-arrow/snap-planner.mjs";
 import { clientToSourcePct } from "../src/contents/code/meta-arrow/geometry.mjs";
-import { enterFullscreen } from "../src/contents/code/meta-arrow/fullscreen-state.mjs";
 
 const layouts = [
   { name: "Portrait - Thirds", screens: ["DP-2"], padding: 0, zones: [
@@ -63,7 +62,7 @@ function mkClient(screen, pctRect, opts = {}) {
     zone: opts.zone != null ? opts.zone : -1,
     layout: opts.layout != null ? opts.layout : -1,
   };
-  if (opts.preFS) c.preFS = opts.preFS;
+  if (opts.metaMemory) c.metaMemory = opts.metaMemory;
   return c;
 }
 
@@ -141,11 +140,64 @@ check("Flow2 TL -> Up -> fullscreen",
   plan(mkClient(HDMI, {x:0,y:0,w:50,h:50}, {zone: 0, layout: 5}), HDMI, "up"),
   expectFullscreen("HDMI-A-2"));
 
-// Memory restore: 100% on HDMI with preFS=TL -> Meta+Down -> restore TL
-const tlPreFS = { x:0, y:0, w:50, h:50, sourceLayoutIndex: 5, sourceZoneIndex: 0, padding: 0, sourceScreen: "HDMI-A-2" };
-check("100% HDMI preFS=TL -> Down -> restore",
-  plan(mkClient(HDMI, {x:0,y:0,w:100,h:100}, {zone: -1, layout: -1, preFS: tlPreFS}), HDMI, "down"),
+// Memory restore: 100% on HDMI with metaMemory direction=up (we got here
+// via Meta+Up from TL). Meta+Down -> restore the previous (TL) geometry.
+const tlPixelRect = { x: 0, y: 0, width: 960, height: 540 };
+const fullscreenHdmiRect = { x: 0, y: 0, width: 1920, height: 1080 };
+check("100% HDMI metaMemory(up) -> Down -> restore",
+  plan(mkClient(HDMI, {x:0,y:0,w:100,h:100}, {
+    zone: -1, layout: -1,
+    metaMemory: { prevGeometry: tlPixelRect, direction: "up", snappedGeometry: fullscreenHdmiRect },
+  }), HDMI, "down"),
   expectRestore());
+
+// Universal undo: bot-2/3 on DP with memory direction=down -> Meta+Up restores.
+const bot23PixelRect = { x: 1920, y: Math.round(0.33 * 1920), width: 1080, height: Math.round(0.67 * 1920) };
+const dpFullscreenRect = { x: 1920, y: 0, width: 1080, height: 1920 };
+check("DP bot-2/3 metaMemory(down) -> Up -> restore fullscreen",
+  plan(mkClient(DP, {x:0,y:33,w:100,h:67}, {
+    zone: 1, layout: 3,
+    metaMemory: { prevGeometry: dpFullscreenRect, direction: "down", snappedGeometry: bot23PixelRect },
+  }), DP, "up"),
+  expectRestore());
+
+// Same window same memory but Meta+Down (NOT opposite) -> normal logic.
+check("DP bot-2/3 metaMemory(down) -> Down -> normal flow",
+  plan(mkClient(DP, {x:0,y:33,w:100,h:67}, {
+    zone: 1, layout: 3,
+    metaMemory: { prevGeometry: dpFullscreenRect, direction: "down", snappedGeometry: bot23PixelRect },
+  }), DP, "down"),
+  (a) => ({ ok: a.type !== "restore", want: "not restore (same direction)" }));
+
+// Perpendicular press (Left/Right) from bot-2/3 with down-memory -> not restore.
+check("DP bot-2/3 metaMemory(down) -> Left -> not restore",
+  plan(mkClient(DP, {x:0,y:33,w:100,h:67}, {
+    zone: 1, layout: 3,
+    metaMemory: { prevGeometry: dpFullscreenRect, direction: "down", snappedGeometry: bot23PixelRect },
+  }), DP, "left"),
+  (a) => ({ ok: a.type !== "restore", want: "not restore (perpendicular)" }));
+
+// Relaxed axis-preserve: tall left-third on HDMI -> Meta+Up should land on TL
+// even though TL.w (50) != source.w (33). Strict width-preserve gives no
+// candidates above source -> relax to full pool -> TL.
+check("left-third -> Up -> TL (relaxed axis preserve)",
+  plan(mkClient(HDMI, {x:0,y:0,w:33,h:100}, {zone: 0, layout: 6}), HDMI, "up"),
+  expectZone(5, 0, "HDMI-A-2"));
+
+// Symmetric: right-third -> Meta+Up -> TR.
+check("right-third -> Up -> TR (relaxed)",
+  plan(mkClient(HDMI, {x:67,y:0,w:33,h:100}, {zone: 2, layout: 6}), HDMI, "up"),
+  expectZone(5, 1, "HDMI-A-2"));
+
+// left-third -> Meta+Down -> BL.
+check("left-third -> Down -> BL (relaxed)",
+  plan(mkClient(HDMI, {x:0,y:0,w:33,h:100}, {zone: 0, layout: 6}), HDMI, "down"),
+  expectZone(5, 2, "HDMI-A-2"));
+
+// right-third -> Meta+Down -> BR.
+check("right-third -> Down -> BR (relaxed)",
+  plan(mkClient(HDMI, {x:67,y:0,w:33,h:100}, {zone: 2, layout: 6}), HDMI, "down"),
+  expectZone(5, 3, "HDMI-A-2"));
 
 // Floating centred on HDMI -> Meta+Up -> TL (least adjustment)
 check("Floating centred -> Up -> TL",
@@ -187,6 +239,51 @@ check("TR -> Right -> jump DP top-half",
 check("DP top -> Right -> noop",
   plan(mkClient(DP, {x:0,y:0,w:100,h:33}, {zone: 0, layout: 0}), DP, "right"),
   expectNoop());
+
+// Right-third sequence — center-in-direction with full intermediate tiles:
+//   right-third (67/33) -> right-half (50/50) -> middle-third (33/34)
+//   -> left-half (0/50) -> left-third (0/33)
+check("seq right-third  -> Left -> right-half",
+  plan(mkClient(HDMI, {x:67,y:0,w:33,h:100}, {zone: 2, layout: 6}), HDMI, "left"),
+  expectZone(4, 1, "HDMI-A-2"));
+check("seq right-half   -> Left -> middle-third",
+  plan(mkClient(HDMI, {x:50,y:0,w:50,h:100}, {zone: 1, layout: 4}), HDMI, "left"),
+  expectZone(6, 1, "HDMI-A-2"));
+check("seq middle-third -> Left -> left-half",
+  plan(mkClient(HDMI, {x:33,y:0,w:34,h:100}, {zone: 1, layout: 6}), HDMI, "left"),
+  expectZone(4, 0, "HDMI-A-2"));
+check("seq left-half    -> Left -> left-third",
+  plan(mkClient(HDMI, {x:0,y:0,w:50,h:100}, {zone: 0, layout: 4}), HDMI, "left"),
+  expectZone(6, 0, "HDMI-A-2"));
+
+// Fullscreen on portrait (DP-2 sits right of HDMI in fixture). Meta+Left
+// should jump to landscape on the LEFT and land on the entry edge -> the
+// rightmost h=100 zone on HDMI = right-third.
+check("DP-2 fullscreen -> Left -> jump HDMI right-third",
+  plan(mkClient(DP, {x:0,y:0,w:100,h:100}), DP, "left"),
+  expectJumpTo("HDMI-A-2", expectZone(6, 2, "HDMI-A-2")));
+
+// DP-2 has no monitor on its right side in this fixture -> noop.
+check("DP-2 fullscreen -> Right -> noop (no monitor right)",
+  plan(mkClient(DP, {x:0,y:0,w:100,h:100}), DP, "right"),
+  expectNoop());
+
+// HDMI is landscape -- has horizontal zones, so Meta+Right from HDMI
+// fullscreen stays on monitor and picks closest zone (right-half).
+check("HDMI fullscreen -> Right -> right-half (in-monitor)",
+  plan(mkClient(HDMI, {x:0,y:0,w:100,h:100}), HDMI, "right"),
+  expectZone(4, 1, "HDMI-A-2"));
+
+// Same chain in reverse using Meta+Right:
+check("seq left-third   -> Right -> left-half",
+  plan(mkClient(HDMI, {x:0,y:0,w:33,h:100}, {zone: 0, layout: 6}), HDMI, "right"),
+  expectZone(4, 0, "HDMI-A-2"));
+check("seq left-half    -> Right -> middle-third",
+  plan(mkClient(HDMI, {x:0,y:0,w:50,h:100}, {zone: 0, layout: 4}), HDMI, "right"),
+  expectZone(6, 1, "HDMI-A-2"));
+check("seq middle-third -> Right -> right-half",
+  plan(mkClient(HDMI, {x:33,y:0,w:34,h:100}, {zone: 1, layout: 6}), HDMI, "right"),
+  expectZone(4, 1, "HDMI-A-2"));
 
 // Horizontal terminal w/o monitor: HDMI alone on right (we'll fake no DP).
 // Skip: we model adjacency by geometry; can't easily mock missing monitor here.

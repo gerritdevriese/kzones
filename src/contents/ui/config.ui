@@ -293,12 +293,12 @@
                       </widget>
                     </item>
                     <item>
-                      <widget class="QCheckBox" name="kcfg_useLegacyMetaArrow">
+                      <widget class="QCheckBox" name="kcfg_smartHotkeys">
                         <property name="toolTip">
-                          <string>Use the original neighbour-adjacency Meta+Arrow logic instead of the smart directional snapping that pools zones across all layouts assigned to a monitor.</string>
+                          <string>Enable smart Meta+Arrow directional snapping that pools zones across all layouts assigned to a monitor, follows the direction of travel, supports one-step undo via the opposite key, and jumps to neighbouring monitors at the edge.</string>
                         </property>
                         <property name="text">
-                          <string>Use legacy Meta+Arrow behavior</string>
+                          <string>Smart Hotkeys</string>
                         </property>
                       </widget>
                     </item>
