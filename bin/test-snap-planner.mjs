@@ -256,19 +256,20 @@ check("Dragged 100% HDMI -> Left -> left-half",
   plan(mkClient(HDMI, {x:0,y:0,w:100,h:100}), HDMI, "left"),
   expectZone(4, 0, "HDMI-A-2"));
 
-// Dragged 100% on DP (portrait, no preFS) -> Meta+Down -> middle-third.
-// Source covers the entire monitor so cycle-in-direction is inclusive: the
-// centred horizontal band wins on minimal change, instead of jumping to a
-// bottom-aligned tile.
-check("Dragged 100% DP -> Down -> middle-third",
+// Dragged 100% on DP (portrait, no preFS) -> Meta+Down -> bottom-2/3.
+// Source covers the monitor; strict centre-in-direction keeps only tiles
+// that genuinely sit below centre, so the bottom-2/3 band wins on minimal
+// change instead of a same-centre middle third.
+check("Dragged 100% DP -> Down -> bottom-2/3",
   plan(mkClient(DP, {x:0,y:0,w:100,h:100}), DP, "down"),
-  expectZone(0, 1, "DP-2"));
+  expectZone(3, 1, "DP-2"));
 
-// Same situation on HDMI (landscape fullscreen + Meta+Down) -> middle
-// vertical strip (Horizontal Thirds zone 1).
-check("Dragged 100% HDMI -> Down -> middle-third",
+// Same situation on HDMI (landscape fullscreen + Meta+Down): the strict
+// downward filter prunes the same-centre middle vertical strip, leaving the
+// two bottom quarters; cost ties and tiebreak picks bottom-left.
+check("Dragged 100% HDMI -> Down -> bottom-left quarter",
   plan(mkClient(HDMI, {x:0,y:0,w:100,h:100}), HDMI, "down"),
-  expectZone(6, 1, "HDMI-A-2"));
+  expectZone(5, 2, "HDMI-A-2"));
 
 // Flow 3: TL -> Meta+Right -> TR; TR -> Meta+Down -> right-half; right-half -> Meta+Down -> BR
 check("Flow3 TL -> Right -> TR",
