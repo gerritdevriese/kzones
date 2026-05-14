@@ -74,6 +74,10 @@ function applyFullscreen(action, client, deps) {
   deps.setMaximize(client, false, false);
   deps.saveClientProperties(client, -1, -2);
   if (fsPad === 0) {
+    // Native maximize acts on whichever screen the window currently
+    // occupies. For a cross-monitor jump the window hasn't moved yet, so
+    // relocate the frame onto the target screen before maximizing.
+    deps.setFrameGeometry(client, { x: ca.x, y: ca.y, width: ca.width, height: ca.height });
     deps.setMaximize(client, true, true);
   } else {
     const padded = applyPadding({ x: 0, y: 0, w: 100, h: 100 }, fsPad, ca);

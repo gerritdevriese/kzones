@@ -184,21 +184,26 @@ function planFromFullscreen({ source, dir, pool, currentScreenName, currentScree
     return planMonitorJump({ source, dir, currentScreen, screens, layouts }) || actionNoop("at fullscreen, no monitor above");
   }
 
-  // Meta+Down on a fullscreen source: every tile is "inside" the source, so
-  // strict centre-in-direction prunes natural targets — a centred horizontal
-  // band (cy = source.cy) on portrait, a centred vertical column on
-  // landscape. Use the inclusive variant so cost-min can pick whichever
-  // shape best matches "next smaller, biased downward".
+  // Meta+Down on a fullscreen source: prefer tiles whose centre genuinely
+  // sits below the source centre — the natural downward target (e.g. a
+  // bottom-2/3 band). Only when NO strictly-lower tile exists do we relax to
+  // the inclusive variant, which also admits a centred horizontal band
+  // (cy = source.cy) on portrait or a centred column on landscape.
+  //
+  // Without this ordering, cost-min favours a same-centre middle band
+  // (positionCost = 0) over a real downward shift, so Meta+Down would land
+  // on the middle third instead of the bottom band.
   //
   // Up / Left / Right stay strict: Up is handled by the early monitor-jump
   // branch above, and horizontal directions need real cx > / < to avoid
   // landing on the centre column when the user asks for the right edge.
   if (dir === "down") {
+    const strict = centerInDirectionFilter(pool, source, dir);
+    let pick = pickMinCost(strict, source);
+    if (pick) return actionZone(pick, currentScreenName);
     const inclusive = centerInDirectionFilter(pool, source, dir, /*inclusive*/ true);
-    if (inclusive.length > 0) {
-      const pick = pickMinCost(inclusive, source);
-      if (pick) return actionZone(pick, currentScreenName);
-    }
+    pick = pickMinCost(inclusive, source);
+    if (pick) return actionZone(pick, currentScreenName);
   }
 
   // Down / Left / Right from fullscreen with no perpendicular-preserving
