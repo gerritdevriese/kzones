@@ -10,22 +10,48 @@ Item {
     property int highlightedZone
     property int layoutIndex
     property alias repeater: repeater
+    // When set, render these zones instead of `config.layouts[layoutIndex].zones`.
+    // Lets the fullscreen-drag preview reuse this component with a synthetic
+    // single-zone layout covering the whole monitor.
+    property var overrideZones: null
+    property int overridePadding: -1
+    property bool overrideAlwaysActive: false
+
+    function _layout() {
+        return config && config.layouts && config.layouts[layoutIndex];
+    }
+
+    function _zones() {
+        if (overrideZones)
+            return overrideZones;
+
+        const l = _layout();
+        return (l && l.zones) || [];
+    }
+
+    function _padding() {
+        if (overridePadding >= 0)
+            return overridePadding;
+
+        const l = _layout();
+        return (l && l.padding) || 0;
+    }
 
     Repeater {
         id: repeater
 
-        model: config.layouts[layoutIndex].zones
+        model: zones._zones()
 
         // zone
         Item {
             id: zone
 
             property int zoneIndex: index
-            property int zonePadding: config.layouts[layoutIndex].padding || 0
-            property var renderZones: config.zoneOverlayIndicatorDisplay == 1 ? [config.layouts[layoutIndex].zones[index]] : config.layouts[layoutIndex].zones
-            property int activeIndex: config.zoneOverlayIndicatorDisplay == 1 ? 0 : index
+            property int zonePadding: zones._padding()
+            property var renderZones: overrideZones ? overrideZones : (config.zoneOverlayIndicatorDisplay == 1 ? [zones._zones()[index]] : zones._zones())
+            property int activeIndex: (overrideZones || config.zoneOverlayIndicatorDisplay == 1) ? 0 : index
             property var indicatorPos: (modelData && modelData.indicator && modelData.indicator.position) || "center"
-            property bool active: (highlightedZone == zoneIndex && currentLayout == layoutIndex)
+            property bool active: overrideAlwaysActive || (highlightedZone == zoneIndex && currentLayout == layoutIndex)
 
             x: ((modelData.x / 100) * (clientArea.width - zonePadding)) + zonePadding
             y: ((modelData.y / 100) * (clientArea.height - zonePadding)) + zonePadding
@@ -86,25 +112,10 @@ Item {
 
             }
 
-            // zone border
-            Rectangle {
-                id: zoneBorder
-
+            Components.ZoneHighlight {
                 anchors.fill: parent
-                color: "transparent"
-                border.color: (active) ? modelData.color || colorHelper.accentColor : "transparent"
-                border.width: 3
-                radius: 8
-            }
-
-            // zone background
-            Rectangle {
-                id: zoneBackground
-
-                opacity: (highlightedZone == zoneIndex) ? 0.1 : 0
-                anchors.fill: parent
-                color: modelData.color || colorHelper.accentColor
-                radius: 8
+                active: zone.active
+                tint: modelData.color || colorHelper.accentColor
             }
 
             // indicator shadow

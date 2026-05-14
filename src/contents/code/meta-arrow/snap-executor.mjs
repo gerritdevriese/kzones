@@ -57,18 +57,42 @@ function applyZone(action, client, deps) {
   }
   const padding = (action.padding != null) ? action.padding : deps.getLayoutPadding(action.layoutIndex);
   const rect = applyPadding(action.zone, padding, ca);
+  // Unmaximize first so KWin restores the pre-max frameGeometry, then
+  // capture that as oldGeometry BEFORE we overwrite with the zone rect.
+  // Without this order, a window maximized via title-bar double-click + then
+  // snapped via Meta+Arrow would store the snapped rect as oldGeometry and
+  // a future drag would never restore the pre-max size.
   deps.setMaximize(client, false, false);
-  deps.setFrameGeometry(client, rect);
   deps.saveClientProperties(client, action.layoutIndex, action.zoneIndex);
+  deps.setFrameGeometry(client, rect);
 }
 
 function applyFullscreen(action, client, deps) {
   const ca = deps.getClientAreaForScreen(action.screenName);
   if (!ca) return;
-  const rect = fullScreenRect(ca);
+  const fsPad = deps.getFullscreenPadding ? (deps.getFullscreenPadding() || 0) : 0;
+  // Unmaximize first, then — for the native maximise path — pre-set the
+  // frame to the oldGeometry restore target so KWin's internal
+  // geometryRestore captures *that* as the pre-max state. Without this,
+  // dragging the maximised window away reverts to whichever snapped tile
+  // happened to be active right before we maximised it.
   deps.setMaximize(client, false, false);
-  deps.setFrameGeometry(client, rect);
-  deps.saveClientProperties(client, -1, -1);
+  deps.saveClientProperties(client, -1, -2);
+  if (fsPad === 0) {
+    const restore = client.oldGeometry || client.lastNormalGeometry;
+    if (restore) {
+      deps.setFrameGeometry(client, {
+        x: restore.x,
+        y: restore.y,
+        width: restore.width,
+        height: restore.height,
+      });
+    }
+    deps.setMaximize(client, true, true);
+  } else {
+    const padded = applyPadding({ x: 0, y: 0, w: 100, h: 100 }, fsPad, ca);
+    deps.setFrameGeometry(client, padded);
+  }
 }
 
 function applyJump(action, client, deps) {

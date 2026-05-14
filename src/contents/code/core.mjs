@@ -131,6 +131,8 @@ export function loadConfig() {
   config.zoneOverlayIndicatorDisplay = KWin.readConfig("zoneOverlayIndicatorDisplay", 0);
   config.enableEdgeSnapping = KWin.readConfig("enableEdgeSnapping", false);
   config.edgeSnappingTriggerDistance = KWin.readConfig("edgeSnappingTriggerDistance", 1);
+  config.enableFullscreenSnap = KWin.readConfig("enableFullscreenSnap", true);
+  config.fullscreenSnapPadding = KWin.readConfig("fullscreenSnapPadding", 0);
   config.rememberWindowGeometries = KWin.readConfig("rememberWindowGeometries", true);
   config.trackLayoutPerScreen = KWin.readConfig("trackLayoutPerScreen", false) || anyScopedLayout;
   config.smartHotkeys = KWin.readConfig("smartHotkeys", false);

@@ -260,6 +260,43 @@
                         </item>
                       </layout>
                     </item>
+                    <item>
+                      <widget class="QCheckBox" name="kcfg_enableFullscreenSnap">
+                        <property name="toolTip">
+                          <string>Drag a window past the top of the workspace (into the panel area) to maximise it. Requires edge snapping to be enabled.</string>
+                        </property>
+                        <property name="text">
+                          <string>Drag to top for fullscreen</string>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <layout class="QFormLayout" name="formLayout_fullscreenSnap">
+                        <item row="0" column="0">
+                          <widget class="QLabel" name="label_fullscreenSnapPadding">
+                            <property name="text">
+                              <string>Fullscreen snap padding</string>
+                            </property>
+                          </widget>
+                        </item>
+                        <item row="0" column="1">
+                          <widget class="QSpinBox" name="kcfg_fullscreenSnapPadding">
+                            <property name="toolTip">
+                              <string>Pixels of margin between the window and the screen edges when you drag a window past the top to snap it fullscreen. Zero uses the native maximised state so double-clicking the title bar toggles it like any other window.</string>
+                            </property>
+                            <property name="suffix">
+                              <string> px</string>
+                            </property>
+                            <property name="minimum">
+                              <number>0</number>
+                            </property>
+                            <property name="maximum">
+                              <number>500</number>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </item>
                   </layout>
                 </widget>
               </item>

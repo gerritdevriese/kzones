@@ -183,8 +183,27 @@ function planFromFullscreen({ source, dir, pool, currentScreenName, currentScree
   if (dir === "up") {
     return planMonitorJump({ source, dir, currentScreen, screens, layouts }) || actionNoop("at fullscreen, no monitor above");
   }
-  // Down / Left / Right from fullscreen: floating-source rule using
-  // full-monitor source. Memory-based undo is handled before reaching here.
+
+  // Meta+Down on a fullscreen source: every tile is "inside" the source, so
+  // strict centre-in-direction prunes natural targets — a centred horizontal
+  // band (cy = source.cy) on portrait, a centred vertical column on
+  // landscape. Use the inclusive variant so cost-min can pick whichever
+  // shape best matches "next smaller, biased downward".
+  //
+  // Up / Left / Right stay strict: Up is handled by the early monitor-jump
+  // branch above, and horizontal directions need real cx > / < to avoid
+  // landing on the centre column when the user asks for the right edge.
+  if (dir === "down") {
+    const inclusive = centerInDirectionFilter(pool, source, dir, /*inclusive*/ true);
+    if (inclusive.length > 0) {
+      const pick = pickMinCost(inclusive, source);
+      if (pick) return actionZone(pick, currentScreenName);
+    }
+  }
+
+  // Down / Left / Right from fullscreen with no perpendicular-preserving
+  // candidate: fall back to the regular floating-source rule, which handles
+  // cross-monitor jumps and the in-monitor edge-tile fallback.
   return planFloating({ source, dir, pool, currentScreenName, screens, currentScreen, layouts });
 }
 
