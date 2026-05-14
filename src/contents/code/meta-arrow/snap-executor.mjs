@@ -71,23 +71,9 @@ function applyFullscreen(action, client, deps) {
   const ca = deps.getClientAreaForScreen(action.screenName);
   if (!ca) return;
   const fsPad = deps.getFullscreenPadding ? (deps.getFullscreenPadding() || 0) : 0;
-  // Unmaximize first, then — for the native maximise path — pre-set the
-  // frame to the oldGeometry restore target so KWin's internal
-  // geometryRestore captures *that* as the pre-max state. Without this,
-  // dragging the maximised window away reverts to whichever snapped tile
-  // happened to be active right before we maximised it.
   deps.setMaximize(client, false, false);
   deps.saveClientProperties(client, -1, -2);
   if (fsPad === 0) {
-    const restore = client.oldGeometry || client.lastNormalGeometry;
-    if (restore) {
-      deps.setFrameGeometry(client, {
-        x: restore.x,
-        y: restore.y,
-        width: restore.width,
-        height: restore.height,
-      });
-    }
     deps.setMaximize(client, true, true);
   } else {
     const padded = applyPadding({ x: 0, y: 0, w: 100, h: 100 }, fsPad, ca);
