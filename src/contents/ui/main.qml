@@ -375,14 +375,26 @@ Item {
         for (let i = 0; i < screens.length; i++) {
             const s = screens[i];
             if (!s || !s.geometry) {
-                overlaps.push({ name: s ? String(s.name || "?") : "null", overlap: -1 });
+                overlaps.push({
+                    "name": s ? String(s.name || "?") : "null",
+                    "overlap": -1
+                });
                 continue;
             }
             const sg = s.geometry;
-            const ox = Math.max(0, Math.min(g.x + g.width,  sg.x + sg.width)  - Math.max(g.x, sg.x));
+            const ox = Math.max(0, Math.min(g.x + g.width, sg.x + sg.width) - Math.max(g.x, sg.x));
             const oy = Math.max(0, Math.min(g.y + g.height, sg.y + sg.height) - Math.max(g.y, sg.y));
             const overlap = ox * oy;
-            overlaps.push({ name: String(s.name || "?"), overlap: overlap, geom: { x: sg.x, y: sg.y, w: sg.width, h: sg.height } });
+            overlaps.push({
+                "name": String(s.name || "?"),
+                "overlap": overlap,
+                "geom": {
+                    "x": sg.x,
+                    "y": sg.y,
+                    "w": sg.width,
+                    "h": sg.height
+                }
+            });
             if (overlap > bestOverlap) {
                 best = s;
                 bestOverlap = overlap;
@@ -394,16 +406,30 @@ Item {
             const bg = best.geometry;
             for (let i = 0; i < screens.length; i++) {
                 const cand = screens[i];
-                if (!cand || cand === best || !cand.geometry) continue;
-                if (overlaps[i].overlap !== bestOverlap || bestOverlap <= 0) continue;
+                if (!cand || cand === best || !cand.geometry)
+                    continue;
+
+                if (overlaps[i].overlap !== bestOverlap || bestOverlap <= 0)
+                    continue;
+
                 const cg = cand.geometry;
-                if (direction === "left"  && cg.x + cg.width  <= bg.x + 1) return cand;
-                if (direction === "right" && cg.x >= bg.x + bg.width - 1)   return cand;
-                if (direction === "up"    && cg.y + cg.height <= bg.y + 1)  return cand;
-                if (direction === "down"  && cg.y >= bg.y + bg.height - 1)  return cand;
+                if (direction === "left" && cg.x + cg.width <= bg.x + 1)
+                    return cand;
+
+                if (direction === "right" && cg.x >= bg.x + bg.width - 1)
+                    return cand;
+
+                if (direction === "up" && cg.y + cg.height <= bg.y + 1)
+                    return cand;
+
+                if (direction === "down" && cg.y >= bg.y + bg.height - 1)
+                    return cand;
+
             }
         }
-        if (best) return best;
+        if (best)
+            return best;
+
         return Workspace.activeScreen;
     }
 
