@@ -92,18 +92,60 @@ Item {
     // trigger a floating <-> non-floating transition. Geometry-driven (not
     // client.zone-driven) so externally-snapped windows are classified
     // correctly.
+    //
+    // Critical: the area used for state derivation must come from the
+    // screen the window CURRENTLY occupies, not Workspace.activeScreen.
+    // During a cross-monitor jump fullscreen (snap-executor.applyFullscreen)
+    // the executor does setFrameGeometry(target-screen-rect) BEFORE
+    // setMaximize(true,true). At that intermediate moment frameGeometryChanged
+    // fires with the target-screen rect; if we evaluate it against the
+    // source-screen's clientArea, the rect matches no zone and isn't
+    // fullscreen-sized, so we misclassify as FLOATING and erroneously
+    // restore pristine — which dumps the window back on the source screen
+    // and the final setMaximize then maximises on the wrong monitor.
+    function screenContainingRect(rect) {
+        if (!rect) return null;
+        const cx = rect.x + rect.width / 2;
+        const cy = rect.y + rect.height / 2;
+        const screens = rawScreensList();
+        for (let i = 0; i < screens.length; i++) {
+            const s = screens[i];
+            if (!s || !s.geometry) continue;
+            const g = s.geometry;
+            if (cx >= g.x && cx <= g.x + g.width && cy >= g.y && cy <= g.y + g.height) return s;
+        }
+        return null;
+    }
+
+    function clientFrameArea(client) {
+        if (!client || !client.frameGeometry) return clientArea;
+        // Derive area from the screen geometrically containing the frame
+        // rather than from client.screen — during a cross-monitor jump the
+        // frameGeometry change fires before client.screen catches up, so
+        // trusting client.screen mid-transition mis-classifies the state.
+        const s = screenContainingRect(client.frameGeometry);
+        if (s) {
+            try {
+                const ca = Workspace.clientArea(KWin.FullScreenArea, s, Workspace.currentDesktop);
+                if (ca && ca.width && ca.height) return ca;
+            } catch (e) { /* fall through */ }
+        }
+        return clientArea;
+    }
+
     function computeWindowState(client) {
         if (!client) return Pristine.FLOATING;
         if (client.fullScreen) return Pristine.FULLSCREEN;
         if (client.maximizeMode !== undefined && client.maximizeMode !== null && client.maximizeMode !== 0)
             return Pristine.FULLSCREEN;
-        if (MoveMemory.isFullscreenSized(client, clientArea)) return Pristine.FULLSCREEN;
-        if (frameGeometryMatchesAnyZone(client)) return Pristine.SNAPPED;
+        const area = clientFrameArea(client);
+        if (MoveMemory.isFullscreenSized(client, area)) return Pristine.FULLSCREEN;
+        if (frameGeometryMatchesAnyZone(client, area)) return Pristine.SNAPPED;
         return Pristine.FLOATING;
     }
 
-    function frameGeometryMatchesAnyZone(client) {
-        if (!client || !client.frameGeometry || !clientArea || !clientArea.width || !clientArea.height) return false;
+    function frameGeometryMatchesAnyZone(client, area) {
+        if (!client || !client.frameGeometry || !area || !area.width || !area.height) return false;
         const g = client.frameGeometry;
         const TOL = 4;
         const layouts = config.layouts || [];
@@ -112,10 +154,10 @@ Item {
             if (!layout || !layout.zones) continue;
             for (let zi = 0; zi < layout.zones.length; zi++) {
                 const z = layout.zones[zi];
-                const zx = clientArea.x + (z.x / 100) * clientArea.width;
-                const zy = clientArea.y + (z.y / 100) * clientArea.height;
-                const zw = (z.width  / 100) * clientArea.width;
-                const zh = (z.height / 100) * clientArea.height;
+                const zx = area.x + (z.x / 100) * area.width;
+                const zy = area.y + (z.y / 100) * area.height;
+                const zw = (z.width  / 100) * area.width;
+                const zh = (z.height / 100) * area.height;
                 if (Math.abs(g.x - zx) <= TOL
                  && Math.abs(g.y - zy) <= TOL
                  && Math.abs(g.width  - zw) <= TOL
