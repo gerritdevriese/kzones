@@ -3,6 +3,7 @@ import "../code/meta-arrow/geometry.mjs" as MetaGeom
 import "../code/meta-arrow/move-memory.mjs" as MoveMemory
 import "../code/meta-arrow/snap-executor.mjs" as SnapExecutor
 import "../code/meta-arrow/snap-planner.mjs" as SnapPlanner
+import "../code/pristine-geometry.mjs" as Pristine
 import "../code/utils.mjs" as Utils
 import QtQuick
 import QtQuick.Layouts
@@ -85,6 +86,60 @@ Item {
             return true;
         }
         return false;
+    }
+
+    // Pristine-geometry state derivation. Used by every signal that may
+    // trigger a floating <-> non-floating transition. Geometry-driven (not
+    // client.zone-driven) so externally-snapped windows are classified
+    // correctly.
+    function computeWindowState(client) {
+        if (!client) return Pristine.FLOATING;
+        if (client.fullScreen) return Pristine.FULLSCREEN;
+        if (client.maximizeMode !== undefined && client.maximizeMode !== null && client.maximizeMode !== 0)
+            return Pristine.FULLSCREEN;
+        if (MoveMemory.isFullscreenSized(client, clientArea)) return Pristine.FULLSCREEN;
+        if (frameGeometryMatchesAnyZone(client)) return Pristine.SNAPPED;
+        return Pristine.FLOATING;
+    }
+
+    function frameGeometryMatchesAnyZone(client) {
+        if (!client || !client.frameGeometry || !clientArea || !clientArea.width || !clientArea.height) return false;
+        const g = client.frameGeometry;
+        const TOL = 4;
+        const layouts = config.layouts || [];
+        for (let li = 0; li < layouts.length; li++) {
+            const layout = layouts[li];
+            if (!layout || !layout.zones) continue;
+            for (let zi = 0; zi < layout.zones.length; zi++) {
+                const z = layout.zones[zi];
+                const zx = clientArea.x + (z.x / 100) * clientArea.width;
+                const zy = clientArea.y + (z.y / 100) * clientArea.height;
+                const zw = (z.width  / 100) * clientArea.width;
+                const zh = (z.height / 100) * clientArea.height;
+                if (Math.abs(g.x - zx) <= TOL
+                 && Math.abs(g.y - zy) <= TOL
+                 && Math.abs(g.width  - zw) <= TOL
+                 && Math.abs(g.height - zh) <= TOL) return true;
+            }
+        }
+        return false;
+    }
+
+    // Clip a pristine rect to the currently active screen's client area so a
+    // restore on a different (or smaller) monitor doesn't put the window
+    // off-screen.
+    function clipPristineToActiveScreen(rect) {
+        if (!rect) return rect;
+        const a = clientArea;
+        if (!a || !a.width || !a.height) return rect;
+        let x = rect.x, y = rect.y, w = rect.width, h = rect.height;
+        if (w > a.width)  w = a.width;
+        if (h > a.height) h = a.height;
+        if (x < a.x) x = a.x;
+        if (x + w > a.x + a.width)  x = a.x + a.width  - w;
+        if (y < a.y) y = a.y;
+        if (y + h > a.y + a.height) y = a.y + a.height - h;
+        return { x: x, y: y, width: w, height: h };
     }
 
     function matchZone(client) {
@@ -748,7 +803,46 @@ Item {
 
         function onMinimizedChanged() {
             clearMetaArrowMemory(client);
+            // Pristine is intentionally preserved across minimize: geometry
+            // doesn't change, and the user should still be able to un-minimize
+            // and drag-away to the original size.
         }
+
+        // ── pristine-geometry wiring ──────────────────────────────────────
+        const pristineDeps = {
+            "computeState": function(c) { return computeWindowState(c); },
+            "applyFrame": function(c, rect) {
+                const clipped = clipPristineToActiveScreen(rect);
+                c.setMaximize(false, false);
+                c.frameGeometry = Qt.rect(clipped.x, clipped.y, clipped.width, clipped.height);
+            },
+            "unmaximize": function(c) {
+                c.setMaximize(false, false);
+            },
+            "log": Utils.log
+        };
+
+        function onFrameGeometryChangedForPristine(oldGeom) {
+            // Gate: skip while a user-initiated interactive drag/resize is in
+            // flight. Those phases are handled explicitly by onInteractiveStart
+            // / onInteractiveEnd to avoid the mid-drag applyFrame we issue from
+            // here cascading back into another state-transition.
+            if (moving || resizing) return;
+            Pristine.onStateMaybeChanged(client, oldGeom, pristineDeps);
+        }
+
+        function onInteractiveStartedForPristine() {
+            Pristine.onInteractiveStart(client, client.frameGeometry, pristineDeps);
+        }
+
+        function onInteractiveFinishedForPristine() {
+            Pristine.onInteractiveEnd(client, resizing, pristineDeps);
+        }
+
+        function onClosedForPristine() {
+            Pristine.clear(client);
+        }
+        // ──────────────────────────────────────────────────────────────────
 
         if (!checkFilter(client))
             return ;
@@ -761,6 +855,15 @@ Item {
         client.onFullScreenChanged.connect(onFullScreenChanged);
         if (client.minimizedChanged)
             client.minimizedChanged.connect(onMinimizedChanged);
+
+        if (config.rememberWindowGeometries) {
+            if (client.frameGeometryChanged)
+                client.frameGeometryChanged.connect(onFrameGeometryChangedForPristine);
+            client.onInteractiveMoveResizeStarted.connect(onInteractiveStartedForPristine);
+            client.onInteractiveMoveResizeFinished.connect(onInteractiveFinishedForPristine);
+            if (client.closed)
+                client.closed.connect(onClosedForPristine);
+        }
 
     }
 
@@ -781,6 +884,7 @@ Item {
         Core.init(KWin, Workspace);
         Core.registerQMLComponent("root", root);
         Core.loadConfig();
+        Pristine.setConfigGate(function() { return config.rememberWindowGeometries; });
         refreshClientArea();
         // match all clients to zones and connect signals
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {

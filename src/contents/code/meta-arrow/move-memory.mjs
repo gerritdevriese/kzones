@@ -1,12 +1,11 @@
 import { eq } from "./geometry.mjs";
+import { keyFor, cloneGeom } from "../client-key.mjs";
 
 // Universal one-step undo memory for Meta+Arrow moves.
 //
-// Memory is stored in a module-level Map keyed by client.internalId (falling
-// back to client itself if internalId is missing). KWin's Window object can
-// be flaky about retaining arbitrary JS properties across signal boundaries,
-// so we keep ownership of the map inside this module instead of attaching to
-// the client.
+// Memory is stored in a module-level Map keyed via the shared client-key
+// helper so the pristine-geometry module and this module agree on identity
+// for the same KWin client.
 //
 // `prevGeometry`    is the absolute pixel rect the window had before the move.
 // `direction`       is the direction that produced the current state.
@@ -15,19 +14,6 @@ import { eq } from "./geometry.mjs";
 //                   off our last snap so we can invalidate memory.
 
 const memory = new Map();
-const clientFallback = new WeakMap();
-
-function keyFor(client) {
-  if (!client) return null;
-  if (client.internalId !== undefined && client.internalId !== null) return String(client.internalId);
-  if (client.windowId  !== undefined && client.windowId  !== null) return String(client.windowId);
-  let k = clientFallback.get(client);
-  if (k === undefined) {
-    k = "obj:" + memory.size + ":" + Math.random().toString(36).slice(2);
-    clientFallback.set(client, k);
-  }
-  return k;
-}
 
 export function captureMove(client, prevGeometry, direction, snappedGeometry) {
   const key = keyFor(client);
@@ -70,9 +56,4 @@ export function memoryDriftedFromSnap(client) {
       || Math.abs(g.y - s.y) > 4
       || Math.abs(g.width  - s.width)  > 4
       || Math.abs(g.height - s.height) > 4;
-}
-
-function cloneGeom(g) {
-  if (!g) return null;
-  return { x: g.x, y: g.y, width: g.width, height: g.height };
 }
