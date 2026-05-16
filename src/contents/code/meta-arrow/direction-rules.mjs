@@ -39,12 +39,7 @@ export function perpendicularPreserveFilter(pool, source, dir) {
 // This replaces the old edge-only filter so e.g. middle-third counts as a
 // "to-the-left-of-right-third" candidate even though it doesn't touch the
 // screen edge.
-//
-// `inclusive` relaxes the comparison so candidates whose centre matches the
-// source's centre are kept. Useful for fullscreen-sized sources where the
-// natural "next" tile (e.g. portrait mid-third with cy = 50 from a fullscreen
-// source whose cy is also 50) would otherwise be filtered out.
-export function centerInDirectionFilter(pool, source, dir, inclusive = false) {
+export function centerInDirectionFilter(pool, source, dir) {
   if (!source) return pool.slice();
   const sx = centerX(source);
   const sy = centerY(source);
@@ -54,20 +49,11 @@ export function centerInDirectionFilter(pool, source, dir, inclusive = false) {
     const cx = centerX(c);
     const cy = centerY(c);
     let inDir = false;
-    if (inclusive) {
-      switch (dir) {
-        case "left":  inDir = cx - TOL <= sx; break;
-        case "right": inDir = cx + TOL >= sx; break;
-        case "up":    inDir = cy - TOL <= sy; break;
-        case "down":  inDir = cy + TOL >= sy; break;
-      }
-    } else {
-      switch (dir) {
-        case "left":  inDir = cx + TOL < sx; break;
-        case "right": inDir = cx - TOL > sx; break;
-        case "up":    inDir = cy + TOL < sy; break;
-        case "down":  inDir = cy - TOL > sy; break;
-      }
+    switch (dir) {
+      case "left":  inDir = cx + TOL < sx; break;
+      case "right": inDir = cx - TOL > sx; break;
+      case "up":    inDir = cy + TOL < sy; break;
+      case "down":  inDir = cy - TOL > sy; break;
     }
     if (inDir) out.push(c);
   }

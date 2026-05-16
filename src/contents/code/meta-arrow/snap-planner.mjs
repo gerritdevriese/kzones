@@ -1,4 +1,4 @@
-import { isWidthPreserveDirection, eq, centerX, centerY, touchesEdge } from "./geometry.mjs";
+import { isWidthPreserveDirection, eq, centerX, centerY, touchesEdge, TOL } from "./geometry.mjs";
 import { buildZonePool, findEntryMatchingSource } from "./zone-pool.mjs";
 import { axisPreserveFilter, perpendicularPreserveFilter, centerInDirectionFilter } from "./direction-rules.mjs";
 import { pickMinCost } from "./cost.mjs";
@@ -179,36 +179,60 @@ function perpendicularCenterWithinSource(zones, source, dir) {
   return out;
 }
 
+// Meta+Down from a fullscreen-sized source.
+//
+// A fullscreen window has every tile "inside" it, so a plain
+// centre-in-direction test is ambiguous. The rule that stays consistent
+// across monitors: shrink the window downward while keeping it
+// HORIZONTALLY CENTRED — never dart off into a corner.
+//
+// Pick order over the pool's bottom-edge tiles:
+//   1. keep only tiles horizontally centred on the source; if none qualify,
+//      widen back to every bottom-edge tile
+//   2. of those, keep the ones whose WIDTH changes least — Meta+Down adjusts
+//      height, not width
+//   3. break the remaining tie with the standard least-adjustment cost
+//
+// Landscape: the only horizontally-centred bottom tile is the middle
+// vertical third, so that wins. Portrait: every full-width band is centred,
+// so step 2 ties and step 3 picks the band closest in height to full — the
+// bottom-2/3. Both are "least size change while staying centred", which is
+// what makes the gesture predictable on either monitor.
+//
+// Returns null when the pool has no bottom-edge tile at all, so the caller
+// can fall through to the floating rule (cross-monitor jump / no-op).
+function planFullscreenDown(source, pool, currentScreenName) {
+  const bottomEdge = pool.filter(z => touchesEdge(z, "down"));
+  if (bottomEdge.length === 0) return null;
+
+  const srcCx = centerX(source);
+  const centred = bottomEdge.filter(z => eq(centerX(z), srcCx));
+  const candidates = centred.length > 0 ? centred : bottomEdge;
+
+  let minWidthDelta = Infinity;
+  for (let i = 0; i < candidates.length; i++) {
+    const d = Math.abs(candidates[i].w - source.w);
+    if (d < minWidthDelta) minWidthDelta = d;
+  }
+  const widthMatched = candidates.filter(z => Math.abs(z.w - source.w) <= minWidthDelta + TOL);
+
+  const pick = pickMinCost(widthMatched, source);
+  return pick ? actionZone(pick, currentScreenName) : null;
+}
+
 function planFromFullscreen({ source, dir, pool, currentScreenName, currentScreen, screens, layouts }) {
   if (dir === "up") {
     return planMonitorJump({ source, dir, currentScreen, screens, layouts }) || actionNoop("at fullscreen, no monitor above");
   }
 
-  // Meta+Down on a fullscreen source: prefer tiles whose centre genuinely
-  // sits below the source centre — the natural downward target (e.g. a
-  // bottom-2/3 band). Only when NO strictly-lower tile exists do we relax to
-  // the inclusive variant, which also admits a centred horizontal band
-  // (cy = source.cy) on portrait or a centred column on landscape.
-  //
-  // Without this ordering, cost-min favours a same-centre middle band
-  // (positionCost = 0) over a real downward shift, so Meta+Down would land
-  // on the middle third instead of the bottom band.
-  //
-  // Up / Left / Right stay strict: Up is handled by the early monitor-jump
-  // branch above, and horizontal directions need real cx > / < to avoid
-  // landing on the centre column when the user asks for the right edge.
   if (dir === "down") {
-    const strict = centerInDirectionFilter(pool, source, dir);
-    let pick = pickMinCost(strict, source);
-    if (pick) return actionZone(pick, currentScreenName);
-    const inclusive = centerInDirectionFilter(pool, source, dir, /*inclusive*/ true);
-    pick = pickMinCost(inclusive, source);
-    if (pick) return actionZone(pick, currentScreenName);
+    const downAction = planFullscreenDown(source, pool, currentScreenName);
+    if (downAction) return downAction;
   }
 
-  // Down / Left / Right from fullscreen with no perpendicular-preserving
-  // candidate: fall back to the regular floating-source rule, which handles
-  // cross-monitor jumps and the in-monitor edge-tile fallback.
+  // Down with an empty bottom-edge pool, or Left / Right from fullscreen:
+  // fall back to the floating-source rule, which handles cross-monitor jumps
+  // and the in-monitor edge-tile fallback.
   return planFloating({ source, dir, pool, currentScreenName, screens, currentScreen, layouts });
 }
 
