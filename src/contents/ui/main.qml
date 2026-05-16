@@ -658,8 +658,17 @@ Item {
 
     function getLayoutKey() {
         const parts = [];
-        if (config.trackLayoutPerScreen)
-            parts.push(Workspace.activeScreen.name);
+        if (config.trackLayoutPerScreen) {
+            // Prefer the QML `activeScreen` property — it tracks kzones's
+            // notion of the active screen, which `refreshClientAreaForScreen`
+            // updates eagerly during cross-monitor smart-snap jumps.
+            // `Workspace.activeScreen` is owned by KWin and only switches
+            // when the cursor or focus moves, so it lags during a jump and
+            // would key per-screen layout storage to the SOURCE screen
+            // instead of the DESTINATION.
+            const name = (activeScreen && activeScreen.name) ? activeScreen.name : (Workspace.activeScreen && Workspace.activeScreen.name);
+            if (name) parts.push(name);
+        }
 
         if (config.trackLayoutPerDesktop)
             parts.push(Workspace.currentDesktop.id);
@@ -694,8 +703,10 @@ Item {
     function osdLayoutName() {
         const name = config.layouts[currentLayout].name;
         const parts = [];
-        if (config.trackLayoutPerScreen)
-            parts.push(Workspace.activeScreen.name);
+        if (config.trackLayoutPerScreen) {
+            const screenName = (activeScreen && activeScreen.name) ? activeScreen.name : (Workspace.activeScreen && Workspace.activeScreen.name);
+            if (screenName) parts.push(screenName);
+        }
 
         if (config.trackLayoutPerDesktop)
             parts.push(Workspace.currentDesktop.name);
