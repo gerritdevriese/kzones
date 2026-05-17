@@ -1,11 +1,16 @@
+import "../code/core.mjs" as Core
+import "../code/meta-arrow/geometry.mjs" as MetaGeom
+import "../code/meta-arrow/move-memory.mjs" as MoveMemory
+import "../code/meta-arrow/snap-executor.mjs" as SnapExecutor
+import "../code/meta-arrow/snap-planner.mjs" as SnapPlanner
+import "../code/pristine-geometry.mjs" as Pristine
+import "../code/utils.mjs" as Utils
 import QtQuick
 import QtQuick.Layouts
-import org.kde.plasma.core as PlasmaCore
-import org.kde.plasma.components as PlasmaComponents
-import org.kde.kwin
-import "../code/core.mjs" as Core
-import "../code/utils.mjs" as Utils
 import "components" as Components
+import org.kde.kwin
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.plasma.core as PlasmaCore
 
 Item {
     id: root
@@ -20,14 +25,163 @@ Item {
     property int currentLayout: 0
     property var screenLayouts: new Object()
     property int highlightedZone: -1
+    property bool fullscreenPendingSnap: false
     property var activeScreen: null
+    // [{ layout, index }, ...] — layouts visible on activeScreen. `index` is
+    // the position in the unfiltered config.layouts so existing references
+    // (client.layout, repeaterLayout.itemAt(...), etc.) stay valid.
+    property var availableLayouts: []
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
+    property var lastActiveWindow: null
 
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
         clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop);
         displaySize = Workspace.virtualScreenSize;
+        refreshAvailableLayouts();
         currentLayout = getCurrentLayout();
+    }
+
+    function getScreenAtCursor() {
+        const cp = Workspace.cursorPos;
+        if (!cp)
+            return null;
+
+        const screens = rawScreensList();
+        for (let i = 0; i < screens.length; i++) {
+            const s = screens[i];
+            if (!s || !s.geometry)
+                continue;
+
+            const g = s.geometry;
+            if (cp.x >= g.x && cp.x <= g.x + g.width && cp.y >= g.y && cp.y <= g.y + g.height)
+                return s;
+
+        }
+        return null;
+    }
+
+    function refreshClientAreaForScreen(screen) {
+        if (!screen) {
+            refreshClientArea();
+            return ;
+        }
+        activeScreen = screen;
+        clientArea = Workspace.clientArea(KWin.FullScreenArea, screen, Workspace.currentDesktop);
+        displaySize = Workspace.virtualScreenSize;
+        refreshAvailableLayouts();
+        currentLayout = getCurrentLayout();
+    }
+
+    function refreshAvailableLayouts() {
+        availableLayouts = Core.getLayoutsForScreen(Core.getScreenId(activeScreen));
+    }
+
+    function firstAvailableIndex() {
+        return availableLayouts.length > 0 ? availableLayouts[0].index : 0;
+    }
+
+    function isLayoutAvailable(idx) {
+        for (let i = 0; i < availableLayouts.length; i++) if (availableLayouts[i].index === idx) {
+            return true;
+        }
+        return false;
+    }
+
+    // Pristine-geometry state derivation. Used by every signal that may
+    // trigger a floating <-> non-floating transition. Geometry-driven (not
+    // client.zone-driven) so externally-snapped windows are classified
+    // correctly.
+    //
+    // Critical: the area used for state derivation must come from the
+    // screen the window CURRENTLY occupies, not Workspace.activeScreen.
+    // During a cross-monitor jump fullscreen (snap-executor.applyFullscreen)
+    // the executor does setFrameGeometry(target-screen-rect) BEFORE
+    // setMaximize(true,true). At that intermediate moment frameGeometryChanged
+    // fires with the target-screen rect; if we evaluate it against the
+    // source-screen's clientArea, the rect matches no zone and isn't
+    // fullscreen-sized, so we misclassify as FLOATING and erroneously
+    // restore pristine — which dumps the window back on the source screen
+    // and the final setMaximize then maximises on the wrong monitor.
+    function screenContainingRect(rect) {
+        if (!rect) return null;
+        const cx = rect.x + rect.width / 2;
+        const cy = rect.y + rect.height / 2;
+        const screens = rawScreensList();
+        for (let i = 0; i < screens.length; i++) {
+            const s = screens[i];
+            if (!s || !s.geometry) continue;
+            const g = s.geometry;
+            if (cx >= g.x && cx <= g.x + g.width && cy >= g.y && cy <= g.y + g.height) return s;
+        }
+        return null;
+    }
+
+    function clientFrameArea(client) {
+        if (!client || !client.frameGeometry) return clientArea;
+        // Derive area from the screen geometrically containing the frame
+        // rather than from client.screen — during a cross-monitor jump the
+        // frameGeometry change fires before client.screen catches up, so
+        // trusting client.screen mid-transition mis-classifies the state.
+        const s = screenContainingRect(client.frameGeometry);
+        if (s) {
+            try {
+                const ca = Workspace.clientArea(KWin.FullScreenArea, s, Workspace.currentDesktop);
+                if (ca && ca.width && ca.height) return ca;
+            } catch (e) { /* fall through */ }
+        }
+        return clientArea;
+    }
+
+    function computeWindowState(client) {
+        if (!client) return Pristine.FLOATING;
+        if (client.fullScreen) return Pristine.FULLSCREEN;
+        if (client.maximizeMode !== undefined && client.maximizeMode !== null && client.maximizeMode !== 0)
+            return Pristine.FULLSCREEN;
+        const area = clientFrameArea(client);
+        if (MoveMemory.isFullscreenSized(client, area)) return Pristine.FULLSCREEN;
+        if (frameGeometryMatchesAnyZone(client, area)) return Pristine.SNAPPED;
+        return Pristine.FLOATING;
+    }
+
+    function frameGeometryMatchesAnyZone(client, area) {
+        if (!client || !client.frameGeometry || !area || !area.width || !area.height) return false;
+        const g = client.frameGeometry;
+        const TOL = 4;
+        const layouts = config.layouts || [];
+        for (let li = 0; li < layouts.length; li++) {
+            const layout = layouts[li];
+            if (!layout || !layout.zones) continue;
+            for (let zi = 0; zi < layout.zones.length; zi++) {
+                const z = layout.zones[zi];
+                const zx = area.x + (z.x / 100) * area.width;
+                const zy = area.y + (z.y / 100) * area.height;
+                const zw = (z.width  / 100) * area.width;
+                const zh = (z.height / 100) * area.height;
+                if (Math.abs(g.x - zx) <= TOL
+                 && Math.abs(g.y - zy) <= TOL
+                 && Math.abs(g.width  - zw) <= TOL
+                 && Math.abs(g.height - zh) <= TOL) return true;
+            }
+        }
+        return false;
+    }
+
+    // Clip a pristine rect to the currently active screen's client area so a
+    // restore on a different (or smaller) monitor doesn't put the window
+    // off-screen.
+    function clipPristineToActiveScreen(rect) {
+        if (!rect) return rect;
+        const a = clientArea;
+        if (!a || !a.width || !a.height) return rect;
+        let x = rect.x, y = rect.y, w = rect.width, h = rect.height;
+        if (w > a.width)  w = a.width;
+        if (h > a.height) h = a.height;
+        if (x < a.x) x = a.x;
+        if (x + w > a.x + a.width)  x = a.x + a.width  - w;
+        if (y < a.y) y = a.y;
+        if (y + h > a.y + a.height) y = a.y + a.height - h;
+        return { x: x, y: y, width: w, height: h };
     }
 
     function matchZone(client) {
@@ -99,21 +253,6 @@ Item {
 
     function saveClientProperties(client, zone) {
         Utils.log("Saving geometry for client " + client.resourceClass.toString());
-        // save current geometry
-        if (config.rememberWindowGeometries) {
-            const geometry = {
-                "x": client.frameGeometry.x,
-                "y": client.frameGeometry.y,
-                "width": client.frameGeometry.width,
-                "height": client.frameGeometry.height
-            };
-            if (zone != -1) {
-                if (client.zone == -1)
-                    client.oldGeometry = geometry;
-
-            }
-        }
-        // save zone
         client.zone = zone;
         client.layout = currentLayout;
         client.desktop = Workspace.currentDesktop;
@@ -299,10 +438,237 @@ Item {
         return targetZoneIndex;
     }
 
+    function rawScreensList() {
+        const out = [];
+        try {
+            if (Array.isArray(Workspace.screens))
+                return Workspace.screens.slice();
+
+            if (Workspace.screens && typeof Workspace.screens.length === "number") {
+                for (let i = 0; i < Workspace.screens.length; i++) out.push(Workspace.screens[i])
+                return out;
+            }
+            if (typeof Workspace.numScreens === "number" && typeof Workspace.screenAt === "function") {
+                for (let i = 0; i < Workspace.numScreens; i++) out.push(Workspace.screenAt(i))
+                return out;
+            }
+        } catch (e) {
+            Utils.log("rawScreensList enumeration failed: " + e);
+        }
+        return out;
+    }
+
+    function getClientAreaForScreen(screenName) {
+        const screens = rawScreensList();
+        for (let i = 0; i < screens.length; i++) {
+            const s = screens[i];
+            if (s && String(s.name) === String(screenName)) {
+                const ca = Workspace.clientArea(KWin.FullScreenArea, s, Workspace.currentDesktop);
+                return {
+                    "x": ca.x,
+                    "y": ca.y,
+                    "width": ca.width,
+                    "height": ca.height
+                };
+            }
+        }
+        return null;
+    }
+
+    function getScreenForClient(client, direction) {
+        if (!client)
+            return null;
+
+        const screens = rawScreensList();
+        const g = client.frameGeometry;
+        // Pick screen with the largest overlap area against the window's rect.
+        // Ignores a tiny sliver bleeding onto an adjacent monitor.
+        let best = null;
+        let bestOverlap = -1;
+        const overlaps = [];
+        for (let i = 0; i < screens.length; i++) {
+            const s = screens[i];
+            if (!s || !s.geometry) {
+                overlaps.push({
+                    "name": s ? String(s.name || "?") : "null",
+                    "overlap": -1
+                });
+                continue;
+            }
+            const sg = s.geometry;
+            const ox = Math.max(0, Math.min(g.x + g.width, sg.x + sg.width) - Math.max(g.x, sg.x));
+            const oy = Math.max(0, Math.min(g.y + g.height, sg.y + sg.height) - Math.max(g.y, sg.y));
+            const overlap = ox * oy;
+            overlaps.push({
+                "name": String(s.name || "?"),
+                "overlap": overlap,
+                "geom": {
+                    "x": sg.x,
+                    "y": sg.y,
+                    "w": sg.width,
+                    "h": sg.height
+                }
+            });
+            if (overlap > bestOverlap) {
+                best = s;
+                bestOverlap = overlap;
+            }
+        }
+        // Tie-break by direction of travel only when there's a non-`best`
+        // screen with the SAME overlap as best.
+        if (direction && best) {
+            const bg = best.geometry;
+            for (let i = 0; i < screens.length; i++) {
+                const cand = screens[i];
+                if (!cand || cand === best || !cand.geometry)
+                    continue;
+
+                if (overlaps[i].overlap !== bestOverlap || bestOverlap <= 0)
+                    continue;
+
+                const cg = cand.geometry;
+                if (direction === "left" && cg.x + cg.width <= bg.x + 1)
+                    return cand;
+
+                if (direction === "right" && cg.x >= bg.x + bg.width - 1)
+                    return cand;
+
+                if (direction === "up" && cg.y + cg.height <= bg.y + 1)
+                    return cand;
+
+                if (direction === "down" && cg.y >= bg.y + bg.height - 1)
+                    return cand;
+
+            }
+        }
+        if (best)
+            return best;
+
+        return Workspace.activeScreen;
+    }
+
+    function smartSnapMetaArrow(client, direction) {
+        if (!checkFilter(client))
+            return ;
+
+        const screen = getScreenForClient(client, direction);
+        const screenName = (screen && screen.name) ? String(screen.name) : "";
+        const clientAreaForSrc = getClientAreaForScreen(screenName);
+        if (!clientAreaForSrc) {
+            Utils.log("smartSnapMetaArrow: no client area for " + screenName);
+            return ;
+        }
+        const screensList = rawScreensList();
+        const sourcePct = MetaGeom.clientToSourcePct(client, clientAreaForSrc);
+        const action = SnapPlanner.planSnap({
+            "client": client,
+            "source": sourcePct,
+            "clientArea": clientAreaForSrc,
+            "dir": direction,
+            "screens": screensList,
+            "currentScreen": screen,
+            "layouts": config.layouts
+        });
+        Utils.log("smartSnapMetaArrow: dir=" + direction + " mem=" + JSON.stringify(MoveMemory.getMoveMemory(client) || null) + " action=" + JSON.stringify(action));
+        // Silently sync the active layout to whichever layout the snapped
+        // zone came from. Keeps the layout pool + overlay consistent with
+        // the geometry the user just locked into, without showing an OSD.
+        applyActiveLayoutForAction(action, screensList, screen);
+        SnapExecutor.executeSnap(action, client, {
+            "getClientAreaForScreen": getClientAreaForScreen,
+            "getFullscreenPadding": function() {
+                return config.fullscreenSnapPadding || 0;
+            },
+            "getLayoutPadding": function(layoutIndex) {
+                if (layoutIndex == null || layoutIndex < 0 || !config.layouts[layoutIndex])
+                    return 0;
+
+                return config.layouts[layoutIndex].padding || 0;
+            },
+            "getZoneRef": function(layoutIndex, zoneIndex) {
+                if (layoutIndex == null || layoutIndex < 0)
+                    return null;
+
+                const l = config.layouts[layoutIndex];
+                if (!l || !l.zones || !l.zones[zoneIndex])
+                    return null;
+
+                const z = l.zones[zoneIndex];
+                return {
+                    "x": +z.x,
+                    "y": +z.y,
+                    "w": +z.width,
+                    "h": +z.height,
+                    "sourceLayoutIndex": layoutIndex,
+                    "sourceZoneIndex": zoneIndex,
+                    "padding": l.padding || 0
+                };
+            },
+            "setMaximize": function(c, h, v) {
+                c.setMaximize(h, v);
+            },
+            "setFrameGeometry": function(c, r) {
+                c.frameGeometry = Qt.rect(r.x, r.y, r.width, r.height);
+            },
+            "saveClientProperties": function(c, layoutIndex, zoneIndex) {
+                c.zone = zoneIndex;
+                c.layout = (layoutIndex !== -1) ? layoutIndex : c.layout;
+                c.desktop = Workspace.currentDesktop;
+                c.activity = Workspace.currentActivity;
+            },
+            "log": Utils.log
+        }, direction);
+    }
+
+    function clearMetaArrowMemory(client) {
+        MoveMemory.clearMemory(client);
+    }
+
+    function applyActiveLayoutForAction(action, screensList, sourceScreen) {
+        if (!action)
+            return ;
+
+        let layoutIndex = -1;
+        let screenName = "";
+        if (action.type === "zone") {
+            layoutIndex = action.layoutIndex;
+            screenName = action.screenName;
+        } else if (action.type === "jump" && action.nextAction && action.nextAction.type === "zone") {
+            layoutIndex = action.nextAction.layoutIndex;
+            screenName = action.nextAction.screenName;
+        } else {
+            return ;
+        }
+        if (layoutIndex == null || layoutIndex < 0)
+            return ;
+
+        let targetScreen = sourceScreen;
+        if (screenName && (!targetScreen || String(targetScreen.name) !== screenName)) {
+            for (let i = 0; i < screensList.length; i++) {
+                const s = screensList[i];
+                if (s && String(s.name) === screenName) {
+                    targetScreen = s;
+                    break;
+                }
+            }
+        }
+        refreshClientAreaForScreen(targetScreen);
+        setCurrentLayout(layoutIndex);
+    }
+
     function getLayoutKey() {
         const parts = [];
-        if (config.trackLayoutPerScreen)
-            parts.push(Workspace.activeScreen.name);
+        if (config.trackLayoutPerScreen) {
+            // Prefer the QML `activeScreen` property — it tracks kzones's
+            // notion of the active screen, which `refreshClientAreaForScreen`
+            // updates eagerly during cross-monitor smart-snap jumps.
+            // `Workspace.activeScreen` is owned by KWin and only switches
+            // when the cursor or focus moves, so it lags during a jump and
+            // would key per-screen layout storage to the SOURCE screen
+            // instead of the DESTINATION.
+            const name = (activeScreen && activeScreen.name) ? activeScreen.name : (Workspace.activeScreen && Workspace.activeScreen.name);
+            if (name) parts.push(name);
+        }
 
         if (config.trackLayoutPerDesktop)
             parts.push(Workspace.currentDesktop.id);
@@ -313,15 +679,21 @@ Item {
     function getCurrentLayout() {
         if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
             const key = getLayoutKey();
-            if (!screenLayouts[key])
-                screenLayouts[key] = 0;
+            if (screenLayouts[key] === undefined || !isLayoutAvailable(screenLayouts[key]))
+                screenLayouts[key] = firstAvailableIndex();
 
             return screenLayouts[key];
         }
+        if (!isLayoutAvailable(currentLayout))
+            return firstAvailableIndex();
+
         return currentLayout;
     }
 
     function setCurrentLayout(layout) {
+        if (!isLayoutAvailable(layout))
+            return ;
+
         if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop)
             screenLayouts[getLayoutKey()] = layout;
 
@@ -331,8 +703,10 @@ Item {
     function osdLayoutName() {
         const name = config.layouts[currentLayout].name;
         const parts = [];
-        if (config.trackLayoutPerScreen)
-            parts.push(Workspace.activeScreen.name);
+        if (config.trackLayoutPerScreen) {
+            const screenName = (activeScreen && activeScreen.name) ? activeScreen.name : (Workspace.activeScreen && Workspace.activeScreen.name);
+            if (screenName) parts.push(screenName);
+        }
 
         if (config.trackLayoutPerDesktop)
             parts.push(Workspace.currentDesktop.name);
@@ -386,16 +760,6 @@ Item {
                             client.opacity = 0.5;
                         }
                     }
-                    if (config.rememberWindowGeometries && client.zone != -1) {
-                        if (client.oldGeometry) {
-                            const geometry = client.oldGeometry;
-                            const zone = config.layouts[client.layout].zones[client.zone];
-                            const zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
-                            const zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
-                            const newGeometry = Qt.rect(Math.round(Workspace.cursorPos.x - geometry.width / 2), Math.round(client.frameGeometry.y), Math.round(geometry.width), Math.round(geometry.height));
-                            client.frameGeometry = newGeometry;
-                        }
-                    }
                     moving = true;
                     moved = false;
                     resizing = false;
@@ -429,10 +793,25 @@ Item {
             if (moving) {
                 Utils.log("Move end " + client.resourceClass.toString());
                 if (moved) {
-                    if (mainDialog.visible)
-                        moveClientToZone(client, highlightedZone);
-                    else
+                    if (mainDialog.visible) {
+                        if (fullscreenPendingSnap) {
+                            const fsPad = config.fullscreenSnapPadding || 0;
+                            if (fsPad === 0) {
+                                client.setMaximize(true, true);
+                            } else {
+                                client.setMaximize(false, false);
+                                client.frameGeometry = Qt.rect(clientArea.x + fsPad, clientArea.y + fsPad, Math.max(0, clientArea.width - 2 * fsPad), Math.max(0, clientArea.height - 2 * fsPad));
+                            }
+                            client.zone = -2;
+                            client.layout = currentLayout;
+                            client.desktop = Workspace.currentDesktop;
+                            client.activity = Workspace.currentActivity;
+                        } else {
+                            moveClientToZone(client, highlightedZone);
+                        }
+                    } else {
                         saveClientProperties(client, -1);
+                    }
                 }
                 mainDialog.hide();
             } else if (resizing) {
@@ -469,14 +848,88 @@ Item {
             mainDialog.hide();
         }
 
+        function onInteractiveMoveResizeStartedClearMemory() {
+            // User started dragging / resizing — the undo memory becomes
+            // stale the moment they move off our snapped rect. Clear up front.
+            clearMetaArrowMemory(client);
+        }
+
+        function onMinimizedChanged() {
+            clearMetaArrowMemory(client);
+            // Pristine is intentionally preserved across minimize: geometry
+            // doesn't change, and the user should still be able to un-minimize
+            // and drag-away to the original size.
+        }
+
+        // ── pristine-geometry wiring ──────────────────────────────────────
+        const pristineDeps = {
+            "computeState": function(c) { return computeWindowState(c); },
+            "applyFrame": function(c, rect) {
+                const clipped = clipPristineToActiveScreen(rect);
+                c.setMaximize(false, false);
+                c.frameGeometry = Qt.rect(clipped.x, clipped.y, clipped.width, clipped.height);
+            },
+            "unmaximize": function(c) {
+                c.setMaximize(false, false);
+            },
+            "log": Utils.log
+        };
+
+        function onFrameGeometryChangedForPristine(oldGeom) {
+            // Gate: skip while a user-initiated interactive drag/resize is in
+            // flight. Those phases are handled explicitly by onInteractiveStart
+            // / onInteractiveEnd to avoid the mid-drag applyFrame we issue from
+            // here cascading back into another state-transition.
+            if (moving || resizing) return;
+            Pristine.onStateMaybeChanged(client, oldGeom, pristineDeps);
+        }
+
+        function onInteractiveStartedForPristine() {
+            Pristine.onInteractiveStart(client, client.frameGeometry, pristineDeps);
+        }
+
+        function onInteractiveFinishedForPristine() {
+            Pristine.onInteractiveEnd(client, resizing, pristineDeps);
+        }
+
+        function onClosedForPristine() {
+            Pristine.clear(client);
+        }
+        // ──────────────────────────────────────────────────────────────────
+
         if (!checkFilter(client))
             return ;
 
         Utils.log("Connecting signals for client " + client.resourceClass.toString());
         client.onInteractiveMoveResizeStarted.connect(onInteractiveMoveResizeStarted);
+        client.onInteractiveMoveResizeStarted.connect(onInteractiveMoveResizeStartedClearMemory);
         client.onInteractiveMoveResizeStepped.connect(onInteractiveMoveResizeStepped);
         client.onInteractiveMoveResizeFinished.connect(onInteractiveMoveResizeFinished);
         client.onFullScreenChanged.connect(onFullScreenChanged);
+        if (client.minimizedChanged)
+            client.minimizedChanged.connect(onMinimizedChanged);
+
+        if (config.rememberWindowGeometries) {
+            if (client.frameGeometryChanged)
+                client.frameGeometryChanged.connect(onFrameGeometryChangedForPristine);
+            client.onInteractiveMoveResizeStarted.connect(onInteractiveStartedForPristine);
+            client.onInteractiveMoveResizeFinished.connect(onInteractiveFinishedForPristine);
+            if (client.closed)
+                client.closed.connect(onClosedForPristine);
+        }
+
+    }
+
+    function showLayoutOsd() {
+        if (!config.showOsdMessages)
+            return ;
+
+        const idx = currentLayout;
+        const layout = config.layouts[idx];
+        if (!layout)
+            return ;
+
+        layoutOsd.show(layout.zones, osdLayoutName(), activeScreen);
     }
 
     Component.onCompleted: {
@@ -484,6 +937,7 @@ Item {
         Core.init(KWin, Workspace);
         Core.registerQMLComponent("root", root);
         Core.loadConfig();
+        Pristine.setConfigGate(function() { return config.rememberWindowGeometries; });
         refreshClientArea();
         // match all clients to zones and connect signals
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
@@ -508,6 +962,7 @@ Item {
             zoneSelector.expanded = false;
             zoneSelector.near = false;
             highlightedZone = -1;
+            fullscreenPendingSnap = false;
             showZoneOverlay = config.zoneOverlayShowWhen == 0;
         }
 
@@ -554,13 +1009,13 @@ Item {
                     // zone selector
                     if (config.enableZoneSelector) {
                         if (!zoneSelector.animating && zoneSelector.expanded) {
-                            zoneSelector.repeater.model.forEach((layout, layoutIndex) => {
-                                const layoutItem = zoneSelector.repeater.itemAt(layoutIndex);
-                                layout.zones.forEach((zone, zoneIndex) => {
+                            zoneSelector.repeater.model.forEach((entry, repeaterIndex) => {
+                                const layoutItem = zoneSelector.repeater.itemAt(repeaterIndex);
+                                entry.layout.zones.forEach((zone, zoneIndex) => {
                                     const zoneItem = layoutItem.children[zoneIndex];
                                     if (Utils.isHovering(zoneItem)) {
                                         hoveringZone = zoneIndex;
-                                        setCurrentLayout(layoutIndex);
+                                        setCurrentLayout(entry.index);
                                     }
                                 });
                             });
@@ -572,8 +1027,16 @@ Item {
                         zoneSelector.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelector.y + zoneSelector.height + triggerDistance;
                     }
                     // edge snapping
+                    let pendingFullscreenSnap = false;
                     if (config.enableEdgeSnapping) {
                         const triggerDistance = (config.edgeSnappingTriggerDistance + 1) * 10;
+                        // Cursor flicked beyond the top of the workspace (into
+                        // the panel area) means the user wants a full-monitor
+                        // toss snap, not a top-edge tile. Detected purely by
+                        // position — no velocity tracking.
+                        if (config.enableFullscreenSnap && Workspace.cursorPos.y < clientArea.y)
+                            pendingFullscreenSnap = true;
+
                         if (Workspace.cursorPos.x <= clientArea.x + triggerDistance || Workspace.cursorPos.x >= clientArea.x + clientArea.width - triggerDistance || Workspace.cursorPos.y <= clientArea.y + triggerDistance || Workspace.cursorPos.y >= clientArea.y + clientArea.height - triggerDistance) {
                             const padding = config.layouts[currentLayout].padding || 0;
                             const halfPadding = padding / 2;
@@ -611,6 +1074,14 @@ Item {
                             });
                         }
                     }
+                    // Fullscreen toss takes priority over any in-layout zone
+                    // we may have just highlighted.
+                    if (pendingFullscreenSnap)
+                        hoveringZone = -1;
+
+                    if (root.fullscreenPendingSnap !== pendingFullscreenSnap)
+                        root.fullscreenPendingSnap = pendingFullscreenSnap;
+
                     // if hovering zone changed from the last frame
                     if (hoveringZone != highlightedZone) {
                         Utils.log("Highlighting zone " + hoveringZone + " in layout " + currentLayout);
@@ -645,7 +1116,10 @@ Item {
                         "oldGeometry": Workspace.activeWindow && Workspace.activeWindow.oldGeometry,
                         "activeScreen": activeScreen && activeScreen.name,
                         "currentLayout": currentLayout,
-                        "screenLayouts": screenLayouts
+                        "screenLayouts": screenLayouts,
+                        "availableLayouts": availableLayouts.map((e) => {
+                            return e.index + ":" + e.layout.name;
+                        })
                     })
                     config: root.config
                 }
@@ -662,9 +1136,32 @@ Item {
                         currentLayout: root.currentLayout
                         highlightedZone: root.highlightedZone
                         layoutIndex: index
-                        visible: index == root.currentLayout
+                        visible: index === root.currentLayout && root.isLayoutAvailable(index) && !root.fullscreenPendingSnap
                     }
 
+                }
+
+                // Fullscreen-drag preview: reuses the standard Zones renderer
+                // with a synthetic single-zone layout covering the entire
+                // client area, so the user sees the same indicator card +
+                // highlight they get for a normal drag-snap.
+                Components.Zones {
+                    id: fullscreenSnapPreview
+
+                    visible: root.fullscreenPendingSnap
+                    config: root.config
+                    currentLayout: -1
+                    highlightedZone: -1
+                    layoutIndex: -1
+                    overrideZones: [{
+                        "x": 0,
+                        "y": 0,
+                        "width": 100,
+                        "height": 100
+                    }]
+                    overridePadding: config.fullscreenSnapPadding || 0
+                    overrideAlwaysActive: root.fullscreenPendingSnap
+                    z: 50
                 }
 
                 Components.Selector {
@@ -673,6 +1170,7 @@ Item {
                     config: root.config
                     currentLayout: root.currentLayout
                     highlightedZone: root.highlightedZone
+                    availableLayouts: root.availableLayouts
                 }
 
             }
@@ -681,19 +1179,42 @@ Item {
 
     }
 
+    Components.LayoutOsd {
+        id: layoutOsd
+    }
+
     Components.Shortcuts {
         onCycleLayouts: {
-            setCurrentLayout((currentLayout + 1) % config.layouts.length);
+            clearMetaArrowMemory(Workspace.activeWindow);
+            refreshClientAreaForScreen(getScreenAtCursor());
+            if (availableLayouts.length === 0)
+                return ;
+
+            const pos = availableLayouts.findIndex((e) => {
+                return e.index === currentLayout;
+            });
+            const next = availableLayouts[(pos + 1) % availableLayouts.length].index;
+            setCurrentLayout(next);
             highlightedZone = -1;
-            Utils.osd(osdLayoutName());
+            showLayoutOsd();
         }
         onCycleLayoutsReversed: {
-            setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
+            clearMetaArrowMemory(Workspace.activeWindow);
+            refreshClientAreaForScreen(getScreenAtCursor());
+            if (availableLayouts.length === 0)
+                return ;
+
+            const pos = availableLayouts.findIndex((e) => {
+                return e.index === currentLayout;
+            });
+            const prev = availableLayouts[(pos - 1 + availableLayouts.length) % availableLayouts.length].index;
+            setCurrentLayout(prev);
             highlightedZone = -1;
-            Utils.osd(osdLayoutName());
+            showLayoutOsd();
         }
         onMoveActiveWindowToNextZone: {
             const client = Workspace.activeWindow;
+            clearMetaArrowMemory(client);
             if (client.zone == -1)
                 moveClientToClosestZone(client);
 
@@ -702,6 +1223,7 @@ Item {
         }
         onMoveActiveWindowToPreviousZone: {
             const client = Workspace.activeWindow;
+            clearMetaArrowMemory(client);
             if (client.zone == -1)
                 moveClientToClosestZone(client);
 
@@ -723,34 +1245,63 @@ Item {
             switchWindowInZone(Workspace.activeWindow.zone, Workspace.activeWindow.layout, true);
         }
         onMoveActiveWindowToZone: {
+            clearMetaArrowMemory(Workspace.activeWindow);
             moveClientToZone(Workspace.activeWindow, zone);
         }
         onActivateLayout: {
-            if (layout <= config.layouts.length - 1) {
-                setCurrentLayout(layout);
+            clearMetaArrowMemory(Workspace.activeWindow);
+            refreshClientAreaForScreen(getScreenAtCursor());
+            if (layout >= 0 && layout < availableLayouts.length) {
+                setCurrentLayout(availableLayouts[layout].index);
                 highlightedZone = -1;
-                Utils.osd(osdLayoutName());
+                showLayoutOsd();
             } else {
-                Utils.osd(`Layout ${layout + 1} does not exist`);
+                const screenName = activeScreen && activeScreen.name ? activeScreen.name : "this screen";
+                Utils.osd(`Layout ${layout + 1} does not exist on ${screenName}`);
             }
         }
         onMoveActiveWindowUp: {
-            moveClientToNeighbour(Workspace.activeWindow, "up");
+            if (config.smartHotkeys)
+                smartSnapMetaArrow(Workspace.activeWindow, "up");
+            else
+                moveClientToNeighbour(Workspace.activeWindow, "up");
         }
         onMoveActiveWindowDown: {
-            moveClientToNeighbour(Workspace.activeWindow, "down");
+            if (config.smartHotkeys)
+                smartSnapMetaArrow(Workspace.activeWindow, "down");
+            else
+                moveClientToNeighbour(Workspace.activeWindow, "down");
         }
         onMoveActiveWindowLeft: {
-            moveClientToNeighbour(Workspace.activeWindow, "left");
+            if (config.smartHotkeys)
+                smartSnapMetaArrow(Workspace.activeWindow, "left");
+            else
+                moveClientToNeighbour(Workspace.activeWindow, "left");
         }
         onMoveActiveWindowRight: {
-            moveClientToNeighbour(Workspace.activeWindow, "right");
+            if (config.smartHotkeys)
+                smartSnapMetaArrow(Workspace.activeWindow, "right");
+            else
+                moveClientToNeighbour(Workspace.activeWindow, "right");
         }
         onSnapActiveWindow: {
+            clearMetaArrowMemory(Workspace.activeWindow);
             moveClientToClosestZone(Workspace.activeWindow);
         }
         onSnapAllWindows: {
+            for (let i = 0; i < Workspace.stackingOrder.length; i++) clearMetaArrowMemory(Workspace.stackingOrder[i])
             moveAllClientsToClosestZone();
+        }
+        onShowDetectedMonitors: {
+            const screens = Core.getDetectedScreens();
+            if (screens.length === 0) {
+                Utils.osd("KZones: no monitors detected");
+                return ;
+            }
+            const summary = screens.map((s) => {
+                return `${s.name} (${s.width}x${s.height})`;
+            }).join("   ");
+            Utils.osd("Monitors: " + summary);
         }
     }
 
@@ -776,6 +1327,21 @@ Item {
             if (config.trackLayoutPerDesktop)
                 currentLayout = getCurrentLayout();
 
+        }
+
+        function onActiveScreenChanged() {
+            refreshClientArea();
+        }
+
+        function onScreensChanged() {
+            refreshClientArea();
+        }
+
+        function onWindowActivated(client) {
+            if (lastActiveWindow && lastActiveWindow !== client)
+                clearMetaArrowMemory(lastActiveWindow);
+
+            lastActiveWindow = client;
         }
 
         function onWindowAdded(client) {

@@ -1,5 +1,5 @@
-import QtQuick
 import "../components" as Components
+import QtQuick
 
 Rectangle {
     id: indicator
