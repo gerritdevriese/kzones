@@ -52,7 +52,7 @@ To install KZones you can either use the built-in script manager or clone the re
 
 ### KWin Script Manager
 
-Navigate to `System Settings / Window Management / KWin Scripts / Get New…` and search for KZones.  
+Navigate to `System Settings / Window Management / KWin Scripts / Get New…` and search for KZones.
 
 Depending on your Plasma version, one of these packages will be downloaded and installed:
 
@@ -115,6 +115,10 @@ When a new window is launched, the script will automatically snap it to its clos
 
 - Enable or disable this behavior.
 
+> [!NOTE]  
+> If you enable this, you should probably add some filters to exclude certain applications from being snapped, like games or other applications that don't work well with tiling.
+> Spectacle is a good example of this, as it won't be able to take screenshots of the entire screen when it's snapped to a zone.
+
 #### Display OSD messages
 
 Disable this if you don't want to see any OSD messages.
@@ -138,30 +142,30 @@ You can define your own layouts by modifying the JSON in the **Layouts** tab in 
 
 ```json
 [
-    {
-        "name": "Layout 1",
-        "padding": 0,
-        "zones": [
-            {
-                "x": 0,
-                "y": 0,
-                "height": 100,
-                "width": 25
-            },
-            {
-                "x": 25,
-                "y": 0,
-                "height": 100,
-                "width": 50
-            },
-            {
-                "x": 75,
-                "y": 0,
-                "height": 100,
-                "width": 25
-            }
-        ]
-    }
+  {
+    "name": "Layout 1",
+    "padding": 0,
+    "zones": [
+      {
+        "x": 0,
+        "y": 0,
+        "height": 100,
+        "width": 25
+      },
+      {
+        "x": 25,
+        "y": 0,
+        "height": 100,
+        "width": 50
+      },
+      {
+        "x": 75,
+        "y": 0,
+        "height": 100,
+        "width": 25
+      }
+    ]
+  }
 ]
 ```
 
@@ -172,91 +176,91 @@ You can define your own layouts by modifying the JSON in the **Layouts** tab in 
 
 ```json
 [
-    {
-        "name": "Priority Grid",
-        "padding": 0,
-        "zones": [
-            {
-                "x": 0,
-                "y": 0,
-                "height": 100,
-                "width": 25
-            },
-            {
-                "x": 25,
-                "y": 0,
-                "height": 100,
-                "width": 50,
-                "applications": ["firefox"]
-            },
-            {
-                "x": 75,
-                "y": 0,
-                "height": 100,
-                "width": 25
-            }
-        ]
-    },
-    {
-        "name": "Quadrant Grid",
-        "padding": 0,
-        "zones": [
-            {
-                "x": 0,
-                "y": 0,
-                "height": 50,
-                "width": 50
-            },
-            {
-                "x": 0,
-                "y": 50,
-                "height": 50,
-                "width": 50
-            },
-            {
-                "x": 50,
-                "y": 50,
-                "height": 50,
-                "width": 50
-            },
-            {
-                "x": 50,
-                "y": 0,
-                "height": 50,
-                "width": 50
-            }
-        ]
-    },
-    {
-        "name": "Columns",
-        "padding": 0,
-        "zones": [
-            {
-                "x": 0,
-                "y": 0,
-                "height": 100,
-                "width": 25
-            },
-            {
-                "x": 25,
-                "y": 0,
-                "height": 100,
-                "width": 25
-            },
-            {
-                "x": 50,
-                "y": 0,
-                "height": 100,
-                "width": 25
-            },
-            {
-                "x": 75,
-                "y": 0,
-                "height": 100,
-                "width": 25
-            }
-        ]
-    }
+  {
+    "name": "Priority Grid",
+    "padding": 0,
+    "zones": [
+      {
+        "x": 0,
+        "y": 0,
+        "height": 100,
+        "width": 25
+      },
+      {
+        "x": 25,
+        "y": 0,
+        "height": 100,
+        "width": 50,
+        "applications": ["firefox"]
+      },
+      {
+        "x": 75,
+        "y": 0,
+        "height": 100,
+        "width": 25
+      }
+    ]
+  },
+  {
+    "name": "Quadrant Grid",
+    "padding": 0,
+    "zones": [
+      {
+        "x": 0,
+        "y": 0,
+        "height": 50,
+        "width": 50
+      },
+      {
+        "x": 0,
+        "y": 50,
+        "height": 50,
+        "width": 50
+      },
+      {
+        "x": 50,
+        "y": 50,
+        "height": 50,
+        "width": 50
+      },
+      {
+        "x": 50,
+        "y": 0,
+        "height": 50,
+        "width": 50
+      }
+    ]
+  },
+  {
+    "name": "Columns",
+    "padding": 0,
+    "zones": [
+      {
+        "x": 0,
+        "y": 0,
+        "height": 100,
+        "width": 25
+      },
+      {
+        "x": 25,
+        "y": 0,
+        "height": 100,
+        "width": 25
+      },
+      {
+        "x": 50,
+        "y": 0,
+        "height": 100,
+        "width": 25
+      },
+      {
+        "x": 75,
+        "y": 0,
+        "height": 100,
+        "width": 25
+      }
+    ]
+  }
 ]
 ```
 
@@ -306,25 +310,25 @@ Here you can enable logging or turn on the debug overlay.
 
 List of all available shortcuts:
 
-| Shortcut                                           | Default Binding                                                     |
-| -------------------------------------------------- | ------------------------------------------------------------------- |
-| Move active window to zone                         | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Num 0-9</kbd>               |
-| Move active window to previous zone                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd>                  |
-| Move active window to next zone                    | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd>                 |
-| Switch to previous window in current zone          | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd>                  |
-| Switch to next window in current zone              | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd>                    |
-| Cycle layouts                                      | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>                     |
-| Cycle layouts (reversed)                           | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>  |
-| Toggle zone overlay                                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>                     |
-| Activate layout                                    | <kbd>Meta</kbd> + <kbd>Num 0-9</kbd>                                |
-| Move active window up                              | <kbd>Meta</kbd> + <kbd>Up</kbd>                                     |
-| Move active window down                            | <kbd>Meta</kbd> + <kbd>Down</kbd>                                   |
-| Move active window left                            | <kbd>Meta</kbd> + <kbd>Left</kbd>                                   |
-| Move active window right                           | <kbd>Meta</kbd> + <kbd>Right</kbd>                                  |
-| Snap all windows                                   | <kbd>Meta</kbd> + <kbd>Space</kbd>                                  |
-| Snap active window                                 | <kbd>Meta</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>               |
+| Shortcut                                  | Default Binding                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------ |
+| Move active window to zone                | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Num 0-9</kbd>              |
+| Move active window to previous zone       | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd>                 |
+| Move active window to next zone           | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd>                |
+| Switch to previous window in current zone | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd>                 |
+| Switch to next window in current zone     | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd>                   |
+| Cycle layouts                             | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>                    |
+| Cycle layouts (reversed)                  | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> |
+| Toggle zone overlay                       | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>                    |
+| Activate layout                           | <kbd>Meta</kbd> + <kbd>Num 0-9</kbd>                               |
+| Move active window up                     | <kbd>Meta</kbd> + <kbd>Up</kbd>                                    |
+| Move active window down                   | <kbd>Meta</kbd> + <kbd>Down</kbd>                                  |
+| Move active window left                   | <kbd>Meta</kbd> + <kbd>Left</kbd>                                  |
+| Move active window right                  | <kbd>Meta</kbd> + <kbd>Right</kbd>                                 |
+| Snap all windows                          | <kbd>Meta</kbd> + <kbd>Space</kbd>                                 |
+| Snap active window                        | <kbd>Meta</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>              |
 
-*To change the default bindings, go to `System Settings / Shortcuts` and search for KZones*
+_To change the default bindings, go to `System Settings / Shortcuts` and search for KZones_
 
 > [!NOTE]  
 > Not all shortcuts will be bound by default as they conflift with existing system bindings.
