@@ -275,6 +275,8 @@ Each **layout** object needs the following keys:
 - `name`: The name of the layout, shown when cycling between layouts
 - `padding`: The amount of space between the window and the zone in pixels
 - `zones`: An array containing all zone objects for this layout
+- `aspectRatio`: only show this layout on screens with this aspect ratio (optional), see [Screen aspect ratio](#screen-aspect-ratio)
+- `aspectRatioTolerance`: how far a screen may be off that ratio and still match (optional), as a fraction of the ratio, `0.05` by default
 
 Each **zone** object can contain the following keys:
 
@@ -286,6 +288,40 @@ Each **zone** object can contain the following keys:
   - `margin`: an object containing the margin for the indicator
     - `top`, `right`, `bottom`, `left`: margin in pixels
 - `color`: a color name or hex value to tint the zone with (optional)
+
+#### Screen aspect ratio
+
+A layout with an `aspectRatio` is hidden on screens that do not have that shape. Handy with several monitors: keep the wide layouts for the ultrawide and the regular ones for the laptop screen, without having to cycle past layouts that make no sense there.
+
+```json
+[
+  {
+    "name": "Ultrawide Thirds",
+    "aspectRatio": "21:9",
+    "zones": []
+  },
+  {
+    "name": "Wide Enough",
+    "aspectRatio": ">16:9",
+    "zones": []
+  },
+  {
+    "name": "Desktop or Laptop",
+    "aspectRatio": ["16:9", "16:10"],
+    "zones": []
+  }
+]
+```
+
+The value can be:
+
+- a ratio: `"16:9"`, `"16/9"`, `"16x9"` or a number like `1.778`
+- a comparison: `">16:9"`, `">=21:9"`, `"<16:9"`, `"<=4:3"`
+- an array of either, the layout shows up when one of them matches
+
+Screens rarely hit a ratio exactly, so a match allows 5% either way by default, which is enough for the usual 21:9 panels (2560x1080 and 3440x1440) while still telling 16:9 and 16:10 apart. Set `aspectRatioTolerance` on the layout to widen or tighten that.
+
+Hidden layouts are skipped when cycling and are left out of the zone selector, and their `Activate layout` shortcut reports that the layout is not available. If the active layout is hidden after moving a window to another screen, the first available layout takes over. Layouts without an `aspectRatio` show up everywhere, and if no layout matches the current screen they all stay available.
 
 ### Filters
 
