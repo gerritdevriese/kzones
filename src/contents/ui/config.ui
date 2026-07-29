@@ -639,7 +639,7 @@
                 <string />
               </property>
               <property name="text">
-                <string>Disable/enable the script to apply changes</string>
+                <string>Changes are applied automatically</string>
               </property>
               <property name="scaledContents">
                 <bool>false</bool>

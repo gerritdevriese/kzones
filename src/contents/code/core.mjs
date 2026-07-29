@@ -9,6 +9,31 @@ export function init(kwin, workspace) {
   Workspace = workspace || null;
 }
 
+export function getConfigFingerprint() {
+  return JSON.stringify([
+    KWin.readConfig("enableZoneSelector", true),
+    KWin.readConfig("zoneSelectorTriggerDistance", 1),
+    KWin.readConfig("enableZoneOverlay", true),
+    KWin.readConfig("zoneOverlayShowWhen", 0),
+    KWin.readConfig("zoneOverlayHighlightTarget", 0),
+    KWin.readConfig("zoneOverlayIndicatorDisplay", 0),
+    KWin.readConfig("enableEdgeSnapping", false),
+    KWin.readConfig("edgeSnappingTriggerDistance", 1),
+    KWin.readConfig("rememberWindowGeometries", true),
+    KWin.readConfig("trackLayoutPerScreen", false),
+    KWin.readConfig("trackLayoutPerDesktop", false),
+    KWin.readConfig("showOsdMessages", true),
+    KWin.readConfig("fadeWindowsWhileMoving", false),
+    KWin.readConfig("autoSnapAllNew", false),
+    KWin.readConfig("layoutsJson", ""),
+    KWin.readConfig("filterMode", 0),
+    KWin.readConfig("filterList", ""),
+    KWin.readConfig("pollingRate", 100),
+    KWin.readConfig("enableDebugLogging", false),
+    KWin.readConfig("enableDebugOverlay", false),
+  ]);
+}
+
 export function registerQMLComponent(name, component) {
   console.log("KZones: Registering QML component:", name);
   try {
@@ -45,6 +70,8 @@ export function loadConfig() {
   let layouts;
   try {
     layouts = JSON.parse(KWin.readConfig("layoutsJson", JSON.stringify(defaultLayouts)));
+    if (!Array.isArray(layouts) || layouts.length === 0 || layouts.some((layout) => !Array.isArray(layout.zones)))
+      throw new Error("layouts must be a non-empty array and every layout must contain zones");
   } catch (e) {
     // TODO: Notify user about invalid config and using defaults instead
     layouts = defaultLayouts;
