@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=KZones Layout Editor
+Comment=Draw and apply KZones window layouts
+Exec=kzones-layout-editor
+Icon=preferences-desktop-virtual
+Categories=Settings;DesktopSettings;Qt;
+Keywords=KWin;Zones;Windows;Layout;
+Terminal=false

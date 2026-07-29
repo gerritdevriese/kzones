@@ -1,6 +1,10 @@
 SCRIPT_NAME := kzones
 PKGFILE := $(SCRIPT_NAME).kwinscript
 SRC_DIR := src
+EDITOR_SOURCE := tools/kzones-layout-editor.py
+EDITOR_NAME := kzones-layout-editor
+LOCAL_BIN := $(HOME)/.local/bin
+LOCAL_APPLICATIONS := $(HOME)/.local/share/applications
 SESSION_WIDTH := 1920
 SESSION_HEIGHT := 1080
 SESSION_OUTPUT_COUNT := 1
@@ -9,7 +13,7 @@ SESSION_APPLICATIONS := # dolphin konsole kate
 
 .NOTPARALLEL: all
 
-.PHONY: all test build install uninstall clean enable disable start-session help
+.PHONY: all test build install install-editor editor check-editor uninstall clean enable disable start-session help
 
 all: install clean
 
@@ -25,10 +29,25 @@ install: build
 	@echo "Installing $(PKGFILE)..."
 	@kpackagetool6 --type=KWin/Script -i $(PKGFILE) || \
 	kpackagetool6 --type=KWin/Script -u $(PKGFILE)
+	@$(MAKE) --no-print-directory install-editor
+
+install-editor:
+	@echo "Installing KZones Layout Editor..."
+	@install -Dm755 $(EDITOR_SOURCE) $(LOCAL_BIN)/$(EDITOR_NAME)
+	@install -Dm644 resources/kzones-layout-editor.desktop $(LOCAL_APPLICATIONS)/kzones-layout-editor.desktop
+	@update-desktop-database $(LOCAL_APPLICATIONS) 2>/dev/null || true
+
+editor: install-editor
+	@$(LOCAL_BIN)/$(EDITOR_NAME)
+
+check-editor:
+	@python3 -m py_compile $(EDITOR_SOURCE)
 
 uninstall:
 	@echo "Uninstalling $(SCRIPT_NAME)..."
 	@kpackagetool6 --type=KWin/Script -r $(SCRIPT_NAME)
+	@rm -f $(LOCAL_BIN)/$(EDITOR_NAME) $(LOCAL_APPLICATIONS)/kzones-layout-editor.desktop
+	@update-desktop-database $(LOCAL_APPLICATIONS) 2>/dev/null || true
 
 clean:
 	@echo "Cleaning up $(PKGFILE)..."
@@ -92,6 +111,9 @@ help:
 	@echo "  test           - Build, install, and start a nested session"
 	@echo "  build          - Package the script into a .kwinscript file"
 	@echo "  install        - Install the script"
+	@echo "  install-editor - Install the visual layout editor and launcher"
+	@echo "  editor         - Install and launch the visual layout editor"
+	@echo "  check-editor   - Check the visual editor Python syntax"
 	@echo "  uninstall      - Uninstall the script"
 	@echo "  clean          - Remove the packaged .kwinscript file"
 	@echo "  enable         - Enable the script in KWin"
