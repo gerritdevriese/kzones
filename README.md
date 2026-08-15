@@ -28,6 +28,11 @@ Edge Snapping allows you to snap windows to zones by dragging them to the edge o
 
 ![](./media/edgesnapping.gif)
 
+### Multi-monitor support
+
+Create layouts tailored for specific device, screen resolution or display orientation so you
+can have each of your display configurable separately. 
+
 ### Multiple Layouts
 
 Create multiple layouts and cycle between them.
@@ -287,7 +292,140 @@ Each **zone** object can contain the following keys:
     - `top`, `right`, `bottom`, `left`: margin in pixels
 - `color`: a color name or hex value to tint the zone with (optional)
 
-### Filters
+Each **layout** object can also contain an optional `match` object, restricting which monitors it
+is offered on. See [Multi-monitor setups](#multi-monitor-setups).
+
+## Multi-monitor setups
+
+There are two independent mechanisms, and they are easy to confuse:
+
+* **Track active layout per screen** (app settings)
+  Every screen remembers **which** of your layouts is currently active, independently of the others.
+  All screens still choose from the same list. **Enabled: TRUE**
+
+ * **`match`** (per layout)
+   Restricts **which layouts are offered** on a given screen at all.
+
+Use the setting on its own if the same handful of layouts suit every monitor. Add `match` when a
+layout only makes sense somewhere specific - thirds on an ultrawide, a two-row stack on a pivoted
+portrait panel - and you would rather not cycle past it everywhere else.
+
+### Finding your display names
+
+`match` keys off the output name KWin uses, such as `DP-4` or `HDMI-A-2`:
+
+```bash
+kscreen-doctor -o | grep Output
+```
+
+should produce
+
+```ascii
+Output: 1 HDMI-A-2 58ef0113328b-4890-c9ad-0eb51118a401
+Output: 2 DP-4     7f94a6c311a4-4ccc-9450-7d99072ddf94
+Output: 3 DP-5     2d26ec81ea27-4af3-b9aa-f06891a77635
+```
+
+**NOTE** The debug overlay (Advanced tab) also prints the active screen, its resolution and its
+orientation, along with which layouts currently apply - the quickest way to check a rule is doing
+what you meant.
+
+### The `match` object
+
+Every criterion you specify must match, and any you leave out matches anything, so a layout with no
+`match` is available everywhere:
+
+- **`display`** - an output name (single string) or an list: `"DP-4"` or `["DP-1", "HDMI-A-1"]`.
+  `*` is a wildcard, so `"DP-*"` covers every DisplayPort output with name starting with `DP-`.
+  Match is case-insensitive and `*` means zero or more of any character.
+- **`resolution`** - a `WIDTHxHEIGHT` string in pixels, or a list of them:
+  `"3440x1440"` or `["3840x2160", "1920x1080"]`. A list matches if **any** entry matches.
+  Wildcards work here too and can be mixed into a list, so `["1920x*", "*x1440"]` is any
+  1920-wide **or** any 1440-tall mode. This is the **rotated** resolution: a pivoted 1920x1080
+  monitor is `"1080x1920"`, and so no longer matches `"1920x*"`.
+- **`orientation`** - `horizontal` or `vertical`. A screen counts as vertical when it is taller
+  than it is wide, so this follows a monitor as you rotate it. Can be combined with `resolution`
+  as well if needed.
+
+Resolution and orientation come from the output's own geometry rather than the usable area, so
+panels and docks do not affect them.
+
+### Examples
+
+One layout per monitor, plus a general-purpose one available everywhere:
+
+```json
+[
+  { "name": "Ultrawide thirds", "match": { "display": "DP-1" }, "zones": [...] },
+  { "name": "Laptop halves",    "match": { "display": "eDP-1" }, "zones": [...] },
+  { "name": "Quadrants",        "zones": [] }
+]
+```
+
+A monitor you rotate, carrying one layout for each orientation. Both name the same output, so only
+the one matching its current rotation is ever offered:
+
+```json
+[
+  { "name": "DP-4 wide", "match": { "display": "DP-4", "orientation": "horizontal" }, "zones": [...] },
+  { "name": "DP-4 tall", "match": { "display": "DP-4", "orientation": "vertical" }, "zones": [...] }
+]
+```
+
+Wildcards and resolutions, for a laptop that is sometimes docked:
+
+```json
+[
+  {
+    "name": "Docked",
+    "match": {
+      "resolution": "3840x2160"
+    },
+    "zones": [ ... ]
+  },
+  {
+    "name": "On the go",
+    "match": {
+      "display": "DP-*",
+      "resolution": [ "1920x1080", "3840x2160" ]
+    },
+    "zones": [ ... ]
+  },
+  {
+    "name": "Side Rotated",
+    "match": {
+      "orientation": "vertical",
+    },
+    "zones": [ ... ]
+  }
+]
+```
+
+Lists, for one layout shared by several monitors. Each criterion matches if **any** of its entries
+matches, and the criteria are still `AND`-ed together:
+
+```json
+[
+  {
+    "name": "Desk monitors",
+    "match": {
+      "display": ["DP-*", "HDMI-A-2"],
+      "resolution": ["3440x1440", "2560x1440"]
+    },
+    "zones": [ ... ]
+  }
+]
+```
+
+### What changes once a layout is restricted
+
+- If a screen was remembering a layout that no longer applies - you rotated the monitor, say - it
+  moves to the first one that does.
+- **If nothing matches a screen, every layout is offered there.** That is a deliberate safety net:
+  a mistyped output name cannot leave a monitor with nothing to snap to. It also means a rule that
+  silently does nothing usually means a typo, so check the name against `kscreen-doctor -o`.
+
+## Filters
 
 Stop certain windows from snapping to zones by adding them to the filter list.
 

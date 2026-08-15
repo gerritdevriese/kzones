@@ -19,6 +19,7 @@ Item {
     property var displaySize: new Object()
     property int currentLayout: 0
     property var screenLayouts: new Object()
+    property var applicableLayouts: []
     property int highlightedZone: -1
     property var activeScreen: null
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
@@ -27,7 +28,38 @@ Item {
         activeScreen = Workspace.activeScreen;
         clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop);
         displaySize = Workspace.virtualScreenSize;
+        applicableLayouts = computeApplicableLayouts();
         currentLayout = getCurrentLayout();
+    }
+
+    // Indices of the layouts whose `match` criteria fit the active screen. Indices
+    // rather than a filtered list, because `currentLayout` indexes config.layouts
+    // everywhere else, including repeaterLayout.itemAt() when moving a window.
+    // A screen that matches nothing falls back to every layout, so a mistyped
+    // output name cannot leave it with nothing to snap to.
+    function computeApplicableLayouts() {
+        const screen = Utils.screenInfo(activeScreen, clientArea);
+        const indices = [];
+        for (let i = 0; i < config.layouts.length; i++) {
+            if (Utils.layoutMatches(config.layouts[i], screen))
+                indices.push(i);
+        }
+        if (indices.length)
+            return indices;
+
+        return config.layouts.map((layout, index) => index);
+    }
+
+    // Move `delta` places through the layouts available on this screen.
+    function stepLayout(delta) {
+        const allowed = applicableLayouts;
+        if (!allowed.length)
+            return;
+
+        const at = allowed.indexOf(currentLayout);
+        setCurrentLayout(at < 0 ? allowed[0] : allowed[(at + delta + allowed.length) % allowed.length]);
+        highlightedZone = -1;
+        Utils.osd(osdLayoutName());
     }
 
     function matchZone(client) {
@@ -321,14 +353,16 @@ Item {
     }
 
     function getCurrentLayout() {
+        const allowed = applicableLayouts;
+        const fallback = allowed.length ? allowed[0] : 0;
         if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
             const key = getLayoutKey();
-            if (!screenLayouts[key])
-                screenLayouts[key] = 0;
+            if (screenLayouts[key] === undefined || allowed.indexOf(screenLayouts[key]) < 0)
+                screenLayouts[key] = fallback;
 
             return screenLayouts[key];
         }
-        return currentLayout;
+        return allowed.indexOf(currentLayout) < 0 ? fallback : currentLayout;
     }
 
     function setCurrentLayout(layout) {
@@ -564,13 +598,13 @@ Item {
                     // zone selector
                     if (config.enableZoneSelector) {
                         if (!zoneSelector.animating && zoneSelector.expanded) {
-                            zoneSelector.repeater.model.forEach((layout, layoutIndex) => {
-                                const layoutItem = zoneSelector.repeater.itemAt(layoutIndex);
-                                layout.zones.forEach((zone, zoneIndex) => {
+                            zoneSelector.repeater.model.forEach((globalIndex, position) => {
+                                const layoutItem = zoneSelector.repeater.itemAt(position);
+                                config.layouts[globalIndex].zones.forEach((zone, zoneIndex) => {
                                     const zoneItem = layoutItem.children[zoneIndex];
                                     if (Utils.isHovering(zoneItem)) {
                                         hoveringZone = zoneIndex;
-                                        setCurrentLayout(layoutIndex);
+                                        setCurrentLayout(globalIndex);
                                     }
                                 });
                             });
@@ -654,6 +688,8 @@ Item {
                         "resizing": resizing,
                         "oldGeometry": Workspace.activeWindow && Workspace.activeWindow.oldGeometry,
                         "activeScreen": activeScreen && activeScreen.name,
+                        "screen": Utils.screenInfo(activeScreen, clientArea),
+                        "applicableLayouts": applicableLayouts,
                         "currentLayout": currentLayout,
                         "screenLayouts": screenLayouts
                     })
@@ -681,6 +717,7 @@ Item {
                     id: zoneSelector
 
                     config: root.config
+                    layoutIndices: root.applicableLayouts
                     currentLayout: root.currentLayout
                     highlightedZone: root.highlightedZone
                 }
@@ -693,14 +730,10 @@ Item {
 
     Components.Shortcuts {
         onCycleLayouts: {
-            setCurrentLayout((currentLayout + 1) % config.layouts.length);
-            highlightedZone = -1;
-            Utils.osd(osdLayoutName());
+            stepLayout(1);
         }
         onCycleLayoutsReversed: {
-            setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
-            highlightedZone = -1;
-            Utils.osd(osdLayoutName());
+            stepLayout(-1);
         }
         onMoveActiveWindowToNextZone: {
             const client = Workspace.activeWindow;
@@ -736,12 +769,14 @@ Item {
             moveClientToZone(Workspace.activeWindow, zone);
         }
         onActivateLayout: {
-            if (layout <= config.layouts.length - 1) {
-                setCurrentLayout(layout);
+            // Meta+N picks the Nth layout available on this screen, so the numbering
+            // matches the selector rather than the position in the config.
+            if (layout < applicableLayouts.length) {
+                setCurrentLayout(applicableLayouts[layout]);
                 highlightedZone = -1;
                 Utils.osd(osdLayoutName());
             } else {
-                Utils.osd(`Layout ${layout + 1} does not exist`);
+                Utils.osd(`Layout ${layout + 1} is not available on this screen`);
             }
         }
         onMoveActiveWindowUp: {
