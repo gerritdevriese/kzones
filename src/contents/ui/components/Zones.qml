@@ -1,6 +1,6 @@
+import "../components" as Components
 import QtQuick
 import QtQuick.Layouts
-import "../components" as Components
 
 Item {
     id: zones
@@ -42,7 +42,7 @@ Item {
                 radius: 10
                 border.color: colorHelper.getBorderColor(color)
                 border.width: 1
-                opacity: !showZoneOverlay ? 0 : (zoneSelector.expanded) ? 0 : (active ? 0.6 : 1)
+                opacity: !showZoneOverlay ? 0 : (zoneSelector.expanded && !config.zoneSelectorShowOnDrag) ? 0 : (active ? 0.6 : 1)
                 scale: active ? 1.1 : 1
                 visible: config.enableZoneOverlay
                 // position
@@ -72,7 +72,7 @@ Item {
 
                 Behavior on scale {
                     NumberAnimation {
-                        duration: zoneSelector.expanded ? 0 : 150
+                        duration: (zoneSelector.expanded && !config.zoneSelectorShowOnDrag) ? 0 : 150
                     }
 
                 }

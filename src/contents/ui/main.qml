@@ -568,7 +568,7 @@ Item {
                     let hoveringZone = -1;
                     // zone overlay
                     const currentZones = repeaterLayout.itemAt(currentLayout);
-                    if (config.enableZoneOverlay && showZoneOverlay && !zoneSelector.expanded)
+                    if (config.enableZoneOverlay && showZoneOverlay && (!zoneSelector.expanded || config.zoneSelectorShowOnDrag))
                         currentZones.repeater.model.forEach((zone, zoneIndex) => {
                         if (Utils.isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget]))
                             hoveringZone = zoneIndex;
@@ -590,12 +590,13 @@ Item {
                             });
                         }
                         // set zoneSelector expansion state
-                        if (!config.zoneSelectorShowOnDrag)
+                        if (config.zoneSelectorShowOnDrag)
+                            zoneSelector.expanded = true;
+                        else
                             zoneSelector.expanded = Utils.isHovering(zoneSelector) && (Workspace.cursorPos.y - clientArea.y) >= 0;
-
                         // set zoneSelector near state
                         const triggerDistance = getZoneSelectorTriggerDistance();
-                        zoneSelector.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelector.y + zoneSelector.height + triggerDistance;
+                        zoneSelector.near = config.zoneSelectorShowOnDrag || (Workspace.cursorPos.y - clientArea.y) < zoneSelector.y + zoneSelector.height + triggerDistance;
                     }
                     // edge snapping
                     if (config.enableEdgeSnapping) {
