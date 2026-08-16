@@ -293,6 +293,16 @@
                       </widget>
                     </item>
                     <item>
+                      <widget class="QCheckBox" name="kcfg_filterLayoutsPerScreen">
+                        <property name="toolTip">
+                          <string>Only show layouts that are configured for the current screen. Layouts without a screen list are shown on all screens.</string>
+                        </property>
+                        <property name="text">
+                          <string>Filter layouts per screen</string>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
                       <widget class="QCheckBox" name="kcfg_trackLayoutPerDesktop">
                         <property name="text">
                           <string>Track active layout per virtual desktop</string>

@@ -109,6 +109,12 @@ If you have multiple monitors, you can enable this to track the active layout pe
 
 - Enable or disable this behavior.
 
+#### Filter layouts per screen
+
+When enabled, only layouts that are configured for the current screen will be available. You can restrict a layout to one or more screens by adding a `screens` array to the layout. Layouts without a `screens` array are shown on all screens.
+
+- Enable or disable this behavior.
+
 #### Automatically snap all new windows
 
 When a new window is launched, the script will automatically snap it to its closest zone.
@@ -275,6 +281,10 @@ Each **layout** object needs the following keys:
 - `name`: The name of the layout, shown when cycling between layouts
 - `padding`: The amount of space between the window and the zone in pixels
 - `zones`: An array containing all zone objects for this layout
+
+Each **layout** object can contain the following optional keys:
+
+- `screens`: an array of screen names (e.g. `["DP-0", "DP-1"]`) that this layout should be restricted to. Requires **Filter layouts per screen** to be enabled. Layouts without this key are shown on all screens.
 
 Each **zone** object can contain the following keys:
 

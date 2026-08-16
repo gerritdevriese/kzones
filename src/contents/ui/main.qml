@@ -21,13 +21,47 @@ Item {
     property var screenLayouts: new Object()
     property int highlightedZone: -1
     property var activeScreen: null
+    property var filteredLayouts: []
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
 
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
         clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop);
         displaySize = Workspace.virtualScreenSize;
+        filteredLayouts = getFilteredLayouts();
         currentLayout = getCurrentLayout();
+    }
+
+    function getFilteredLayouts() {
+        if (!config.filterLayoutsPerScreen)
+            return config.layouts.map((layout, index) => ({
+                ...layout,
+                layoutIndex: index
+            }));
+
+        const screenName = Workspace.activeScreen.name;
+        return config.layouts.map((layout, index) => ({
+            ...layout,
+            layoutIndex: index
+        })).filter(layout => !layout.screens || layout.screens.length === 0 || layout.screens.includes(screenName));
+    }
+
+    function cycleLayout(reverse) {
+        const validLayouts = filteredLayouts;
+        if (validLayouts.length === 0)
+            return;
+
+        const validIndices = validLayouts.map(layout => layout.layoutIndex);
+        const currentIndex = validIndices.indexOf(currentLayout);
+        let nextIndex;
+        if (currentIndex === -1) {
+            nextIndex = 0;
+        } else if (reverse) {
+            nextIndex = (currentIndex - 1 + validLayouts.length) % validLayouts.length;
+        } else {
+            nextIndex = (currentIndex + 1) % validLayouts.length;
+        }
+        setCurrentLayout(validLayouts[nextIndex].layoutIndex);
     }
 
     function matchZone(client) {
@@ -321,17 +355,39 @@ Item {
     }
 
     function getCurrentLayout() {
+        let layout;
         if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
             const key = getLayoutKey();
             if (!screenLayouts[key])
                 screenLayouts[key] = 0;
 
-            return screenLayouts[key];
+            layout = screenLayouts[key];
+        } else {
+            layout = currentLayout;
         }
-        return currentLayout;
+
+        // make sure the layout is allowed on the current screen
+        if (config.filterLayoutsPerScreen) {
+            const validIndices = filteredLayouts.map(item => item.layoutIndex);
+            if (validIndices.length === 0)
+                return 0;
+            if (!validIndices.includes(layout)) {
+                layout = validIndices[0];
+                if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop)
+                    screenLayouts[getLayoutKey()] = layout;
+            }
+        }
+
+        return layout;
     }
 
     function setCurrentLayout(layout) {
+        if (config.filterLayoutsPerScreen) {
+            const validIndices = filteredLayouts.map(item => item.layoutIndex);
+            if (validIndices.length > 0 && !validIndices.includes(layout))
+                layout = validIndices[0];
+        }
+
         if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop)
             screenLayouts[getLayoutKey()] = layout;
 
@@ -570,7 +626,7 @@ Item {
                                     const zoneItem = layoutItem.children[zoneIndex];
                                     if (Utils.isHovering(zoneItem)) {
                                         hoveringZone = zoneIndex;
-                                        setCurrentLayout(layoutIndex);
+                                        setCurrentLayout(layout.layoutIndex);
                                     }
                                 });
                             });
@@ -681,6 +737,7 @@ Item {
                     id: zoneSelector
 
                     config: root.config
+                    filteredLayouts: root.filteredLayouts
                     currentLayout: root.currentLayout
                     highlightedZone: root.highlightedZone
                 }
@@ -693,12 +750,12 @@ Item {
 
     Components.Shortcuts {
         onCycleLayouts: {
-            setCurrentLayout((currentLayout + 1) % config.layouts.length);
+            cycleLayout(false);
             highlightedZone = -1;
             Utils.osd(osdLayoutName());
         }
         onCycleLayoutsReversed: {
-            setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
+            cycleLayout(true);
             highlightedZone = -1;
             Utils.osd(osdLayoutName());
         }

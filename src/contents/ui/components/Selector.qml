@@ -1,11 +1,12 @@
+import "../components" as Components
 import QtQuick
 import QtQuick.Layouts
-import "../components" as Components
 
 Item {
     id: selector
 
     property var config
+    property var filteredLayouts
     property int currentLayout
     property int highlightedZone
     property bool expanded: false
@@ -43,14 +44,14 @@ Item {
             Repeater {
                 id: repeater
 
-                model: config.layouts
+                model: filteredLayouts
 
                 Components.Indicator {
                     zones: modelData.zones
-                    activeZone: (currentLayout == index) ? highlightedZone : -1
+                    activeZone: (currentLayout == modelData.layoutIndex) ? highlightedZone : -1
                     width: 160 - 30
                     height: 100 - 30
-                    hovering: (currentLayout == index)
+                    hovering: (currentLayout == modelData.layoutIndex)
                 }
 
             }
