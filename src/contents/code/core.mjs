@@ -52,6 +52,10 @@ export function loadConfig() {
 
   config.enableZoneSelector = KWin.readConfig("enableZoneSelector", true);
   config.zoneSelectorTriggerDistance = KWin.readConfig("zoneSelectorTriggerDistance", 1);
+  config.zoneSelectorShowOnDrag = KWin.readConfig("zoneSelectorShowOnDrag", false);
+  config.zoneSelectorTriggerUnit = KWin.readConfig("zoneSelectorTriggerUnit", 0);
+  config.zoneSelectorTriggerDistancePixels = KWin.readConfig("zoneSelectorTriggerDistancePixels", 100);
+  config.zoneSelectorTriggerDistancePercent = KWin.readConfig("zoneSelectorTriggerDistancePercent", 10);
   config.enableZoneOverlay = KWin.readConfig("enableZoneOverlay", true);
   config.zoneOverlayShowWhen = KWin.readConfig("zoneOverlayShowWhen", 0);
   config.zoneOverlayHighlightTarget = KWin.readConfig("zoneOverlayHighlightTarget", 0);

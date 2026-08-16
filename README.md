@@ -79,7 +79,8 @@ The script settings can be found under `System Settings / Window Management / KW
 The zone selector is a small widget that appears when you drag a window to the top of the screen. It allows you to snap the window to a zone regardless of the current layout.
 
 - Enable or disable the zone selector.
-- Set the distance from the top of the screen at which the zone selector will start to appear.
+- Show the selector immediately when starting to drag a window, without having to move the cursor to the top edge first.
+- Set the distance from the top of the screen at which the zone selector will start to appear. You can use the legacy relative setting, pixels, or a percentage of the screen height.
 
 #### Zone Overlay
 

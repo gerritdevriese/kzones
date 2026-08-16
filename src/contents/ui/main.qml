@@ -1,11 +1,11 @@
-import QtQuick
-import QtQuick.Layouts
-import org.kde.plasma.core as PlasmaCore
-import org.kde.plasma.components as PlasmaComponents
-import org.kde.kwin
 import "../code/core.mjs" as Core
 import "../code/utils.mjs" as Utils
+import QtQuick
+import QtQuick.Layouts
 import "components" as Components
+import org.kde.kwin
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.plasma.core as PlasmaCore
 
 Item {
     id: root
@@ -28,6 +28,17 @@ Item {
         clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop);
         displaySize = Workspace.virtualScreenSize;
         currentLayout = getCurrentLayout();
+    }
+
+    function getZoneSelectorTriggerDistance() {
+        switch (config.zoneSelectorTriggerUnit) {
+        case 1:
+            return config.zoneSelectorTriggerDistancePixels;
+        case 2:
+            return (config.zoneSelectorTriggerDistancePercent / 100) * clientArea.height;
+        default:
+            return config.zoneSelectorTriggerDistance * 50 + 25;
+        }
     }
 
     function matchZone(client) {
@@ -80,7 +91,7 @@ Item {
 
     function restoreWindowGeometry(client) {
         if (!checkFilter(client))
-            return;
+            return ;
 
         if (config.rememberWindowGeometries && client.zone != -1 && client.oldGeometry) {
             Utils.log("Restoring geometry for client " + client.resourceClass.toString());
@@ -411,6 +422,9 @@ Item {
                     resizing = false;
                     Utils.log("Move start " + client.resourceClass.toString());
                     mainDialog.show();
+                    if (config.enableZoneSelector && config.zoneSelectorShowOnDrag)
+                        zoneSelector.expanded = true;
+
                 }
                 if (client.resize) {
                     moving = false;
@@ -576,9 +590,11 @@ Item {
                             });
                         }
                         // set zoneSelector expansion state
-                        zoneSelector.expanded = Utils.isHovering(zoneSelector) && (Workspace.cursorPos.y - clientArea.y) >= 0;
+                        if (!config.zoneSelectorShowOnDrag)
+                            zoneSelector.expanded = Utils.isHovering(zoneSelector) && (Workspace.cursorPos.y - clientArea.y) >= 0;
+
                         // set zoneSelector near state
-                        const triggerDistance = config.zoneSelectorTriggerDistance * 50 + 25;
+                        const triggerDistance = getZoneSelectorTriggerDistance();
                         zoneSelector.near = (Workspace.cursorPos.y - clientArea.y) < zoneSelector.y + zoneSelector.height + triggerDistance;
                     }
                     // edge snapping
