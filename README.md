@@ -358,7 +358,7 @@ One layout per monitor, plus a general-purpose one available everywhere:
 [
   { "name": "Ultrawide thirds", "match": { "display": "DP-1" }, "zones": [...] },
   { "name": "Laptop halves",    "match": { "display": "eDP-1" }, "zones": [...] },
-  { "name": "Quadrants",        "zones": [] }
+  { "name": "Quadrants",        "zones": [...] }
 ]
 ```
 
