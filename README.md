@@ -135,6 +135,30 @@ Reduce the opacity of other windows while the active window is being moved.
 
 You can define your own layouts by modifying the JSON in the **Layouts** tab in the script settings, here are some examples to get you started:
 
+#### Visual layout editor
+
+<img align="right" width="420" src="./media/layout-editor/editor-overview.png" alt="KZones Layout Editor">
+
+This fork includes **KZones Layout Editor**, a companion application for drawing layouts instead of editing JSON by hand. It supports:
+
+- drawing, moving, and resizing zones;
+- clicking the top or left ruler to split zones vertically or horizontally;
+- sticky mode, which keeps adjacent zones connected while resizing;
+- floating mode for free positioning.
+
+When building from source, install and open it with:
+
+```sh
+make install-editor
+kzones-layout-editor
+```
+
+The editor requires Python 3 and PyQt6 (`python3-pyqt6` on Debian/Ubuntu). Its **Save and apply** button writes the same `layoutsJson` configuration used by KZones and asks KWin to reconfigure immediately.
+
+![KZones Layout Editor demo](./media/layout-editor/editor-demo.gif)
+
+[Watch the MP4 demo](./media/layout-editor/editor-demo.mp4)
+
 #### Examples
 
 <details open>
