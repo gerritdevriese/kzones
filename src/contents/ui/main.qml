@@ -11,6 +11,7 @@ Item {
     id: root
 
     property var config: new Object()
+    property string configFingerprint: ""
     property bool moving: false
     property bool moved: false
     property bool resizing: false
@@ -22,6 +23,25 @@ Item {
     property int highlightedZone: -1
     property var activeScreen: null
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
+
+    function reloadConfigIfChanged() {
+        if (Core.getConfigFingerprint() === configFingerprint)
+            return;
+
+        const previousLayout = currentLayout;
+        Core.loadConfig();
+        configFingerprint = Core.getConfigFingerprint();
+        currentLayout = Math.min(previousLayout, config.layouts.length - 1);
+        Object.keys(screenLayouts).forEach((screenName) => {
+            if (screenLayouts[screenName] >= config.layouts.length)
+                screenLayouts[screenName] = 0;
+        });
+        refreshClientArea();
+        for (let i = 0; i < Workspace.stackingOrder.length; i++)
+            matchZone(Workspace.stackingOrder[i]);
+
+        Utils.log("Configuration applied without restarting KZones");
+    }
 
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
@@ -494,6 +514,7 @@ Item {
         Core.init(KWin, Workspace);
         Core.registerQMLComponent("root", root);
         Core.loadConfig();
+        configFingerprint = Core.getConfigFingerprint();
         refreshClientArea();
         // match all clients to zones and connect signals
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
@@ -501,6 +522,14 @@ Item {
             connectSignals(Workspace.stackingOrder[i]);
         }
         Utils.log("Everything loaded successfully");
+    }
+
+    Timer {
+        id: configWatcher
+        interval: 350
+        running: true
+        repeat: true
+        onTriggered: root.reloadConfigIfChanged()
     }
 
     PlasmaCore.Dialog {
