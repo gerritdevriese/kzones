@@ -6,6 +6,7 @@ Item {
     id: selector
 
     property var config
+    property var layoutIndices: []
     property int currentLayout
     property int highlightedZone
     property bool expanded: false
@@ -43,14 +44,16 @@ Item {
             Repeater {
                 id: repeater
 
-                model: config.layouts
+                // Global layout indices, so the selector only offers the layouts this
+                // screen can actually use.
+                model: layoutIndices
 
                 Components.Indicator {
-                    zones: modelData.zones
-                    activeZone: (currentLayout == index) ? highlightedZone : -1
+                    zones: config.layouts[modelData].zones
+                    activeZone: (currentLayout == modelData) ? highlightedZone : -1
                     width: 160 - 30
                     height: 100 - 30
-                    hovering: (currentLayout == index)
+                    hovering: (currentLayout == modelData)
                 }
 
             }
