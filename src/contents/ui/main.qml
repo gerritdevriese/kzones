@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kwin
+import "../code/aspect.mjs" as Aspect
 import "../code/core.mjs" as Core
 import "../code/utils.mjs" as Utils
 import "components" as Components
@@ -22,12 +23,66 @@ Item {
     property int highlightedZone: -1
     property var activeScreen: null
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
+    // screens we are listening to for shape changes
+    property var connectedScreens: []
+    // layouts available on the active screen, as { index, layout }
+    property var visibleLayouts: Aspect.visibleLayouts(config.layouts, clientArea.width, clientArea.height)
+
+    // Layouts can limit themselves to screens with a certain aspect ratio.
+    function availableLayouts() {
+        return Aspect.visibleLayouts(config.layouts, clientArea.width, clientArea.height);
+    }
+
+    function layoutAvailable(layoutIndex) {
+        const available = availableLayouts();
+        for (let i = 0; i < available.length; i++) {
+            if (available[i].index === layoutIndex)
+                return true;
+
+        }
+        return false;
+    }
+
+    function nextAvailableLayout(step) {
+        return Aspect.nextVisibleLayout(config.layouts, currentLayout, step, clientArea.width, clientArea.height);
+    }
 
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
         clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop);
         displaySize = Workspace.virtualScreenSize;
         currentLayout = getCurrentLayout();
+    }
+
+    // Screens can change shape while nothing else is going on: a resolution
+    // change, a rotation, a monitor being plugged in. Layouts are filtered by
+    // the aspect ratio of the screen, so pick that up as it happens instead of
+    // waiting for the next window drag.
+    function handleScreenChanged() {
+        const previousLayout = currentLayout;
+        refreshClientArea();
+        Utils.log(`Screen changed: ${clientArea.width}x${clientArea.height} (ratio ${clientArea.width / clientArea.height})`);
+        if (currentLayout !== previousLayout)
+            Utils.log(`Layout ${previousLayout} is not available on this screen, switched to ${currentLayout}`);
+
+    }
+
+    // Output signals are per screen, so they have to be reconnected whenever the
+    // set of screens changes.
+    function connectScreenSignals() {
+        const screens = Workspace.screens || [];
+        for (let i = 0; i < connectedScreens.length; i++) {
+            const screen = connectedScreens[i];
+            screen.geometryChanged.disconnect(handleScreenChanged);
+            screen.currentModeChanged.disconnect(handleScreenChanged);
+        }
+        connectedScreens = [];
+        for (let i = 0; i < screens.length; i++) {
+            screens[i].geometryChanged.connect(handleScreenChanged);
+            screens[i].currentModeChanged.connect(handleScreenChanged);
+            connectedScreens.push(screens[i]);
+        }
+        Utils.log("Connected screen signals for " + screens.length + " screen(s)");
     }
 
     function matchZone(client) {
@@ -321,14 +376,24 @@ Item {
     }
 
     function getCurrentLayout() {
+        let layout = currentLayout;
         if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
             const key = getLayoutKey();
             if (!screenLayouts[key])
                 screenLayouts[key] = 0;
 
-            return screenLayouts[key];
+            layout = screenLayouts[key];
         }
-        return currentLayout;
+        // the layout can be hidden on this screen by its aspect ratio, in which
+        // case the first available one takes over until we are back on a screen
+        // the layout is meant for
+        if (!layoutAvailable(layout)) {
+            const available = availableLayouts();
+            if (available.length > 0)
+                layout = available[0].index;
+
+        }
+        return layout;
     }
 
     function setCurrentLayout(layout) {
@@ -494,6 +559,7 @@ Item {
         Core.init(KWin, Workspace);
         Core.registerQMLComponent("root", root);
         Core.loadConfig();
+        connectScreenSignals();
         refreshClientArea();
         // match all clients to zones and connect signals
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
@@ -564,13 +630,13 @@ Item {
                     // zone selector
                     if (config.enableZoneSelector) {
                         if (!zoneSelector.animating && zoneSelector.expanded) {
-                            zoneSelector.repeater.model.forEach((layout, layoutIndex) => {
-                                const layoutItem = zoneSelector.repeater.itemAt(layoutIndex);
-                                layout.zones.forEach((zone, zoneIndex) => {
+                            zoneSelector.repeater.model.forEach((entry, position) => {
+                                const layoutItem = zoneSelector.repeater.itemAt(position);
+                                entry.layout.zones.forEach((zone, zoneIndex) => {
                                     const zoneItem = layoutItem.children[zoneIndex];
                                     if (Utils.isHovering(zoneItem)) {
                                         hoveringZone = zoneIndex;
-                                        setCurrentLayout(layoutIndex);
+                                        setCurrentLayout(entry.index);
                                     }
                                 });
                             });
@@ -681,6 +747,7 @@ Item {
                     id: zoneSelector
 
                     config: root.config
+                    layouts: root.visibleLayouts
                     currentLayout: root.currentLayout
                     highlightedZone: root.highlightedZone
                 }
@@ -693,12 +760,14 @@ Item {
 
     Components.Shortcuts {
         onCycleLayouts: {
-            setCurrentLayout((currentLayout + 1) % config.layouts.length);
+            refreshClientArea();
+            setCurrentLayout(nextAvailableLayout(1));
             highlightedZone = -1;
             Utils.osd(osdLayoutName());
         }
         onCycleLayoutsReversed: {
-            setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
+            refreshClientArea();
+            setCurrentLayout(nextAvailableLayout(-1));
             highlightedZone = -1;
             Utils.osd(osdLayoutName());
         }
@@ -736,12 +805,15 @@ Item {
             moveClientToZone(Workspace.activeWindow, zone);
         }
         onActivateLayout: {
-            if (layout <= config.layouts.length - 1) {
+            refreshClientArea();
+            if (layout > config.layouts.length - 1) {
+                Utils.osd(`Layout ${layout + 1} does not exist`);
+            } else if (!layoutAvailable(layout)) {
+                Utils.osd(`${config.layouts[layout].name} is not available on this screen`);
+            } else {
                 setCurrentLayout(layout);
                 highlightedZone = -1;
                 Utils.osd(osdLayoutName());
-            } else {
-                Utils.osd(`Layout ${layout + 1} does not exist`);
             }
         }
         onMoveActiveWindowUp: {
@@ -789,6 +861,21 @@ Item {
             if (config.trackLayoutPerDesktop)
                 currentLayout = getCurrentLayout();
 
+        }
+
+        // a screen was added, removed or reordered
+        function onScreensChanged() {
+            connectScreenSignals();
+            handleScreenChanged();
+        }
+
+        function onScreenOrderChanged() {
+            handleScreenChanged();
+        }
+
+        // the shape of the desktop changed, for example a resolution change
+        function onVirtualScreenSizeChanged() {
+            handleScreenChanged();
         }
 
         function onWindowAdded(client) {

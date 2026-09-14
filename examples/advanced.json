@@ -57,6 +57,31 @@
         ]
     },
     {
+        "name": "Ultrawide Thirds",
+        "padding": 0,
+        "aspectRatio": ">16:9",
+        "zones": [
+            {
+                "x": 0,
+                "y": 0,
+                "height": 100,
+                "width": 33
+            },
+            {
+                "x": 33,
+                "y": 0,
+                "height": 100,
+                "width": 34
+            },
+            {
+                "x": 67,
+                "y": 0,
+                "height": 100,
+                "width": 33
+            }
+        ]
+    },
+    {
         "name": "Columns",
         "padding": 0,
         "zones": [
