@@ -63,6 +63,7 @@ export function loadConfig() {
   config.trackLayoutPerDesktop = KWin.readConfig("trackLayoutPerDesktop", false);
   config.showOsdMessages = KWin.readConfig("showOsdMessages", true);
   config.fadeWindowsWhileMoving = KWin.readConfig("fadeWindowsWhileMoving", false);
+  config.disableZonedWindowBorders = KWin.readConfig("disableZonedWindowBorders", false);
   config.autoSnapAllNew = KWin.readConfig("autoSnapAllNew", false);
   config.layouts = layouts;
   config.filterMode = KWin.readConfig("filterMode", 0);

@@ -323,6 +323,13 @@
                         </property>
                       </widget>
                     </item>
+                    <item>
+                     <widget class="QCheckBox" name="kcfg_disableZonedWindowBorders">
+                      <property name="text">
+                       <string>Disable decorations for zoned windows</string>
+                      </property>
+                     </widget>
+                    </item>
                   </layout>
                 </widget>
               </item>

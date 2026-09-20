@@ -62,6 +62,10 @@
             <default>false</default>
         </entry>
 
+        <entry name="disableZonedWindowBorders" type="Bool">
+            <default>false</default>
+        </entry>
+
         <!-- Layouts -->
 
         <entry name="layoutsJson" type="String">

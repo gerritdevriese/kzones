@@ -85,6 +85,9 @@ Item {
         if (config.rememberWindowGeometries && client.zone != -1 && client.oldGeometry) {
             Utils.log("Restoring geometry for client " + client.resourceClass.toString());
             client.frameGeometry = client.oldGeometry;
+            if (config.disableZonedWindowBorders) {
+                client.noBorder = client.oldBorder;
+            }
         }
     }
 
@@ -104,6 +107,9 @@ Item {
             Utils.log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry));
             client.setMaximize(false, false);
             client.frameGeometry = newGeometry;
+            if (config.disableZonedWindowBorders) {
+                client.noBorder = true;
+            }
         }
     }
 
@@ -120,6 +126,9 @@ Item {
             if (zone != -1) {
                 if (client.zone == -1)
                     client.oldGeometry = geometry;
+                    if (config.disableZonedWindowBorders) {
+                        client.oldBorder = client.noBorder;
+                    }
 
             }
         }
