@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtCore
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kwin
@@ -22,6 +23,13 @@ Item {
     property int highlightedZone: -1
     property var activeScreen: null
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
+
+    Settings {
+        id: kzonesPersistence
+        location: StandardPaths.writableLocation(StandardPaths.ConfigLocation) + "/kzonesrc"
+        category: "ScreenLayouts"
+        property string screenLayoutsJson: "{}"
+    }
 
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
@@ -323,17 +331,22 @@ Item {
     function getCurrentLayout() {
         if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
             const key = getLayoutKey();
-            if (!screenLayouts[key])
-                screenLayouts[key] = 0;
+            let layout = screenLayouts[key];
+            if (layout === undefined || layout < 0 || layout >= config.layouts.length) {
+                layout = 0;
+                screenLayouts[key] = layout;
+            }
 
-            return screenLayouts[key];
+            return layout;
         }
         return currentLayout;
     }
 
     function setCurrentLayout(layout) {
-        if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop)
+        if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
             screenLayouts[getLayoutKey()] = layout;
+            kzonesPersistence.screenLayoutsJson = JSON.stringify(screenLayouts);
+        }
 
         currentLayout = layout;
     }
@@ -494,6 +507,14 @@ Item {
         Core.init(KWin, Workspace);
         Core.registerQMLComponent("root", root);
         Core.loadConfig();
+
+        try {
+            screenLayouts = JSON.parse(kzonesPersistence.screenLayoutsJson || "{}");
+        } catch (e) {
+            Utils.log("Could not load per-screen/per-desktop layouts from configuration: " + e.message);
+            screenLayouts = {};
+        }
+
         refreshClientArea();
         // match all clients to zones and connect signals
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
