@@ -317,6 +317,7 @@ List of all available shortcuts:
 | Move active window to next zone           | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd>                |
 | Switch to previous window in current zone | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd>                 |
 | Switch to next window in current zone     | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd>                   |
+| Focus window in zone                      | <kbd>Meta</kbd> + <kbd>Ctrl</kbd> + <kbd>Num 0-9</kbd>             |
 | Cycle layouts                             | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>                    |
 | Cycle layouts (reversed)                  | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> |
 | Toggle zone overlay                       | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>                    |

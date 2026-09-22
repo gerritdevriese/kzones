@@ -10,6 +10,7 @@ Item {
     signal switchToNextWindowInCurrentZone()
     signal switchToPreviousWindowInCurrentZone()
     signal moveActiveWindowToZone(int zone)
+    signal focusZone(int zone)
     signal activateLayout(int layout)
     signal moveActiveWindowUp()
     signal moveActiveWindowDown()
@@ -109,6 +110,26 @@ Item {
                 sequence: "Meta+Num+" + modelData
                 onActivated: {
                     activateLayout(modelData - 1);
+                }
+            }
+
+        }
+
+    }
+
+    // Numpad digits require NumLock to be on, which means Shift can't be part of
+    // the sequence: XKB's KEYPAD key type maps Shift+NumLock back to the base
+    // level (KP_End, KP_Down, ...), making "Shift+Num+1" physically unreachable.
+    Repeater {
+        model: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        delegate: Item {
+            ShortcutHandler {
+                name: "KZones: Focus window in zone " + modelData
+                text: "KZones: Focus window in zone " + modelData
+                sequence: "Meta+Ctrl+Num+" + modelData
+                onActivated: {
+                    focusZone(modelData - 1);
                 }
             }
 
