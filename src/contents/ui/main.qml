@@ -708,7 +708,13 @@ Item {
                 moveClientToClosestZone(client);
 
             const zonesLength = config.layouts[currentLayout].zones.length;
-            moveClientToZone(client, (client.zone + 1) % zonesLength);
+            if (client.zone + 1 >= zonesLength && typeof Workspace.slotWindowToNextScreen === "function") {
+                Workspace.slotWindowToNextScreen();
+                refreshClientArea();
+                moveClientToZone(client, 0);
+            } else {
+                moveClientToZone(client, (client.zone + 1) % zonesLength);
+            }
         }
         onMoveActiveWindowToPreviousZone: {
             const client = Workspace.activeWindow;
@@ -716,7 +722,14 @@ Item {
                 moveClientToClosestZone(client);
 
             const zonesLength = config.layouts[currentLayout].zones.length;
-            moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength);
+            if (client.zone - 1 < 0 && typeof Workspace.slotWindowToPrevScreen === "function") {
+                Workspace.slotWindowToPrevScreen();
+                refreshClientArea();
+                const newZonesLength = config.layouts[currentLayout].zones.length;
+                moveClientToZone(client, newZonesLength - 1);
+            } else {
+                moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength);
+            }
         }
         onToggleZoneOverlay: {
             if (!config.enableZoneOverlay)
