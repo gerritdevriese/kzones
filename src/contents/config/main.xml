@@ -30,6 +30,14 @@
             <default>0</default>
         </entry>
 
+        <entry name="enableSnapAssist" type="Bool">
+            <default>true</default>
+        </entry>
+
+        <entry name="enableStickyResizing" type="Bool">
+            <default>true</default>
+        </entry>
+
         <entry name="enableEdgeSnapping" type="Bool">
             <default>false</default>
         </entry>
@@ -67,60 +75,367 @@
         <entry name="layoutsJson" type="String">
             <default>
                 [
-    {
-        &quot;name&quot;: &quot;Priority Grid&quot;,
-        &quot;padding&quot;: 0,
-        &quot;zones&quot;: [
-            {
-                &quot;x&quot;: 0,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 100,
-                &quot;width&quot;: 25
-            },
-            {
-                &quot;x&quot;: 25,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 100,
-                &quot;width&quot;: 50
-            },
-            {
-                &quot;x&quot;: 75,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 100,
-                &quot;width&quot;: 25
-            }
-        ]
-    },
-    {
-        &quot;name&quot;: &quot;Quadrant Grid&quot;,
-        &quot;zones&quot;: [
-            {
-                &quot;x&quot;: 0,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 50,
-                &quot;width&quot;: 50
-            },
-            {
-                &quot;x&quot;: 0,
-                &quot;y&quot;: 50,
-                &quot;height&quot;: 50,
-                &quot;width&quot;: 50
-            },
-            {
-                &quot;x&quot;: 50,
-                &quot;y&quot;: 50,
-                &quot;height&quot;: 50,
-                &quot;width&quot;: 50
-            },
-            {
-                &quot;x&quot;: 50,
-                &quot;y&quot;: 0,
-                &quot;height&quot;: 50,
-                &quot;width&quot;: 50
-            }
-        ]
-    }
-]
+                    {
+                        &quot;name&quot;: &quot;Two Columns (1/2 - 1/2)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 100
+                            },
+                            {
+                                &quot;x&quot;: 50,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 100
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Two Columns (2/3 - 1/3)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 66.67,
+                                &quot;height&quot;: 100
+                            },
+                            {
+                                &quot;x&quot;: 66.67,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 33.33,
+                                &quot;height&quot;: 100
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Two Columns (1/3 - 2/3)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 33.33,
+                                &quot;height&quot;: 100
+                            },
+                            {
+                                &quot;x&quot;: 33.33,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 66.67,
+                                &quot;height&quot;: 100
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Three Columns (1/3 - 1/3 - 1/3)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 33.33,
+                                &quot;height&quot;: 100
+                            },
+                            {
+                                &quot;x&quot;: 33.33,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 33.34,
+                                &quot;height&quot;: 100
+                            },
+                            {
+                                &quot;x&quot;: 66.67,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 33.33,
+                                &quot;height&quot;: 100
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Priority Grid Left (1/2 - 1/4 - 1/4)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 100
+                            },
+                            {
+                                &quot;x&quot;: 50,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 50,
+                                &quot;y&quot;: 50,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Priority Grid Right (1/4 - 1/4 - 1/2)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 50,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 50,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 100
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Quadrant Grid (2x2)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 50,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 50,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 50,
+                                &quot;y&quot;: 50,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Three Columns (1/6 - 2/3 - 1/6)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 16.67,
+                                &quot;height&quot;: 100
+                            },
+                            {
+                                &quot;x&quot;: 16.67,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 66.66,
+                                &quot;height&quot;: 100
+                            },
+                            {
+                                &quot;x&quot;: 83.33,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 16.67,
+                                &quot;height&quot;: 100
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Two Rows (1/2 - 1/2)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 50,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 50
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Three Rows (1/3 - 1/3 - 1/3)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 33.33
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 33.33,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 33.34
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 66.67,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 33.33
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Four Rows (1/4 - 1/4 - 1/4 - 1/4)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 25
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 25,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 25
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 50,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 25
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 75,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 25
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Two Rows (2/3 - 1/3)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 66.67
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 66.67,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 33.33
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Two Rows (1/3 - 2/3)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 33.33
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 33.33,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 66.67
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Priority Rows Top (1/2 - 1/4 - 1/4)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 50,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 50,
+                                &quot;y&quot;: 50,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Priority Rows Bottom (1/4 - 1/4 - 1/2)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 50,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 50,
+                                &quot;height&quot;: 50
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 50,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 50
+                            }
+                        ]
+                    },
+                    {
+                        &quot;name&quot;: &quot;Three Rows (1/6 - 2/3 - 1/6)&quot;,
+                        &quot;padding&quot;: 0,
+                        &quot;zones&quot;: [
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 0,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 16.67
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 16.67,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 66.66
+                            },
+                            {
+                                &quot;x&quot;: 0,
+                                &quot;y&quot;: 83.33,
+                                &quot;width&quot;: 100,
+                                &quot;height&quot;: 16.67
+                            }
+                        ]
+                    }
+                ]
             </default>
         </entry>
 
