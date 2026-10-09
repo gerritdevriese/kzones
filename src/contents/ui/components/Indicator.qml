@@ -53,17 +53,12 @@ Rectangle {
                     ColorAnimation {
                         duration: 150
                     }
-
                 }
-
             }
-
         }
-
     }
 
     Components.ColorHelper {
         id: colorHelper
     }
-
 }

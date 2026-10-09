@@ -56,11 +56,8 @@ Item {
                     cardColor: (currentLayout == index) ? colorHelper.tintWithAlpha(colorHelper.backgroundColor, colorHelper.accentColor, 0.2) : colorHelper.tintWithAlpha(colorHelper.backgroundColor, colorHelper.buttonColor, 0.3)
                     hovering: (currentLayout == index)
                 }
-
             }
-
         }
-
     }
 
     Components.Shadow {
@@ -82,7 +79,5 @@ Item {
                 selector.animating = running;
             }
         }
-
     }
-
 }

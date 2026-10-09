@@ -10,7 +10,7 @@ Item {
     property var targetRect: Qt.rect(0, 0, 400, 300)
     property var candidates: []
     signal windowSelected(var client)
-    signal dismissed()
+    signal dismissed
 
     x: targetRect ? targetRect.x : 0
     y: targetRect ? targetRect.y : 0
@@ -97,9 +97,12 @@ Item {
                 boundsBehavior: Flickable.StopAtBounds
 
                 readonly property int cols: {
-                    if (candidates.length <= 1) return 1;
-                    if (grid.width > 700 && candidates.length >= 3) return 3;
-                    if (grid.width > 350 && candidates.length >= 2) return 2;
+                    if (candidates.length <= 1)
+                        return 1;
+                    if (grid.width > 700 && candidates.length >= 3)
+                        return 3;
+                    if (grid.width > 350 && candidates.length >= 2)
+                        return 2;
                     return 1;
                 }
 
@@ -118,9 +121,7 @@ Item {
                         id: itemCard
                         anchors.fill: parent
                         anchors.margins: 6
-                        color: itemMouse.containsMouse
-                            ? colorHelper.tintWithAlpha(colorHelper.backgroundColor, colorHelper.accentColor, 0.25)
-                            : colorHelper.tintWithAlpha(colorHelper.backgroundColor, colorHelper.buttonColor, 0.35)
+                        color: itemMouse.containsMouse ? colorHelper.tintWithAlpha(colorHelper.backgroundColor, colorHelper.accentColor, 0.25) : colorHelper.tintWithAlpha(colorHelper.backgroundColor, colorHelper.buttonColor, 0.35)
                         radius: 8
                         border.color: itemMouse.containsMouse ? colorHelper.accentColor : colorHelper.getBorderColor(color)
                         border.width: itemMouse.containsMouse ? 2 : 1
@@ -128,7 +129,9 @@ Item {
                         scale: itemMouse.containsMouse ? 1.02 : 1.0
 
                         Behavior on scale {
-                            NumberAnimation { duration: 100 }
+                            NumberAnimation {
+                                duration: 100
+                            }
                         }
 
                         ColumnLayout {

@@ -121,7 +121,6 @@ Item {
             for (let i = 0; i < c.desktops.length; i++) {
                 if (c.desktops[i] === Workspace.currentDesktop || (c.desktops[i].id && c.desktops[i].id === Workspace.currentDesktop.id))
                     return true;
-
             }
             if (c.desktops.length > 0)
                 return false;
@@ -142,7 +141,6 @@ Item {
             const client = Workspace.stackingOrder[i];
             if (client.zone === zone && client.layout === layout && isClientOnCurrentDesktop(client) && client.activity === Workspace.currentActivity && isSameScreen(client, Workspace.activeWindow) && checkFilter(client))
                 windows.push(client);
-
         }
         return windows;
     }
@@ -174,7 +172,7 @@ Item {
 
     function moveClientToZone(client, zone) {
         if (!checkFilter(client))
-            return ;
+            return;
 
         Utils.log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
         refreshClientArea();
@@ -204,7 +202,6 @@ Item {
             if (zone != -1) {
                 if (client.zone == -1)
                     client.oldGeometry = geometry;
-
             }
         }
         // save zone
@@ -268,12 +265,7 @@ Item {
         const zone = layout.zones[targetZoneIndex];
         const zonePadding = layout.padding || 0;
 
-        const targetRect = Qt.rect(
-            Math.round(clientArea.x + ((zone.x / 100) * (clientArea.width - zonePadding)) + zonePadding),
-            Math.round(clientArea.y + ((zone.y / 100) * (clientArea.height - zonePadding)) + zonePadding),
-            Math.round(((zone.width / 100) * (clientArea.width - zonePadding)) - zonePadding),
-            Math.round(((zone.height / 100) * (clientArea.height - zonePadding)) - zonePadding)
-        );
+        const targetRect = Qt.rect(Math.round(clientArea.x + ((zone.x / 100) * (clientArea.width - zonePadding)) + zonePadding), Math.round(clientArea.y + ((zone.y / 100) * (clientArea.height - zonePadding)) + zonePadding), Math.round(((zone.width / 100) * (clientArea.width - zonePadding)) - zonePadding), Math.round(((zone.height / 100) * (clientArea.height - zonePadding)) - zonePadding));
 
         const candidates = [];
         const excluded = {
@@ -571,7 +563,6 @@ Item {
 
             if (config.filterMode == 1)
                 return !filter.includes(client.resourceClass.toString());
-
         }
         return true;
     }
@@ -611,7 +602,7 @@ Item {
                     moving = false;
                     moved = false;
                     resizing = true;
-                    Sticky.startResize(client, Workspace, config, function(otherClient) {
+                    Sticky.startResize(client, Workspace, config, function (otherClient) {
                         return root.checkFilter(otherClient);
                     });
                 }
@@ -690,7 +681,7 @@ Item {
         }
 
         if (!checkFilter(client))
-            return ;
+            return;
 
         Utils.log("Connecting signals for client " + client.resourceClass.toString());
         client.onInteractiveMoveResizeStarted.connect(onInteractiveMoveResizeStarted);
@@ -762,7 +753,7 @@ Item {
 
                 property int targetZoneIndex: -1
 
-                onWindowSelected: function(client) {
+                onWindowSelected: function (client) {
                     if (!client)
                         return;
 
@@ -778,9 +769,7 @@ Item {
                     snapAssistDialog.hide();
                 }
             }
-
         }
-
     }
 
     PlasmaCore.Dialog {
@@ -836,10 +825,9 @@ Item {
                     const currentZones = repeaterLayout.itemAt(currentLayout);
                     if (config.enableZoneOverlay && showZoneOverlay && !zoneSelector.expanded)
                         currentZones.repeater.model.forEach((zone, zoneIndex) => {
-                        if (Utils.isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget]))
-                            hoveringZone = zoneIndex;
-
-                    });
+                            if (Utils.isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget]))
+                                hoveringZone = zoneIndex;
+                        });
 
                     // zone selector
                     if (config.enableZoneSelector) {
@@ -899,7 +887,6 @@ Item {
                                 // check if cursor is inside the zone geometry
                                 if (Utils.isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry))
                                     hoveringZone = zoneIndex;
-
                             });
                         }
                     }
@@ -920,25 +907,25 @@ Item {
 
                 Components.Debug {
                     info: ({
-                        "activeWindow": {
-                            "caption": Workspace.activeWindow && Workspace.activeWindow.caption,
-                            "resourceClass": Workspace.activeWindow && Workspace.activeWindow.resourceClass && Workspace.activeWindow.resourceClass.toString(),
-                            "frameGeometry": {
-                                "x": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.x,
-                                "y": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.y,
-                                "width": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.width,
-                                "height": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.height
+                            "activeWindow": {
+                                "caption": Workspace.activeWindow && Workspace.activeWindow.caption,
+                                "resourceClass": Workspace.activeWindow && Workspace.activeWindow.resourceClass && Workspace.activeWindow.resourceClass.toString(),
+                                "frameGeometry": {
+                                    "x": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.x,
+                                    "y": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.y,
+                                    "width": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.width,
+                                    "height": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.height
+                                },
+                                "zone": Workspace.activeWindow && Workspace.activeWindow.zone
                             },
-                            "zone": Workspace.activeWindow && Workspace.activeWindow.zone
-                        },
-                        "highlightedZone": highlightedZone,
-                        "moving": moving,
-                        "resizing": resizing,
-                        "oldGeometry": Workspace.activeWindow && Workspace.activeWindow.oldGeometry,
-                        "activeScreen": activeScreen && activeScreen.name,
-                        "currentLayout": currentLayout,
-                        "screenLayouts": screenLayouts
-                    })
+                            "highlightedZone": highlightedZone,
+                            "moving": moving,
+                            "resizing": resizing,
+                            "oldGeometry": Workspace.activeWindow && Workspace.activeWindow.oldGeometry,
+                            "activeScreen": activeScreen && activeScreen.name,
+                            "currentLayout": currentLayout,
+                            "screenLayouts": screenLayouts
+                        })
                     config: root.config
                 }
 
@@ -956,7 +943,6 @@ Item {
                         layoutIndex: index
                         visible: index == root.currentLayout
                     }
-
                 }
 
                 Components.Selector {
@@ -966,11 +952,8 @@ Item {
                     currentLayout: root.currentLayout
                     highlightedZone: root.highlightedZone
                 }
-
             }
-
         }
-
     }
 
     Components.Shortcuts {
@@ -1093,7 +1076,6 @@ Item {
             snapAssistDialog.hide();
             if (config.trackLayoutPerDesktop)
                 currentLayout = getCurrentLayout();
-
         }
 
         function onWindowAdded(client) {
@@ -1102,7 +1084,7 @@ Item {
             config.layouts[currentLayout].zones.forEach((zone, zoneIndex) => {
                 if (zone.applications && zone.applications.includes(client.resourceClass.toString())) {
                     moveClientToZone(client, zoneIndex);
-                    return ;
+                    return;
                 }
             });
             // auto snap to closest zone
@@ -1112,7 +1094,6 @@ Item {
             // check if new window spawns in a zone
             if (client.zone == undefined || client.zone == -1)
                 matchZone(client);
-
         }
 
         target: Workspace
@@ -1126,5 +1107,4 @@ Item {
 
         target: Options
     }
-
 }
