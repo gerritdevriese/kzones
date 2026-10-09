@@ -4,13 +4,20 @@ import "../components" as Components
 Rectangle {
     id: indicator
 
+    property alias repeater: indicators
     property int activeZone: 0
     property bool hovering: false
     property var zones: []
+    property color cardColor: "transparent"
 
-    width: parent.width
-    height: parent.height
-    color: "transparent"
+    implicitWidth: 120
+    implicitHeight: 75
+    width: parent ? parent.width : implicitWidth
+    height: parent ? parent.height : implicitHeight
+    color: cardColor
+    radius: 6
+    border.color: hovering ? colorHelper.accentColor : (cardColor != "transparent" ? colorHelper.getBorderColor(color) : "transparent")
+    border.width: hovering ? 2 : 1
     opacity: 1
 
     Repeater {
@@ -40,23 +47,18 @@ Rectangle {
                 }
                 border.color: colorHelper.getBorderColor(color)
                 border.width: 1
-                radius: 5
+                radius: 4
 
                 Behavior on color {
                     ColorAnimation {
                         duration: 150
                     }
-
                 }
-
             }
-
         }
-
     }
 
     Components.ColorHelper {
         id: colorHelper
     }
-
 }

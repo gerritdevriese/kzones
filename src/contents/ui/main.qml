@@ -5,6 +5,7 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.kwin
 import "../code/core.mjs" as Core
 import "../code/utils.mjs" as Utils
+import "../code/sticky.mjs" as Sticky
 import "components" as Components
 
 Item {
@@ -23,6 +24,10 @@ Item {
     property var activeScreen: null
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
 
+    function isSnapAssistEnabled() {
+        return config.enableSnapAssist !== false;
+    }
+
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
         clientArea = Workspace.clientArea(KWin.FullScreenArea, activeScreen, Workspace.currentDesktop);
@@ -30,35 +35,112 @@ Item {
         currentLayout = getCurrentLayout();
     }
 
-    function matchZone(client) {
-        refreshClientArea();
-        client.zone = -1;
-        // get all zones in the current layout
-        const zones = config.layouts[currentLayout].zones;
-        // loop through zones and compare with the geometries of the client
+    function findMatchingZone(client, layoutIndex) {
+        if (!client || !client.frameGeometry || !config.layouts[layoutIndex])
+            return -1;
+
+        const layout = config.layouts[layoutIndex];
+        const zones = layout.zones || [];
+        const zonePadding = layout.padding || 0;
         for (let i = 0; i < zones.length; i++) {
             const zone = zones[i];
-            const zonePadding = config.layouts[currentLayout].padding || 0;
-            const zoneX = ((zone.x / 100) * (clientArea.width - zonePadding)) + zonePadding;
-            const zoneY = ((zone.y / 100) * (clientArea.height - zonePadding)) + zonePadding;
+            const zoneX = clientArea.x + ((zone.x / 100) * (clientArea.width - zonePadding)) + zonePadding;
+            const zoneY = clientArea.y + ((zone.y / 100) * (clientArea.height - zonePadding)) + zonePadding;
             const zoneWidth = ((zone.width / 100) * (clientArea.width - zonePadding)) - zonePadding;
             const zoneHeight = ((zone.height / 100) * (clientArea.height - zonePadding)) - zonePadding;
-            if (client.frameGeometry.x == zoneX && client.frameGeometry.y == zoneY && client.frameGeometry.width == zoneWidth && client.frameGeometry.height == zoneHeight) {
-                // zone found, set it and exit the loop
-                client.zone = i;
-                client.layout = currentLayout;
-                break;
-            }
+            if (client.frameGeometry.x === Math.round(zoneX) && client.frameGeometry.y === Math.round(zoneY) && client.frameGeometry.width === Math.round(zoneWidth) && client.frameGeometry.height === Math.round(zoneHeight))
+                return i;
         }
+        return -1;
+    }
+
+    function matchZone(client) {
+        refreshClientArea();
+        client.zone = findMatchingZone(client, currentLayout);
+        if (client.zone !== -1)
+            client.layout = currentLayout;
+    }
+
+    function isClientOnScreen(c, screen) {
+        if (!c || screen === undefined || screen === null)
+            return true;
+
+        const clientOutput = c.output !== undefined ? c.output : c.screen;
+        if (clientOutput !== undefined && clientOutput !== null) {
+            if (clientOutput === screen)
+                return true;
+
+            if (clientOutput.name && screen.name && clientOutput.name === screen.name)
+                return true;
+
+            if (typeof clientOutput === "number" && typeof screen === "number")
+                return clientOutput === screen;
+        }
+        if (screen.geometry && c.frameGeometry) {
+            const sg = screen.geometry;
+            const cg = c.frameGeometry;
+            const centerX = cg.x + cg.width / 2;
+            const centerY = cg.y + cg.height / 2;
+            return centerX >= sg.x && centerX < sg.x + sg.width && centerY >= sg.y && centerY < sg.y + sg.height;
+        }
+        return true;
+    }
+
+    function isSameScreen(c1, c2) {
+        if (!c1 || !c2)
+            return true;
+
+        const o1 = c1.output !== undefined ? c1.output : c1.screen;
+        const o2 = c2.output !== undefined ? c2.output : c2.screen;
+        if (o1 !== undefined && o1 !== null && o2 !== undefined && o2 !== null) {
+            if (o1 === o2)
+                return true;
+
+            if (o1.name && o2.name && o1.name === o2.name)
+                return true;
+
+            if (typeof o1 === "number" && typeof o2 === "number")
+                return o1 === o2;
+
+            return false;
+        }
+        return true;
+    }
+
+    function isClientOnCurrentDesktop(c) {
+        if (!c)
+            return false;
+
+        if (c.onAllDesktops)
+            return true;
+
+        if (c.onCurrentDesktop !== undefined)
+            return c.onCurrentDesktop;
+
+        if (c.desktops && Workspace.currentDesktop) {
+            for (let i = 0; i < c.desktops.length; i++) {
+                if (c.desktops[i] === Workspace.currentDesktop || (c.desktops[i].id && c.desktops[i].id === Workspace.currentDesktop.id))
+                    return true;
+            }
+            if (c.desktops.length > 0)
+                return false;
+        }
+        if (c.desktop !== undefined && Workspace.currentDesktop !== undefined) {
+            if (c.desktop === Workspace.currentDesktop || (c.desktop.id && c.desktop.id === Workspace.currentDesktop.id))
+                return true;
+
+            if (typeof c.desktop === "number" && typeof Workspace.currentDesktop === "number")
+                return c.desktop === Workspace.currentDesktop;
+        }
+        return true;
     }
 
     function getWindowsInZone(zone, layout) {
         const windows = [];
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
             const client = Workspace.stackingOrder[i];
-            if (client.zone === zone && client.layout === layout && client.desktop === Workspace.currentDesktop && client.activity === Workspace.currentActivity && client.screen === Workspace.activeWindow.screen && checkFilter(client))
+            if (client.zone === zone && client.layout === layout && isClientOnCurrentDesktop(client) && client.activity === Workspace.currentActivity && isSameScreen(client, Workspace.activeWindow) && checkFilter(client))
                 windows.push(client);
-
         }
         return windows;
     }
@@ -90,7 +172,7 @@ Item {
 
     function moveClientToZone(client, zone) {
         if (!checkFilter(client))
-            return ;
+            return;
 
         Utils.log("Moving client " + client.resourceClass.toString() + " to zone " + zone);
         refreshClientArea();
@@ -120,7 +202,6 @@ Item {
             if (zone != -1) {
                 if (client.zone == -1)
                     client.oldGeometry = geometry;
-
             }
         }
         // save zone
@@ -128,6 +209,113 @@ Item {
         client.layout = currentLayout;
         client.desktop = Workspace.currentDesktop;
         client.activity = Workspace.currentActivity;
+    }
+
+    function triggerSnapAssist(layoutIndex, justFilledZone) {
+        Utils.log("Snap Assist requested for layout " + layoutIndex + ", filled zone " + justFilledZone + ", enabled=" + isSnapAssistEnabled());
+        if (!isSnapAssistEnabled()) {
+            Utils.log("Snap Assist skipped: disabled in config");
+            return;
+        }
+
+        refreshClientArea();
+        if (!config.layouts || !config.layouts[layoutIndex]) {
+            Utils.log("Snap Assist skipped: layout " + layoutIndex + " is unavailable");
+            return;
+        }
+
+        const layout = config.layouts[layoutIndex];
+        if (!layout.zones || layout.zones.length <= 1) {
+            Utils.log("Snap Assist skipped: layout has fewer than two zones");
+            return;
+        }
+
+        const occupiedZones = {};
+        if (justFilledZone !== undefined && justFilledZone !== null && justFilledZone >= 0)
+            occupiedZones[justFilledZone] = true;
+
+        const allClients = Workspace.stackingOrder || Workspace.windows || [];
+        for (let i = 0; i < allClients.length; i++) {
+            const client = allClients[i];
+            if (!client || !checkFilter(client) || client.minimized || client.fullScreen)
+                continue;
+            if (!isClientOnScreen(client, activeScreen))
+                continue;
+            if (!isClientOnCurrentDesktop(client))
+                continue;
+
+            const clientZone = findMatchingZone(client, layoutIndex);
+            if (clientZone !== -1)
+                occupiedZones[clientZone] = true;
+        }
+
+        const unoccupiedZones = [];
+        for (let z = 0; z < layout.zones.length; z++) {
+            if (!occupiedZones[z])
+                unoccupiedZones.push(z);
+        }
+
+        if (unoccupiedZones.length === 0) {
+            Utils.log("Snap Assist skipped: every zone is occupied");
+            snapAssistDialog.hide();
+            return;
+        }
+
+        const targetZoneIndex = unoccupiedZones[0];
+        const zone = layout.zones[targetZoneIndex];
+        const zonePadding = layout.padding || 0;
+
+        const targetRect = Qt.rect(Math.round(clientArea.x + ((zone.x / 100) * (clientArea.width - zonePadding)) + zonePadding), Math.round(clientArea.y + ((zone.y / 100) * (clientArea.height - zonePadding)) + zonePadding), Math.round(((zone.width / 100) * (clientArea.width - zonePadding)) - zonePadding), Math.round(((zone.height / 100) * (clientArea.height - zonePadding)) - zonePadding));
+
+        const candidates = [];
+        const excluded = {
+            filter: 0,
+            screen: 0,
+            desktop: 0,
+            fullscreen: 0,
+            occupied: 0
+        };
+        for (let i = allClients.length - 1; i >= 0; i--) {
+            const client = allClients[i];
+            if (!client)
+                continue;
+            if (!checkFilter(client)) {
+                excluded.filter++;
+                continue;
+            }
+            if (!isClientOnScreen(client, activeScreen)) {
+                excluded.screen++;
+                continue;
+            }
+            if (!isClientOnCurrentDesktop(client)) {
+                excluded.desktop++;
+                continue;
+            }
+            if (client.fullScreen) {
+                excluded.fullscreen++;
+                continue;
+            }
+
+            const clientZone = findMatchingZone(client, layoutIndex);
+            if (!client.minimized && clientZone !== -1 && occupiedZones[clientZone]) {
+                excluded.occupied++;
+                continue;
+            }
+
+            candidates.push(client);
+        }
+
+        Utils.log("Snap Assist candidates: " + candidates.length + " of " + allClients.length + " windows; excluded " + JSON.stringify(excluded) + "; target zone " + targetZoneIndex);
+        if (candidates.length === 0) {
+            Utils.log("Snap Assist skipped: no eligible candidate windows");
+            snapAssistDialog.hide();
+            return;
+        }
+
+        snapAssistItem.targetRect = targetRect;
+        snapAssistItem.targetZoneIndex = targetZoneIndex;
+        snapAssistItem.candidates = candidates;
+        snapAssistDialog.show();
     }
 
     function moveClientToClosestZone(client) {
@@ -375,7 +563,6 @@ Item {
 
             if (config.filterMode == 1)
                 return !filter.includes(client.resourceClass.toString());
-
         }
         return true;
     }
@@ -383,6 +570,7 @@ Item {
     function connectSignals(client) {
         function onInteractiveMoveResizeStarted() {
             Utils.log("Interactive move/resize started for client " + client.resourceClass.toString());
+            snapAssistDialog.hide();
             if (client.resizeable && checkFilter(client)) {
                 if (client.move && checkFilter(client)) {
                     cachedClientArea = clientArea;
@@ -400,8 +588,6 @@ Item {
                         if (client.oldGeometry) {
                             const geometry = client.oldGeometry;
                             const zone = config.layouts[client.layout].zones[client.zone];
-                            const zoneCenterX = (zone.x + zone.width / 2) / 100 * cachedClientArea.width + cachedClientArea.x;
-                            const zoneX = ((zone.x / 100) * cachedClientArea.width + cachedClientArea.x);
                             const newGeometry = Qt.rect(Math.round(Workspace.cursorPos.x - geometry.width / 2), Math.round(client.frameGeometry.y), Math.round(geometry.width), Math.round(geometry.height));
                             client.frameGeometry = newGeometry;
                         }
@@ -416,20 +602,24 @@ Item {
                     moving = false;
                     moved = false;
                     resizing = true;
+                    Sticky.startResize(client, Workspace, config, function (otherClient) {
+                        return root.checkFilter(otherClient);
+                    });
                 }
             }
         }
 
-        function onInteractiveMoveResizeStepped() {
+        function onInteractiveMoveResizeStepped(rect) {
             if (client.resizeable) {
                 if (moving && checkFilter(client))
                     moved = true;
-
+                if (resizing && checkFilter(client))
+                    Sticky.stepResize(client, rect || client.frameGeometry, config);
             }
         }
 
         function onInteractiveMoveResizeFinished() {
-            Utils.log("Interactive move/resize finished for client " + client.resourceClass.toString());
+            Utils.log("Interactive move/resize finished for " + client.resourceClass.toString() + "; moving=" + moving + ", moved=" + moved + ", highlightedZone=" + highlightedZone + ", overlayVisible=" + mainDialog.visible + ", snapAssistEnabled=" + isSnapAssistEnabled());
             if (config.fadeWindowsWhileMoving) {
                 for (let i = 0; i < Workspace.stackingOrder.length; i++) {
                     const client = Workspace.stackingOrder[i];
@@ -438,14 +628,25 @@ Item {
             }
             if (moving) {
                 Utils.log("Move end " + client.resourceClass.toString());
+                let targetZone = -1;
                 if (moved) {
-                    if (mainDialog.visible)
-                        moveClientToZone(client, highlightedZone);
-                    else
-                        saveClientProperties(client, -1);
+                    if (mainDialog.visible && highlightedZone !== -1) {
+                        targetZone = highlightedZone;
+                        moveClientToZone(client, targetZone);
+                    } else {
+                        matchZone(client);
+                        if (client.zone !== -1) {
+                            targetZone = client.zone;
+                        } else {
+                            saveClientProperties(client, -1);
+                        }
+                    }
                 }
                 mainDialog.hide();
+                if (targetZone !== -1 && isSnapAssistEnabled())
+                    triggerSnapAssist(currentLayout, targetZone);
             } else if (resizing) {
+                Sticky.finishResize();
                 matchZone(client);
                 Utils.log("Resizing end: Matched client " + client.resourceClass.toString() + " to layout.zone " + client.layout + " " + client.zone);
                 saveClientProperties(client, client.zone);
@@ -480,7 +681,7 @@ Item {
         }
 
         if (!checkFilter(client))
-            return ;
+            return;
 
         Utils.log("Connecting signals for client " + client.resourceClass.toString());
         client.onInteractiveMoveResizeStarted.connect(onInteractiveMoveResizeStarted);
@@ -501,6 +702,74 @@ Item {
             connectSignals(Workspace.stackingOrder[i]);
         }
         Utils.log("Everything loaded successfully");
+    }
+
+    PlasmaCore.Dialog {
+        id: snapAssistDialog
+
+        function show() {
+            refreshClientArea();
+            snapAssistDialog.x = 0;
+            snapAssistDialog.y = 0;
+            snapAssistDialog.width = Workspace.virtualScreenSize.width;
+            snapAssistDialog.height = Workspace.virtualScreenSize.height;
+            snapAssistDialog.setWidth(Workspace.virtualScreenSize.width);
+            snapAssistDialog.setHeight(Workspace.virtualScreenSize.height);
+            snapAssistDialog.visible = true;
+            snapAssistDialog.requestActivate();
+            Utils.log("Snap Assist dialog shown at " + snapAssistItem.x + "," + snapAssistItem.y + " size " + snapAssistItem.width + "x" + snapAssistItem.height + " with " + snapAssistItem.candidates.length + " candidates");
+        }
+
+        function hide() {
+            snapAssistDialog.visible = false;
+            snapAssistItem.candidates = [];
+            snapAssistItem.targetZoneIndex = -1;
+        }
+
+        title: "KZones Snap Assist"
+        location: PlasmaCore.Types.Floating
+        type: PlasmaCore.Dialog.Normal
+        backgroundHints: PlasmaCore.Types.NoBackground
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.BypassWindowManagerHint
+        hideOnWindowDeactivate: false
+        visible: false
+        outputOnly: false
+        width: displaySize.width
+        height: displaySize.height
+
+        Item {
+            id: snapAssistRoot
+
+            width: snapAssistDialog.width
+            height: snapAssistDialog.height
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: snapAssistDialog.hide()
+            }
+
+            Components.SnapAssist {
+                id: snapAssistItem
+
+                property int targetZoneIndex: -1
+
+                onWindowSelected: function (client) {
+                    if (!client)
+                        return;
+
+                    const targetZone = targetZoneIndex;
+                    if (client.minimized)
+                        client.minimized = false;
+
+                    moveClientToZone(client, targetZone);
+                    Workspace.activeWindow = client;
+                    triggerSnapAssist(currentLayout, targetZone);
+                }
+                onDismissed: {
+                    snapAssistDialog.hide();
+                }
+            }
+        }
     }
 
     PlasmaCore.Dialog {
@@ -556,23 +825,24 @@ Item {
                     const currentZones = repeaterLayout.itemAt(currentLayout);
                     if (config.enableZoneOverlay && showZoneOverlay && !zoneSelector.expanded)
                         currentZones.repeater.model.forEach((zone, zoneIndex) => {
-                        if (Utils.isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget]))
-                            hoveringZone = zoneIndex;
-
-                    });
+                            if (Utils.isHovering(currentZones.repeater.itemAt(zoneIndex).children[config.zoneOverlayHighlightTarget]))
+                                hoveringZone = zoneIndex;
+                        });
 
                     // zone selector
                     if (config.enableZoneSelector) {
                         if (!zoneSelector.animating && zoneSelector.expanded) {
                             zoneSelector.repeater.model.forEach((layout, layoutIndex) => {
                                 const layoutItem = zoneSelector.repeater.itemAt(layoutIndex);
-                                layout.zones.forEach((zone, zoneIndex) => {
-                                    const zoneItem = layoutItem.children[zoneIndex];
-                                    if (Utils.isHovering(zoneItem)) {
-                                        hoveringZone = zoneIndex;
-                                        setCurrentLayout(layoutIndex);
-                                    }
-                                });
+                                if (layoutItem) {
+                                    layout.zones.forEach((zone, zoneIndex) => {
+                                        const zoneItem = layoutItem.repeater ? layoutItem.repeater.itemAt(zoneIndex) : layoutItem.children[zoneIndex];
+                                        if (zoneItem && Utils.isHovering(zoneItem)) {
+                                            hoveringZone = zoneIndex;
+                                            setCurrentLayout(layoutIndex);
+                                        }
+                                    });
+                                }
                             });
                         }
                         // set zoneSelector expansion state
@@ -617,7 +887,6 @@ Item {
                                 // check if cursor is inside the zone geometry
                                 if (Utils.isPointInside(Workspace.cursorPos.x, Workspace.cursorPos.y, zoneGeometry))
                                     hoveringZone = zoneIndex;
-
                             });
                         }
                     }
@@ -638,25 +907,25 @@ Item {
 
                 Components.Debug {
                     info: ({
-                        "activeWindow": {
-                            "caption": Workspace.activeWindow && Workspace.activeWindow.caption,
-                            "resourceClass": Workspace.activeWindow && Workspace.activeWindow.resourceClass && Workspace.activeWindow.resourceClass.toString(),
-                            "frameGeometry": {
-                                "x": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.x,
-                                "y": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.y,
-                                "width": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.width,
-                                "height": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.height
+                            "activeWindow": {
+                                "caption": Workspace.activeWindow && Workspace.activeWindow.caption,
+                                "resourceClass": Workspace.activeWindow && Workspace.activeWindow.resourceClass && Workspace.activeWindow.resourceClass.toString(),
+                                "frameGeometry": {
+                                    "x": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.x,
+                                    "y": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.y,
+                                    "width": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.width,
+                                    "height": Workspace.activeWindow && Workspace.activeWindow.frameGeometry && Workspace.activeWindow.frameGeometry.height
+                                },
+                                "zone": Workspace.activeWindow && Workspace.activeWindow.zone
                             },
-                            "zone": Workspace.activeWindow && Workspace.activeWindow.zone
-                        },
-                        "highlightedZone": highlightedZone,
-                        "moving": moving,
-                        "resizing": resizing,
-                        "oldGeometry": Workspace.activeWindow && Workspace.activeWindow.oldGeometry,
-                        "activeScreen": activeScreen && activeScreen.name,
-                        "currentLayout": currentLayout,
-                        "screenLayouts": screenLayouts
-                    })
+                            "highlightedZone": highlightedZone,
+                            "moving": moving,
+                            "resizing": resizing,
+                            "oldGeometry": Workspace.activeWindow && Workspace.activeWindow.oldGeometry,
+                            "activeScreen": activeScreen && activeScreen.name,
+                            "currentLayout": currentLayout,
+                            "screenLayouts": screenLayouts
+                        })
                     config: root.config
                 }
 
@@ -674,7 +943,6 @@ Item {
                         layoutIndex: index
                         visible: index == root.currentLayout
                     }
-
                 }
 
                 Components.Selector {
@@ -684,20 +952,19 @@ Item {
                     currentLayout: root.currentLayout
                     highlightedZone: root.highlightedZone
                 }
-
             }
-
         }
-
     }
 
     Components.Shortcuts {
         onCycleLayouts: {
+            snapAssistDialog.hide();
             setCurrentLayout((currentLayout + 1) % config.layouts.length);
             highlightedZone = -1;
             Utils.osd(osdLayoutName());
         }
         onCycleLayoutsReversed: {
+            snapAssistDialog.hide();
             setCurrentLayout((currentLayout - 1 + config.layouts.length) % config.layouts.length);
             highlightedZone = -1;
             Utils.osd(osdLayoutName());
@@ -708,7 +975,10 @@ Item {
                 moveClientToClosestZone(client);
 
             const zonesLength = config.layouts[currentLayout].zones.length;
-            moveClientToZone(client, (client.zone + 1) % zonesLength);
+            const targetZone = (client.zone + 1) % zonesLength;
+            moveClientToZone(client, targetZone);
+            if (isSnapAssistEnabled())
+                triggerSnapAssist(currentLayout, targetZone);
         }
         onMoveActiveWindowToPreviousZone: {
             const client = Workspace.activeWindow;
@@ -716,7 +986,10 @@ Item {
                 moveClientToClosestZone(client);
 
             const zonesLength = config.layouts[currentLayout].zones.length;
-            moveClientToZone(client, (client.zone - 1 + zonesLength) % zonesLength);
+            const targetZone = (client.zone - 1 + zonesLength) % zonesLength;
+            moveClientToZone(client, targetZone);
+            if (isSnapAssistEnabled())
+                triggerSnapAssist(currentLayout, targetZone);
         }
         onToggleZoneOverlay: {
             if (!config.enableZoneOverlay)
@@ -734,8 +1007,11 @@ Item {
         }
         onMoveActiveWindowToZone: {
             moveClientToZone(Workspace.activeWindow, zone);
+            if (isSnapAssistEnabled())
+                triggerSnapAssist(currentLayout, zone);
         }
         onActivateLayout: {
+            snapAssistDialog.hide();
             if (layout <= config.layouts.length - 1) {
                 setCurrentLayout(layout);
                 highlightedZone = -1;
@@ -745,19 +1021,30 @@ Item {
             }
         }
         onMoveActiveWindowUp: {
-            moveClientToNeighbour(Workspace.activeWindow, "up");
+            const targetZone = moveClientToNeighbour(Workspace.activeWindow, "up");
+            if (targetZone !== -1 && targetZone !== null && isSnapAssistEnabled())
+                triggerSnapAssist(currentLayout, targetZone);
         }
         onMoveActiveWindowDown: {
-            moveClientToNeighbour(Workspace.activeWindow, "down");
+            const targetZone = moveClientToNeighbour(Workspace.activeWindow, "down");
+            if (targetZone !== -1 && targetZone !== null && isSnapAssistEnabled())
+                triggerSnapAssist(currentLayout, targetZone);
         }
         onMoveActiveWindowLeft: {
-            moveClientToNeighbour(Workspace.activeWindow, "left");
+            const targetZone = moveClientToNeighbour(Workspace.activeWindow, "left");
+            if (targetZone !== -1 && targetZone !== null && isSnapAssistEnabled())
+                triggerSnapAssist(currentLayout, targetZone);
         }
         onMoveActiveWindowRight: {
-            moveClientToNeighbour(Workspace.activeWindow, "right");
+            const targetZone = moveClientToNeighbour(Workspace.activeWindow, "right");
+            if (targetZone !== -1 && targetZone !== null && isSnapAssistEnabled())
+                triggerSnapAssist(currentLayout, targetZone);
         }
         onSnapActiveWindow: {
-            moveClientToClosestZone(Workspace.activeWindow);
+            const zone = moveClientToClosestZone(Workspace.activeWindow);
+            Utils.log("Snap active shortcut resolved zone " + zone + "; Snap Assist enabled=" + root.isSnapAssistEnabled());
+            if (zone !== null && root.isSnapAssistEnabled())
+                root.triggerSnapAssist(currentLayout, zone);
         }
         onSnapAllWindows: {
             moveAllClientsToClosestZone();
@@ -786,9 +1073,9 @@ Item {
     // workspace connection
     Connections {
         function onCurrentDesktopChanged() {
+            snapAssistDialog.hide();
             if (config.trackLayoutPerDesktop)
                 currentLayout = getCurrentLayout();
-
         }
 
         function onWindowAdded(client) {
@@ -797,7 +1084,7 @@ Item {
             config.layouts[currentLayout].zones.forEach((zone, zoneIndex) => {
                 if (zone.applications && zone.applications.includes(client.resourceClass.toString())) {
                     moveClientToZone(client, zoneIndex);
-                    return ;
+                    return;
                 }
             });
             // auto snap to closest zone
@@ -807,7 +1094,6 @@ Item {
             // check if new window spawns in a zone
             if (client.zone == undefined || client.zone == -1)
                 matchZone(client);
-
         }
 
         target: Workspace
@@ -821,5 +1107,4 @@ Item {
 
         target: Options
     }
-
 }

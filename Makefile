@@ -21,10 +21,37 @@ $(PKGFILE): $(shell find $(SRC_DIR) -type f)
 	@echo "Packaging $(SRC_DIR) into $(PKGFILE)..."
 	@zip -rq $(PKGFILE) $(SRC_DIR)
 
-install: build
-	@echo "Installing $(PKGFILE)..."
-	@kpackagetool6 --type=KWin/Script -i $(PKGFILE) || \
-	kpackagetool6 --type=KWin/Script -u $(PKGFILE)
+install:
+	@$(MAKE) clean
+	@$(MAKE) build
+	@set -eu; \
+	if [ "$$(qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.isScriptLoaded $(SCRIPT_NAME))" = "true" ]; then \
+		echo "Unloading running $(SCRIPT_NAME) script..."; \
+		qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript $(SCRIPT_NAME) >/dev/null; \
+	fi; \
+	if kpackagetool6 --type=KWin/Script --show $(SCRIPT_NAME) >/dev/null 2>&1; then \
+		kpackagetool6 --type=KWin/Script --upgrade $(PKGFILE); \
+	else \
+		kpackagetool6 --type=KWin/Script --install $(PKGFILE); \
+	fi; \
+	if [ "$$(kreadconfig6 --file kwinrc --group Plugins --key $(SCRIPT_NAME)Enabled)" = "true" ]; then \
+		PACKAGE_PATH="$$(kpackagetool6 --type=KWin/Script --show $(SCRIPT_NAME) | sed -n 's/^[[:space:]]*Path[[:space:]]*:[[:space:]]*//p')"; \
+		SCRIPT_PATH="$$PACKAGE_PATH/contents/ui/main.qml"; \
+		if [ ! -f "$$SCRIPT_PATH" ]; then \
+			echo "Installed script entry point not found: $$SCRIPT_PATH" >&2; \
+			exit 1; \
+		fi; \
+		echo "Loading updated $(SCRIPT_NAME) script into KWin..."; \
+		qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.loadDeclarativeScript "$$SCRIPT_PATH" $(SCRIPT_NAME) >/dev/null; \
+		qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.start; \
+		if [ "$$(qdbus6 org.kde.KWin /Scripting org.kde.kwin.Scripting.isScriptLoaded $(SCRIPT_NAME))" != "true" ]; then \
+			echo "KWin did not load $(SCRIPT_NAME) successfully" >&2; \
+			exit 1; \
+		fi; \
+		echo "$(SCRIPT_NAME) updated and running"; \
+	else \
+		echo "$(SCRIPT_NAME) installed; it is disabled in KWin settings"; \
+	fi
 
 uninstall:
 	@echo "Uninstalling $(SCRIPT_NAME)..."
@@ -55,9 +82,9 @@ restart-kwin:
 
 logs:
 	@if [ "${XDG_SESSION_TYPE}" = "x11" ]; then \
-	    journalctl -f -t kwin_x11; \
+	    journalctl -n 0 -f -t kwin_x11 | grep --line-buffered -i "KZones"; \
 	else \
-	    journalctl --user -u plasma-kwin_wayland -f QT_CATEGORY=js QT_CATEGORY=qml QT_CATEGORY=kwin_scripting; \
+	    journalctl --user -n 0 -u plasma-kwin_wayland -f | grep --line-buffered -i "KZones"; \
 	fi
 
 

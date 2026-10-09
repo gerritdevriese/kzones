@@ -23,22 +23,23 @@ Item {
     Rectangle {
         id: background
 
-        width: row.implicitWidth + row.spacing * 2
-        height: row.implicitHeight + row.spacing * 2
+        width: grid.implicitWidth + 30
+        height: grid.implicitHeight + 30
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottomMargin: 15
         color: colorHelper.backgroundColor
-        radius: 10
+        radius: 12
         border.color: colorHelper.getBorderColor(color)
         border.width: 1
 
-        RowLayout {
-            id: row
+        GridLayout {
+            id: grid
 
-            spacing: 15
-            anchors.fill: parent
-            anchors.margins: spacing
+            columns: 4
+            rowSpacing: 10
+            columnSpacing: 10
+            anchors.centerIn: parent
 
             Repeater {
                 id: repeater
@@ -48,15 +49,15 @@ Item {
                 Components.Indicator {
                     zones: modelData.zones
                     activeZone: (currentLayout == index) ? highlightedZone : -1
-                    width: 160 - 30
-                    height: 100 - 30
+                    Layout.preferredWidth: 120
+                    Layout.preferredHeight: 75
+                    width: 120
+                    height: 75
+                    cardColor: (currentLayout == index) ? colorHelper.tintWithAlpha(colorHelper.backgroundColor, colorHelper.accentColor, 0.2) : colorHelper.tintWithAlpha(colorHelper.backgroundColor, colorHelper.buttonColor, 0.3)
                     hovering: (currentLayout == index)
                 }
-
             }
-
         }
-
     }
 
     Components.Shadow {
@@ -78,7 +79,5 @@ Item {
                 selector.animating = running;
             }
         }
-
     }
-
 }
