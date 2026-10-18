@@ -1,3 +1,4 @@
+import QtCore
 import QtQuick
 import QtQuick.Layouts
 import org.kde.plasma.core as PlasmaCore
@@ -22,6 +23,17 @@ Item {
     property int highlightedZone: -1
     property var activeScreen: null
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
+
+    // runtime state (active layouts), kept apart from the script configuration
+    Settings {
+        id: layoutState
+
+        property string screenLayoutsJson: "{}"
+
+        // GenericStateLocation (~/.local/state) requires Qt 6.7
+        location: StandardPaths.writableLocation(StandardPaths.GenericStateLocation !== undefined ? StandardPaths.GenericStateLocation : StandardPaths.GenericConfigLocation) + "/kzonesstaterc"
+        category: "Layouts"
+    }
 
     function refreshClientArea() {
         activeScreen = Workspace.activeScreen;
@@ -309,10 +321,22 @@ Item {
         return targetZoneIndex;
     }
 
+    function getScreenId(screen) {
+        // EDID identity follows the monitor across ports, fall back to the connector name
+        const edidId = (s) => [s.manufacturer, s.model, s.serialNumber].filter(Boolean).join(' ');
+        const id = edidId(screen);
+        if (!id)
+            return screen.name;
+
+        // identical monitors without a serial number share an EDID identity, tell them apart by connector
+        const duplicate = Workspace.screens.some((s) => s !== screen && edidId(s) === id);
+        return duplicate ? `${id} (${screen.name})` : id;
+    }
+
     function getLayoutKey() {
         const parts = [];
         if (config.trackLayoutPerScreen)
-            parts.push(Workspace.activeScreen.name);
+            parts.push(getScreenId(Workspace.activeScreen));
 
         if (config.trackLayoutPerDesktop)
             parts.push(Workspace.currentDesktop.id);
@@ -321,20 +345,29 @@ Item {
     }
 
     function getCurrentLayout() {
-        if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop) {
-            const key = getLayoutKey();
-            if (!screenLayouts[key])
-                screenLayouts[key] = 0;
+        // key is "" when neither per-screen nor per-desktop tracking is enabled
+        const saved = screenLayouts[getLayoutKey()];
+        if (!saved)
+            return 0;
 
-            return screenLayouts[key];
-        }
-        return currentLayout;
+        // prefer the saved index if it still points to the same layout, then look up by name
+        if (saved.index < config.layouts.length && config.layouts[saved.index].name === saved.name)
+            return saved.index;
+
+        const byName = config.layouts.findIndex((layout) => layout.name === saved.name);
+        if (byName !== -1)
+            return byName;
+
+        return saved.index < config.layouts.length ? saved.index : 0;
     }
 
     function setCurrentLayout(layout) {
-        if (config.trackLayoutPerScreen || config.trackLayoutPerDesktop)
-            screenLayouts[getLayoutKey()] = layout;
-
+        screenLayouts[getLayoutKey()] = {
+            "index": layout,
+            "name": config.layouts[layout].name
+        };
+        layoutState.screenLayoutsJson = JSON.stringify(screenLayouts);
+        layoutState.sync();
         currentLayout = layout;
     }
 
@@ -494,6 +527,12 @@ Item {
         Core.init(KWin, Workspace);
         Core.registerQMLComponent("root", root);
         Core.loadConfig();
+        try {
+            screenLayouts = JSON.parse(layoutState.screenLayoutsJson);
+        } catch (e) {
+            Utils.log("Could not restore saved layouts: " + e.message);
+            screenLayouts = {};
+        }
         refreshClientArea();
         // match all clients to zones and connect signals
         for (let i = 0; i < Workspace.stackingOrder.length; i++) {
