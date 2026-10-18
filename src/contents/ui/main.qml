@@ -321,10 +321,22 @@ Item {
         return targetZoneIndex;
     }
 
+    function getScreenId(screen) {
+        // EDID identity follows the monitor across ports, fall back to the connector name
+        const edidId = (s) => [s.manufacturer, s.model, s.serialNumber].filter(Boolean).join(' ');
+        const id = edidId(screen);
+        if (!id)
+            return screen.name;
+
+        // identical monitors without a serial number share an EDID identity, tell them apart by connector
+        const duplicate = Workspace.screens.some((s) => s !== screen && edidId(s) === id);
+        return duplicate ? `${id} (${screen.name})` : id;
+    }
+
     function getLayoutKey() {
         const parts = [];
         if (config.trackLayoutPerScreen)
-            parts.push(Workspace.activeScreen.name);
+            parts.push(getScreenId(Workspace.activeScreen));
 
         if (config.trackLayoutPerDesktop)
             parts.push(Workspace.currentDesktop.id);
