@@ -33,20 +33,27 @@ export function overlapArea(a, b) {
   return (x2 - x1) * (y2 - y1);
 }
 
-// The zone a window belongs to is the one it overlaps more than any other, however
-// small that overlap is: a free-floating window covering a tenth of a zone is still
-// in that zone, and deciding this per window rather than per zone is what keeps it
-// reachable next to a bigger neighbour. Ties go to the lowest zone index, so a
-// window spread evenly over two zones always resolves the same way. Returns -1 when
-// the window overlaps no zone at all.
+// The zone a window belongs to is the one it fits best, scored as intersection over
+// union: the overlap divided by the area the window and zone cover together. Raw
+// overlap alone can't tell nested zones apart, since a window filling a half-height
+// zone overlaps the full-height zone around it by exactly as much. Among zones of
+// the same size this ranks the same as raw overlap, so a free-floating window
+// covering a tenth of a zone is still in whichever zone it overlaps the most, and
+// among nested zones it goes to the smallest one holding it. Ties go to the lowest
+// zone index, so a window spread evenly over two zones always resolves the same
+// way. Returns -1 when the window overlaps no zone at all.
 export function bestOverlappingZone(geometry, zoneGeometries) {
+  const windowArea = geometry.width * geometry.height;
   let best = -1;
-  let bestArea = 0;
+  let bestScore = 0;
   for (let i = 0; i < zoneGeometries.length; i++) {
-    if (!zoneGeometries[i]) continue;
-    const area = overlapArea(geometry, zoneGeometries[i]);
-    if (area > bestArea) {
-      bestArea = area;
+    const zone = zoneGeometries[i];
+    if (!zone) continue;
+    const area = overlapArea(geometry, zone);
+    if (area <= 0) continue;
+    const score = area / (windowArea + zone.width * zone.height - area);
+    if (score > bestScore) {
+      bestScore = score;
       best = i;
     }
   }
