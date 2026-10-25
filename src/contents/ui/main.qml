@@ -78,6 +78,67 @@ Item {
         }
     }
 
+    // unlike getWindowsInZone, this matches on actual geometry instead of the zone
+    // stored on the client, so windows that were never snapped by KZones (or were
+    // snapped while another layout was active) still count as being in a zone
+    function getWindowsInZoneByGeometry(zone, zoneGeometries) {
+        const windows = [];
+        // stackingOrder is the only window enumeration the declarative scripting API
+        // offers (windowList() exists on the imperative API only). Its order changes
+        // as windows are raised, so the index is a last resort for the sort key.
+        const allWindows = Workspace.stackingOrder;
+        for (let i = 0; i < allWindows.length; i++) {
+            const client = allWindows[i];
+            if (!checkFilter(client) || client.minimized)
+                continue;
+
+            if (client.output !== activeScreen)
+                continue;
+
+            // an empty list means the window is on all desktops / activities
+            if (client.desktops.length > 0 && !client.desktops.includes(Workspace.currentDesktop))
+                continue;
+
+            if (client.activities.length > 0 && !client.activities.includes(Workspace.currentActivity))
+                continue;
+
+            if (Utils.bestOverlappingZone(client.frameGeometry, zoneGeometries) !== zone)
+                continue;
+
+            windows.push({
+                "client": client,
+                "key": Utils.windowKey(client, i)
+            });
+        }
+        return windows;
+    }
+
+    function focusWindowInZone(zone) {
+        refreshClientArea();
+        const zones = config.layouts[currentLayout].zones;
+        if (zone < 0 || zone >= zones.length) {
+            Utils.osd(`Zone ${zone + 1} does not exist`);
+            return ;
+        }
+        // every zone of the layout, because a window belongs to whichever one it
+        // overlaps the most and that can only be decided by comparing them all
+        const zoneGeometries = [];
+        for (let i = 0; i < zones.length; i++) {
+            zoneGeometries.push(getZoneGeometry(currentLayout, i));
+        }
+        if (!zoneGeometries[zone])
+            return ;
+
+        const candidates = getWindowsInZoneByGeometry(zone, zoneGeometries);
+        const client = Utils.pickWindowInZone(candidates, Workspace.stackingOrder, Workspace.activeWindow);
+        if (!client) {
+            Utils.log("No window found in zone " + zone);
+            return ;
+        }
+        Utils.log("Focusing client " + client.resourceClass.toString() + " in zone " + zone + " (" + candidates.length + " candidate(s))");
+        Workspace.activeWindow = client;
+    }
+
     function restoreWindowGeometry(client) {
         if (!checkFilter(client))
             return;
@@ -86,6 +147,21 @@ Item {
             Utils.log("Restoring geometry for client " + client.resourceClass.toString());
             client.frameGeometry = client.oldGeometry;
         }
+    }
+
+    // the rendered zone items are the source of truth for zone geometry, so
+    // everything that needs a zone rect reads it back from them
+    function getZoneGeometry(layout, zone) {
+        const layoutItem = repeaterLayout.itemAt(layout);
+        if (!layoutItem)
+            return null;
+
+        const zoneItem = layoutItem.repeater.itemAt(zone);
+        if (!zoneItem)
+            return null;
+
+        const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
+        return Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
     }
 
     function moveClientToZone(client, zone) {
@@ -97,10 +173,10 @@ Item {
         saveClientProperties(client, zone);
         // move client to zone
         if (zone != -1) {
-            const currentZones = repeaterLayout.itemAt(currentLayout);
-            const zoneItem = currentZones.repeater.itemAt(zone);
-            const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
-            const newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
+            const newGeometry = getZoneGeometry(currentLayout, zone);
+            if (!newGeometry)
+                return ;
+
             Utils.log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry));
             client.setMaximize(false, false);
             client.frameGeometry = newGeometry;
@@ -466,13 +542,12 @@ Item {
                     const zone = layout.zones[client.zone];
                     Utils.log("Layout.fullscreen: " + layout.fullscreen + " Zone.fullscreen: " + zone.fullscreen);
                     if (layout.fullscreen == true || zone.fullscreen == true) {
-                        const currentZones = repeaterLayout.itemAt(client.layout);
-                        const zoneItem = currentZones.repeater.itemAt(client.zone);
-                        const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
-                        const newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
-                        Utils.log("Fullscreen client " + client.resourceClass.toString() + " to zone " + client.zone + " with geometry " + JSON.stringify(newGeometry));
-                        client.setMaximize(false, false);
-                        client.frameGeometry = newGeometry;
+                        const newGeometry = getZoneGeometry(client.layout, client.zone);
+                        if (newGeometry) {
+                            Utils.log("Fullscreen client " + client.resourceClass.toString() + " to zone " + client.zone + " with geometry " + JSON.stringify(newGeometry));
+                            client.setMaximize(false, false);
+                            client.frameGeometry = newGeometry;
+                        }
                     }
                 }
             }
@@ -734,6 +809,9 @@ Item {
         }
         onMoveActiveWindowToZone: {
             moveClientToZone(Workspace.activeWindow, zone);
+        }
+        onFocusZone: {
+            focusWindowInZone(zone);
         }
         onActivateLayout: {
             if (layout <= config.layouts.length - 1) {
