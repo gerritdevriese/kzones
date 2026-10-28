@@ -20,6 +20,7 @@ Item {
     property int currentLayout: 0
     property var screenLayouts: new Object()
     property int highlightedZone: -1
+    property var paintedZones: []
     property var activeScreen: null
     property bool showZoneOverlay: config.zoneOverlayShowWhen == 0
 
@@ -88,7 +89,24 @@ Item {
         }
     }
 
-    function moveClientToZone(client, zone) {
+    function getZonesGeometry(layout, zoneIndices) {
+        const currentZones = repeaterLayout.itemAt(layout);
+        let left = Infinity;
+        let top = Infinity;
+        let right = -Infinity;
+        let bottom = -Infinity;
+        zoneIndices.forEach(zoneIndex => {
+            const zoneItem = currentZones.repeater.itemAt(zoneIndex);
+            const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
+            left = Math.min(left, itemGlobal.x);
+            top = Math.min(top, itemGlobal.y);
+            right = Math.max(right, itemGlobal.x + zoneItem.width);
+            bottom = Math.max(bottom, itemGlobal.y + zoneItem.height);
+        });
+        return Qt.rect(Math.round(left), Math.round(top), Math.round(right - left), Math.round(bottom - top));
+    }
+
+    function moveClientToZone(client, zone, spanZones = null) {
         if (!checkFilter(client))
             return ;
 
@@ -97,10 +115,7 @@ Item {
         saveClientProperties(client, zone);
         // move client to zone
         if (zone != -1) {
-            const currentZones = repeaterLayout.itemAt(currentLayout);
-            const zoneItem = currentZones.repeater.itemAt(zone);
-            const itemGlobal = zoneItem.mapToGlobal(Qt.point(0, 0));
-            const newGeometry = Qt.rect(Math.round(itemGlobal.x), Math.round(itemGlobal.y), Math.round(zoneItem.width), Math.round(zoneItem.height));
+            const newGeometry = getZonesGeometry(currentLayout, spanZones || [zone]);
             Utils.log("Moving client " + client.resourceClass.toString() + " to zone " + zone + " with geometry " + JSON.stringify(newGeometry));
             client.setMaximize(false, false);
             client.frameGeometry = newGeometry;
@@ -439,7 +454,9 @@ Item {
             if (moving) {
                 Utils.log("Move end " + client.resourceClass.toString());
                 if (moved) {
-                    if (mainDialog.visible)
+                    if (mainDialog.visible && paintedZones.length > 0)
+                        moveClientToZone(client, paintedZones[0], paintedZones);
+                    else if (mainDialog.visible)
                         moveClientToZone(client, highlightedZone);
                     else
                         saveClientProperties(client, -1);
@@ -489,6 +506,10 @@ Item {
         client.onFullScreenChanged.connect(onFullScreenChanged);
     }
 
+    onCurrentLayoutChanged: {
+        paintedZones = [];
+    }
+
     Component.onCompleted: {
         Utils.log("Loading script (" + Qt.resolvedUrl("./main.qml") + ")");
         Core.init(KWin, Workspace);
@@ -518,6 +539,7 @@ Item {
             zoneSelector.expanded = false;
             zoneSelector.near = false;
             highlightedZone = -1;
+            paintedZones = [];
             showZoneOverlay = config.zoneOverlayShowWhen == 0;
         }
 
@@ -626,6 +648,8 @@ Item {
                         Utils.log("Highlighting zone " + hoveringZone + " in layout " + currentLayout);
                         highlightedZone = hoveringZone;
                     }
+                    if (paintedZones.length > 0 && hoveringZone != -1 && !paintedZones.includes(hoveringZone))
+                        paintedZones = paintedZones.concat([hoveringZone]);
                 }
             }
 
@@ -650,6 +674,7 @@ Item {
                             "zone": Workspace.activeWindow && Workspace.activeWindow.zone
                         },
                         "highlightedZone": highlightedZone,
+                        "paintedZones": paintedZones,
                         "moving": moving,
                         "resizing": resizing,
                         "oldGeometry": Workspace.activeWindow && Workspace.activeWindow.oldGeometry,
@@ -670,7 +695,7 @@ Item {
 
                         config: root.config
                         currentLayout: root.currentLayout
-                        highlightedZone: root.highlightedZone
+                        highlightedZones: root.paintedZones.length > 0 ? root.paintedZones : [root.highlightedZone]
                         layoutIndex: index
                         visible: index == root.currentLayout
                     }
@@ -764,6 +789,16 @@ Item {
         }
         onRestoreActiveWindow: {
             restoreWindowGeometry(Workspace.activeWindow);
+        }
+        onToggleZoneSpanning: {
+            if (!moving || !mainDialog.visible)
+                return;
+
+            if (paintedZones.length > 0)
+                paintedZones = [];
+            else if (highlightedZone != -1)
+                paintedZones = [highlightedZone];
+            Utils.log("Zone spanning " + (paintedZones.length > 0 ? "enabled" : "disabled"));
         }
     }
 

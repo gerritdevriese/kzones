@@ -18,6 +18,7 @@ Item {
     signal snapActiveWindow()
     signal snapAllWindows()
     signal restoreActiveWindow()
+    signal toggleZoneSpanning()
 
     ShortcutHandler {
         name: "KZones: Cycle layouts"
@@ -176,6 +177,15 @@ Item {
         sequence: "Meta+Backspace"
         onActivated: {
             restoreActiveWindow();
+        }
+    }
+
+    ShortcutHandler {
+        name: "KZones: Span multiple zones while moving"
+        text: "KZones: Span multiple zones while moving"
+        sequence: "Control"
+        onActivated: {
+            toggleZoneSpanning();
         }
     }
 

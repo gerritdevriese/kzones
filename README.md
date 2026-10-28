@@ -328,6 +328,7 @@ List of all available shortcuts:
 | Snap all windows                          | <kbd>Meta</kbd> + <kbd>Space</kbd>                                 |
 | Snap active window                        | <kbd>Meta</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd>              |
 | Restore active window                     | <kbd>Meta</kbd> + <kbd>Backspace</kbd>                             |
+| Span multiple zones while moving          | <kbd>Ctrl</kbd> (tap over a zone while dragging)                   |
 
 _To change the default bindings, go to `System Settings / Shortcuts` and search for KZones_
 
