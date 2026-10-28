@@ -7,7 +7,7 @@ Item {
 
     property var config
     property int currentLayout
-    property int highlightedZone
+    property var highlightedZones: []
     property int layoutIndex
     property alias repeater: repeater
 
@@ -25,7 +25,7 @@ Item {
             property var renderZones: config.zoneOverlayIndicatorDisplay == 1 ? [config.layouts[layoutIndex].zones[index]] : config.layouts[layoutIndex].zones
             property int activeIndex: config.zoneOverlayIndicatorDisplay == 1 ? 0 : index
             property var indicatorPos: (modelData && modelData.indicator && modelData.indicator.position) || "center"
-            property bool active: (highlightedZone == zoneIndex && currentLayout == layoutIndex)
+            property bool active: (highlightedZones.includes(zoneIndex) && currentLayout == layoutIndex)
 
             x: ((modelData.x / 100) * (clientArea.width - zonePadding)) + zonePadding
             y: ((modelData.y / 100) * (clientArea.height - zonePadding)) + zonePadding
@@ -101,7 +101,7 @@ Item {
             Rectangle {
                 id: zoneBackground
 
-                opacity: (highlightedZone == zoneIndex) ? 0.1 : 0
+                opacity: highlightedZones.includes(zoneIndex) ? 0.1 : 0
                 anchors.fill: parent
                 color: modelData.color || colorHelper.accentColor
                 radius: 8
